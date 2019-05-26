@@ -1,0 +1,6 @@
+[submodule "control-toolbox"]
+	path = control-toolbox
+	url = git@github.com:ethz-adrl/control-toolbox.git
+[submodule "kindr"]
+	path = kindr
+	url = git@github.com:ANYbotics/kindr.git
