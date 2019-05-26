@@ -1,8 +1,8 @@
-#ifndef POSE_EDKF
-#define POSE_EDKF
+#ifndef EKF_TRANSLATION
+#define EKF_TRANSLATION
 
-#include "riptide_gnc/kalman_filter.h"
-#include "riptide_gnc/auv_math_lib.h"
+#include "auv_gnc/kalman_filter.h"
+#include "auv_gnc/auv_math_lib.h"
 #include "eigen3/Eigen/Dense"
 #include "math.h"
 

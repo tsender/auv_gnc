@@ -6,6 +6,8 @@
 
 using namespace Eigen;
 
+namespace AUV_GNC
+{
 // This class performs motion planning along a single axis using the distance to be traveled, 
 // with which is constrains velocity to a trapezoidal profile
 
@@ -25,10 +27,10 @@ public:
     const float DEFAULT_SPEED = 1.0;
     
     DistanceMotionPlanner(float startPos, float nominalSpeed);
-    void SetAcceleration(float accel, int seq);
     void initMotionPlanner();
     float getTravelTime();
     Vector2f computeState(float t);
+};
 }
 
 #endif

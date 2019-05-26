@@ -1,6 +1,8 @@
-#include "riptide_gnc/auv_math_lib.h"
+#include "auv_gnc/auv_math_lib.h"
 
-namepsace AUVMathLib
+namespace AUV_GNC
+{
+namespace AUVMathLib
 {
 // Return rotation matrix about a single axis
 Matrix3f GetAxisRotation(int axis, float angle)
@@ -121,7 +123,7 @@ float SawtoothWave(float x, float period, float max)
 float TriangularWave(float x, float period, float max)
 {
     float f = floor(0.5 + 2*x/period);
-    return max * 2 * (2*x/period - f) * (-1)^(f);
+    return max * 2 * (2*x/period - f) * pow(-1,f);
 }
 
 // Returns value within the bounds of roll/yaw values: [-180, +180] deg
@@ -138,3 +140,4 @@ float PitchMap(float x)
     return TriangularWave(x, 360, 90);
 }
 } // namespace AUVMathLib
+} // namespace AUV_GNC

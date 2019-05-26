@@ -1,4 +1,4 @@
-#include "riptide_gnc/auv_model.h"
+#include "auv_gnc/auv_model.h"
 
 AUModel::AUVModel(float m, float V, float fluid_rho, const Ref<const Matrix3f> &Inertia, const Ref<const Vector3f> &cob,
                   const Ref<const Matrix62f> &drag, vector<Vector5f> &auv_thrusters);

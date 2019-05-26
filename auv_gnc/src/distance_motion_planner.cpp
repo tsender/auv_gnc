@@ -1,4 +1,4 @@
-#include "riptide_gnc/simple_motion_planner.h"
+#include "auv_gnc/simple_motion_planner.h"
 
 /**
  * @param startPos Starting position
@@ -132,12 +132,12 @@ Vector2f DistanceMotionPlanner::computeState(float t)
 
     if (!accelerate_) // Constant Speed
     {
-        if (t >= 0 && t <= tEnd) // Valid time instance
+        if (t >= 0 && t <= tEnd_) // Valid time instance
         {
             state(0) = cruiseSpeed_ * t;
             state(1) = cruiseSpeed_;
         }
-        else if (t > tEnd) // Do not know anything about times outside this interval
+        else if (t > tEnd_) // Do not know anything about times outside this interval
         {
             state(0) = distance_;
             state(1) = cruiseSpeed_;
@@ -155,13 +155,13 @@ Vector2f DistanceMotionPlanner::computeState(float t)
             float time1 = 0, time2 = 0, time3 = 0;
 
             // t in [t, t1] range - accelarate from rest to cruiseSpeed
-            time1 = (t <= t1) ? t : t1;
-            state(0) = start + vel0 * time1 + 0.5 * accel1 * pow(time1, 2);
-            state(1) = accel1 * time1;
+            time1 = (t <= t1_) ? t : t1_;
+            state(0) = velocity0_ * time1 + 0.5 * acceleration1_ * pow(time1, 2);
+            state(1) = acceleration1_ * time1;
 
             // t in (t1, t2] range - move at cruiseSpeed
-            time2 = (t > t1 && t <= t2) ? t - t1 : 0;
-            time2 = (t > t2) ? t2 - t1 : time2;
+            time2 = (t > t1_ && t <= t2_) ? (t - t1_) : 0;
+            time2 = (t > t2_) ? (t2_ - t1_) : time2;
             state(0) = state(0) + cruiseSpeed * time2;
 
             // t in (t2, tEnd] range - accelerate from cruiseSPeed to rest

@@ -3,35 +3,38 @@
 
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"
-#include "sstream"
+#include <sstream>
 
 using namespace Eigen;
 
+namespace AUV_GNC
+{
 // Basic Kalman Filter
 // If not initialized manually, then it will auto-initialize (set Xhat prediction to zero-vector).
 class KalmanFilter
 {
   private:
-    float m, n;    // m = # measurements, n = # states
-    VectorXf Xhat; // State Vector
-    MatrixXf A;    // State-transition Matrix
-    MatrixXf H;    // Observation/Measurement Matrix
-    MatrixXf K;    // Kalman Gain
-    MatrixXf P;    // Error Covariance Matrix
-    MatrixXf Q;    // Process Noise Covariance Matrix
-    MatrixXf R;    // Measurement Noise Covariance Matrix
-    MatrixXf I;    // Identity Matrix
-    bool init;
+    float m_, n_;    // m = # measurements, n = # states
+    VectorXf Xhat_; // State Vector
+    MatrixXf A_;    // State-transition Matrix
+    MatrixXf H_;    // Observation/Measurement Matrix
+    MatrixXf K_;    // Kalman Gain
+    MatrixXf P_;    // Error Covariance Matrix
+    MatrixXf Q_;    // Process Noise Covariance Matrix
+    MatrixXf R_;    // Measurement Noise Covariance Matrix
+    MatrixXf I_;    // Identity Matrix
+    bool init_;
 
   public:
     KalmanFilter(const Ref<const MatrixXf> &Ao, const Ref<const MatrixXf> &Ho,
                  const Ref<const MatrixXf> &Qo, const Ref<const MatrixXf> &Ro);
-    void Init(const Ref<const VectorXf> &Xo);
-    VectorXf Update(const Ref<const VectorXf> &Z);
-    VectorXf EKFUpdate(const Ref<const MatrixXf> &Anew, const Ref<const MatrixXf> &Hnew, const Ref<const MatrixXf> &Rnew
+    void init(const Ref<const VectorXf> &Xo);
+    VectorXf update(const Ref<const VectorXf> &Z);
+    VectorXf updateEKF(const Ref<const MatrixXf> &Anew, const Ref<const MatrixXf> &Hnew, const Ref<const MatrixXf> &Rnew,
                        const Ref<const VectorXf> &Xpredict, const Ref<const VectorXf> &Z);
-    VectorXf GetXhat();
-    MatrixXf GetErrorCovariance();
+    VectorXf getXhat();
+    MatrixXf getErrorCovariance();
 };
+}
 
 #endif

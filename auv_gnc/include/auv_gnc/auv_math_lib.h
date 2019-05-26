@@ -7,6 +7,8 @@
 
 using namespace Eigen;
 
+namespace AUV_GNC
+{
 // Useful math tools
 namespace AUVMathLib
 {
@@ -27,5 +29,6 @@ float TriangularWave(float x, float period, float max);
 float RollYawMap(float x);
 float PitchMap(float x);
 } // namespace AUVMathLib
+} // namespace AUV_GNC
 
 #endif

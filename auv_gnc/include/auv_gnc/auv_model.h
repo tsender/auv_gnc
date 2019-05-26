@@ -3,7 +3,7 @@
 
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"
-#include "riptide_gnc/auv_math_lib.h"
+#include "auv_gnc/auv_math_lib.h"
 #include <cppad/cppad.hpp>
 
 using namespace Eigen;
@@ -13,6 +13,7 @@ using CppAD::AD;
 
 typedef Matrix<float, 12, 12> Matrix12f;
 typedef Matrix<float, 6, 2> Matrix62f;
+typedef Matrix<float, 3, 2> Matrix32f;
 typedef Matrix<float, 9, 9> Matrix9f;
 typedef Matrix<float, 6, Dynamic> Matrix6xf;
 typedef Matrix<float, 5, Dynamic> Matrix5xf;

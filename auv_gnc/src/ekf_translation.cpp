@@ -1,4 +1,4 @@
-#include "riptide_gnc/trans_ekf.h"
+#include "auv_gnc/ekf_translation.h"
 
 // NOTE: pos sensors are Inertial-FRAME, and vel and accel sensors are Body-FRAME
 TransEKF::TransEKF(const Ref<const Matrix3i> &fullMsmtMaskIn, const Ref<const MatrixXf> &RposIn, const Ref<const MatrixXf> &RvelIn,
