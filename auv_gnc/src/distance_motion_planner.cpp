@@ -1,10 +1,12 @@
-#include "auv_gnc/simple_motion_planner.h"
+#include "auv_gnc/distance_motion_planner.hpp"
 
+namespace AUV_GNC
+{
 /**
  * @param startPos Starting position
  * @param nominalSpeed Desired cruise speed
  */
-DistanceMotionPlanner::DistanceMotionPlanner(float distance, float nominalSpeed, float accel = 0.0, int seq = SEQ_NONE)
+DistanceMotionPlanner::DistanceMotionPlanner(float distance, float nominalSpeed, float accel, int seq)
 {
     distance_ = distance;
     if (nominalSpeed <= 0) // TODO: May need to be strictly less than 0, will see later
@@ -35,7 +37,7 @@ DistanceMotionPlanner::DistanceMotionPlanner(float distance, float nominalSpeed,
     }
 
     // Initialize to zero
-    t1_ = 0, t2_ = 0, tMid_ = 0, tFinal_ = 0;
+    t1_ = 0, t2_ = 0, tMid_ = 0, tEnd_ = 0;
     cruiseDuration_ = 0;
     initialSpeed_ = 0, maxSpeed_ = 0, finalSpeed_ = 0;
 
@@ -75,8 +77,8 @@ void DistanceMotionPlanner::initMotionPlanner()
             }
             else // Impossible: Will be traveling slower than cruiseSpeed at destination
             {
-                stringstream ss;
-                ss << "DistanceMotionPlanner: SEQ_START - Will be traveling slower than cruiseSpeed at destination. Decrease speed or increase acceleration." << endl;
+                std::stringstream ss;
+                ss << "DistanceMotionPlanner: SEQ_START - Will be traveling slower than cruiseSpeed at destination. Decrease speed or increase acceleration." << std::endl;
                 throw std::runtime_error(ss.str());
             }
         }
@@ -92,8 +94,8 @@ void DistanceMotionPlanner::initMotionPlanner()
             }
             else // Impossible: Will have non-zero speed when you reach the destination
             {
-                stringstream ss;
-                ss << "DistanceMotionPlanner: SEQ_END -  Will have non-zero speed at destination. Decrease speed or increase acceleration." << endl;
+                std::stringstream ss;
+                ss << "DistanceMotionPlanner: SEQ_END -  Will have non-zero speed at destination. Decrease speed or increase acceleration." << std::endl;
                 throw std::runtime_error(ss.str());
             }
         }
@@ -151,20 +153,20 @@ Vector2f DistanceMotionPlanner::computeState(float t)
     }
     else if (accelerate_)
     {
-        if (t >= 0 && t <= tEnd) // Valid time instance
+        if (t >= 0 && t <= tEnd_) // Valid time instance
         {
             float time1 = 0, time2 = 0, time3 = 0;
 
             // time1 in [t, t1] range - accelarate from rest to cruiseSpeed
             time1 = (t <= t1_) ? t : t1_;
-            state(0) = initialVelocity_ * time1 + 0.5 * acceleration_ * pow(time1, 2);
+            state(0) = initialSpeed_ * time1 + 0.5 * acceleration_ * pow(time1, 2);
             state(1) = acceleration_ * time1;
 
             // time2 in (t1, t2] range - traveling at cruiseSpeed
             time2 = (t > t1_ && t <= t2_) ? (t - t1_) : 0;
             time2 = (t > t2_) ? (t2_ - t1_) : time2;
             if (time2 > 0)
-                state(0) = state(0) + cruiseSpeed * time2; // state(1) remains as is
+                state(0) = state(0) + cruiseSpeed_ * time2; // state(1) remains as is
 
             // time3 in (t2, tEnd] range - accelerate from cruiseSPeed to rest
             time3 = (t > t2_) ? (t - t2_) : 0;
@@ -185,4 +187,6 @@ Vector2f DistanceMotionPlanner::computeState(float t)
             state(1) = finalSpeed_;
         }
     }
+    return state;
+}
 }

@@ -1,4 +1,4 @@
-#include "riptide_gnc/pose_edkf_interface.h"
+#include "auv_gnc/test_node.hpp"
 
 namespace Eigen {
 template<typename X, typename BinOp>
@@ -17,10 +17,12 @@ struct ScalarBinaryOpTraits<X,CppAD::AD<X>,BinOp>
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "pose_edkf");
-    PoseEDKFInterface poseEDKF;
+    AUV_GNC::TestNode testNode;
     ros::spin();
 }
 
+namespace AUV_GNC
+{
 void GetRotationYPR2Body(Ref<MatrixXf> R, float yaw, float pitch, float roll)
 {
     //Matrix3f R = Matrix3f::Zero();
@@ -42,7 +44,7 @@ void GetRotationYPR2Body(Ref<MatrixXf> R, float yaw, float pitch, float roll)
     R(2, 2) = c_phi * c_theta;
 }
 
-PoseEDKFInterface::PoseEDKFInterface() : nh("pose_edkf")
+TestNode::TestNode() : nh("pose_edkf")
 {
     /*int n = 2;
     int m = 3;
@@ -96,7 +98,7 @@ PoseEDKFInterface::PoseEDKFInterface() : nh("pose_edkf")
     Matrix3f skew;
     Vector3f pqr;
     pqr << 1, 2, 3;
-    skew = SkewSym(pqr);
+    skew = AUVMathLib::skewSym(pqr);
     cout << "skew 123: " << endl << skew << endl;
 
     /*cout << "v1: " << endl << v1 << endl;
@@ -179,15 +181,16 @@ PoseEDKFInterface::PoseEDKFInterface() : nh("pose_edkf")
     cout << "test: " << test << endl;
 }
 
-void PoseEDKFInterface::copy(const Ref<const MatrixXf> &m)
+void TestNode::copy(const Ref<const MatrixXf> &m)
 {
     mat = m;
 }
 
 template <typename T>
-int PoseEDKFInterface::sign(T x){
+int TestNode::sign(T x){
     if (x > 0)
         return 1;
     else 
         return -1;
+}
 }

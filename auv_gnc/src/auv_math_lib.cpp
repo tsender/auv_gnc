@@ -1,11 +1,11 @@
-#include "auv_gnc/auv_math_lib.h"
+#include "auv_gnc/auv_math_lib.hpp"
 
 namespace AUV_GNC
 {
 namespace AUVMathLib
 {
 // Return rotation matrix about a single axis
-Matrix3f GetAxisRotation(int axis, float angle)
+Matrix3f getAxisRotation(int axis, float angle)
 {
     Matrix3f R = Matrix3f::Zero();
     RowVector3f row1, row2, row3;
@@ -43,13 +43,13 @@ Matrix3f GetAxisRotation(int axis, float angle)
 // Ex. Vb = R * Vw, Vb = vector in B-frame coordinates, Vw = vector in world-frame coordinates
 // Parameters:
 //      attitude = Eigen::Vector3f of yaw, pitch, and roll (in this order)
-Matrix3f GetEulerRotMat(const Ref<const Vector3f> &attitude)
+Matrix3f getEulerRotMat(const Ref<const Vector3f> &attitude)
 {
     Matrix3f R = Matrix3f::Identity();
 
     int axis = 1;
     for (int i = 2; i >= 0; i--)
-        R = R * AUVMathLib::GetAxisRotation(axis++, attitude(i)); // R1(phi) * R2(theta) * R3(psi)
+        R = R * AUVMathLib::getAxisRotation(axis++, attitude(i)); // R1(phi) * R2(theta) * R3(psi)
 
     return R;
 }
@@ -58,48 +58,48 @@ Matrix3f GetEulerRotMat(const Ref<const Vector3f> &attitude)
 // Parameters:
 //   velBF = vel expressed in body-frame
 //   angVelBF = ang. vel expressed in the body-frame
-MatrixXf SgnMat(const Ref<const MatrixXf>& mat)
+MatrixXf sign(const Ref<const MatrixXf>& mat)
 {
-    MatrixXf sgnMat = mat;
+    MatrixXf signMat = mat;
 
     for (int i = 0; i < mat.rows(); i++)
     {
         for (int j = 0; j < mat.cols(); j++)
         {
             if (mat(i, j) > 0)
-                sgnMat(i, j) = 1;
+                signMat(i, j) = 1;
             else if (mat(i, j) < 0)
-                sgnMat(i, j) = -1;
+                signMat(i, j) = -1;
             else
-                sgnMat(i, j) = 0;
+                signMat(i, j) = 0;
         }
     }
-    return sgnMat;
+    return signMat;
 }
 
 //template <typename T>
-int Sgn(double &x){
+int sign(double x){
     if (x > 0)
         return 1;
     else 
         return -1;
 }
 
-int Sgn(float &x){
+int sign(float x){
     if (x > 0)
         return 1;
     else 
         return -1;
 }
 
-int Sgn(int &x){
+int sign(int x){
     if (x > 0)
         return 1;
     else 
         return -1;
 }
 
-Matrix3f SkewSym(const Ref<const Vector3f> &v)
+Matrix3f skewSym(const Ref<const Vector3f> &v)
 {
     Matrix3f skew = Matrix3f::Zero();
     RowVector3f row1, row2, row3;
@@ -113,14 +113,14 @@ Matrix3f SkewSym(const Ref<const Vector3f> &v)
 }
 
 // Constrain 'x' to conform to the sawtooth profile
-float SawtoothWave(float x, float period, float max)
+float sawtoothWave(float x, float period, float max)
 {
     return max * 2 * (x/period - floor(0.5 + x/period));
 }
 
 
 // Constrain 'x' to conform to the triangulat profile
-float TriangularWave(float x, float period, float max)
+float triangularWave(float x, float period, float max)
 {
     float f = floor(0.5 + 2*x/period);
     return max * 2 * (2*x/period - f) * pow(-1,f);
@@ -128,16 +128,16 @@ float TriangularWave(float x, float period, float max)
 
 // Returns value within the bounds of roll/yaw values: [-180, +180] deg
 // Follows sawtooth profile
-float RollYawMap(float x)
+float rollYawMap(float x)
 {
-    return SawtoothWave(x, 360, 180);
+    return sawtoothWave(x, 360, 180);
 }
 
 // Returns value within the bounds of pitch values: [-90, +90] deg
 // Follows triangular profile
-float PitchMap(float x)
+float pitchMap(float x)
 {
-    return TriangularWave(x, 360, 90);
+    return triangularWave(x, 360, 90);
 }
 } // namespace AUVMathLib
 } // namespace AUV_GNC

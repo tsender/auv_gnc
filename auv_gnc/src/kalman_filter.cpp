@@ -1,4 +1,4 @@
-#include "auv_gnc/kalman_filter.h"
+#include "auv_gnc/kalman_filter.hpp"
 
 namespace AUV_GNC
 {

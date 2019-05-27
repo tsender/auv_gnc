@@ -5,9 +5,9 @@ project(auv_gnc)
 # add_compile_options(-std=c++11)
 
 
-#find_package(catkin REQUIRED COMPONENTS
-#  roscpp
-#)
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+)
 
 find_package(Eigen3)
 
@@ -15,22 +15,22 @@ find_package(Eigen3)
 ## Build ##
 ###########
 
-#catkin_package(
-#  INCLUDE_DIRS include
-#  CATKIN_DEPENDS roscpp
-#  DEPENDS ${Eigen3_LIBRARIES} 
-#)
-#include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
+catkin_package(
+  INCLUDE_DIRS include
+  CATKIN_DEPENDS roscpp
+  DEPENDS ${Eigen3_LIBRARIES} 
+)
+include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
 
-#add_executable(pose_edkf_interface src/pose_edkf_interface.cpp ${POSE_EDKF})
-#target_link_libraries(pose_edkf_interface ${catkin_LIBRARIES})
-#add_dependencies(pose_edkf_interface ${catkin_EXPORTED_TARGETS})
+add_executable(test_node src/test_node.cpp src/auv_math_lib.cpp)
+target_link_libraries(test_node ${catkin_LIBRARIES})
+add_dependencies(test_node ${catkin_EXPORTED_TARGETS})
 
 add_library(${PROJECT_NAME}_lib 
     src/auv_math_lib.cpp
-    #src/auv_model.cpp
+    src/auv_model.cpp
     src/kalman_filter.cpp
-    #src/distance_motion_planner.cpp
+    src/distance_motion_planner.cpp
 )
 
 target_include_directories(${PROJECT_NAME}_lib PUBLIC include ${Eigen3_INCLUDE_DIRS})

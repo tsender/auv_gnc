@@ -3,6 +3,7 @@
 
 #include "eigen3/Eigen/Dense"
 #include "math.h"
+#include <sstream>
 
 using namespace Eigen;
 
@@ -20,13 +21,13 @@ private:
     float t1_, t2_, tMid_, tEnd_; // Key times. At cruiseSpeed for in the time interval [t1_, t2_]
     bool accelerate_;
 public:
-    const int SEQ_NONE = 0;
-    const int SEQ_START = 1;
-    const int SEQ_END = 2;
-    const int SEQ_BOTH = 3;
-    const float DEFAULT_SPEED = 1.0;
+    static const int SEQ_NONE = 0;
+    static const int SEQ_START = 1;
+    static const int SEQ_END = 2;
+    static const int SEQ_BOTH = 3;
+    static const float DEFAULT_SPEED = 1.0;
     
-    DistanceMotionPlanner(float startPos, float nominalSpeed);
+    DistanceMotionPlanner(float distance, float nominalSpeed, float accel = 0.0, int seq = DistanceMotionPlanner::SEQ_NONE);
     void initMotionPlanner();
     float getTravelTime();
     Vector2f computeState(float t);

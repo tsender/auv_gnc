@@ -28,6 +28,7 @@ private:
   int n; // Size of A matrix (nxn = 9x9)
 
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   TransEKF(const Ref<const Matrix3i> &sensorMaskIn, const Ref<const MatrixXf> &RposIn, const Ref<const MatrixXf> &RvelIn,
            const Ref<const MatrixXf> &RaccelIn, const Ref<const Matrix9f> &Qin);
   void Init(const Ref<const VectorXf> &Xo);
