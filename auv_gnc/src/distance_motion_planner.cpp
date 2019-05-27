@@ -10,11 +10,11 @@ DistanceMotionPlanner::DistanceMotionPlanner(float distance, float nominalSpeed,
 {
     distance_ = distance;
     if (nominalSpeed <= 0) // TODO: May need to be strictly less than 0, will see later
-        cruiseSpeed_ = DEFAULT_SPEED;
+        cruiseSpeed_ = DistanceMotionPlanner::DEFAULT_SPEED;
     else
         cruiseSpeed_ = abs(nominalSpeed);
 
-    if (accel == 0 || seq == SEQ_NONE) // Default case
+    if (accel == 0 || seq == DistanceMotionPlanner::SEQ_NONE) // Default case
     {
         accelerate_ = false;
         acceleration_ = 0;
@@ -22,7 +22,7 @@ DistanceMotionPlanner::DistanceMotionPlanner(float distance, float nominalSpeed,
     }
     else
     {
-        if (seq >= SEQ_NONE && seq <= SEQ_BOTH) // Valid sequence
+        if (seq >= DistanceMotionPlanner::SEQ_NONE && seq <= DistanceMotionPlanner::SEQ_BOTH) // Valid sequence
         {
             accelerate_ = true;
             acceleration_ = accel;
@@ -32,7 +32,7 @@ DistanceMotionPlanner::DistanceMotionPlanner(float distance, float nominalSpeed,
         {
             accelerate_ = false; // Default to constant speed (accel = 0)
             acceleration_ = 0;
-            accelSeq_ = SEQ_NONE;
+            accelSeq_ = DistanceMotionPlanner::SEQ_NONE;
         }
     }
 
@@ -65,7 +65,7 @@ void DistanceMotionPlanner::initMotionPlanner()
         float accelDuration = cruiseSpeed_ / acceleration_;           // Assuming accelerating from rest
         float accelDist = 0.5 * pow(cruiseSpeed_, 2) / acceleration_; // Or 0.5*acceleration*t^2
 
-        if (accelSeq_ == SEQ_START)
+        if (accelSeq_ == DistanceMotionPlanner::SEQ_START)
         {
             if (accelDist <= distance_) // Possible: Will be traveling at cruiseSpeed at destination
             {
@@ -82,7 +82,7 @@ void DistanceMotionPlanner::initMotionPlanner()
                 throw std::runtime_error(ss.str());
             }
         }
-        else if (accelSeq_ == SEQ_END)
+        else if (accelSeq_ == DistanceMotionPlanner::SEQ_END)
         {
             if (accelDist <= distance_) // Possible: Will be able to accelerate from cruiseSpeed to rest
             {
@@ -99,7 +99,7 @@ void DistanceMotionPlanner::initMotionPlanner()
                 throw std::runtime_error(ss.str());
             }
         }
-        else if (accelSeq_ == SEQ_BOTH)
+        else if (accelSeq_ == DistanceMotionPlanner::SEQ_BOTH)
         {
             if (2 * accelDist <= distance_) // Will reach cruise speed for some duration >= 0
             {

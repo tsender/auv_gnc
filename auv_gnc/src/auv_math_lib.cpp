@@ -130,14 +130,14 @@ float triangularWave(float x, float period, float max)
 // Follows sawtooth profile
 float rollYawMap(float x)
 {
-    return sawtoothWave(x, 360, 180);
+    return AUVMathLib::sawtoothWave(x, 360, 180);
 }
 
 // Returns value within the bounds of pitch values: [-90, +90] deg
 // Follows triangular profile
 float pitchMap(float x)
 {
-    return triangularWave(x, 360, 90);
+    return AUVMathLib::triangularWave(x, 360, 90);
 }
 } // namespace AUVMathLib
 } // namespace AUV_GNC
