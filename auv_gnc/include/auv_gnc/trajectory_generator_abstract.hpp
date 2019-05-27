@@ -4,6 +4,7 @@
 #include "eigen3/Eigen/Dense"
 
 using namespace Eigen;
+typedef Matrix<float, 12, 1> Vector12f;
 
 namespace AUV_GNC
 {
@@ -11,7 +12,7 @@ class TrajectoryGenerator
 {
 public:
     TrajectoryGenerator();
-    virtual VectorXf computeState(float time);
+    virtual Vector12f computeState(float time);
 };
 }
 

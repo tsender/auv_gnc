@@ -31,6 +31,7 @@ add_library(${PROJECT_NAME}_lib
     src/auv_model.cpp
     src/kalman_filter.cpp
     src/distance_motion_planner.cpp
+    src/trajectory_translation.cpp
 )
 
 target_include_directories(${PROJECT_NAME}_lib PUBLIC include ${Eigen3_INCLUDE_DIRS})
