@@ -37,7 +37,7 @@ DistanceMotionPlanner::DistanceMotionPlanner(float distance, float nominalSpeed,
     // Initialize to zero
     t1_ = 0, t2_ = 0, tMid_ = 0, tFinal_ = 0;
     cruiseDuration_ = 0;
-    velocity0_ = 0, acceleration1_ = 0, acceleration2_ = 0;
+    initialSpeed_ = 0, maxSpeed_ = 0, finalSpeed_ = 0;
 
     DistanceMotionPlanner::initMotionPlanner();
 }
@@ -54,6 +54,9 @@ void DistanceMotionPlanner::initMotionPlanner()
         tEnd_ = distance_ / cruiseSpeed_;
         cruiseDuration_ = tEnd_;
         t2_ = tEnd_;
+        initialSpeed_ = cruiseSpeed_;
+        maxSpeed_ = cruiseSpeed_;
+        finalSpeed_ = cruiseSpeed_;
     }
     else // Will be accelerating for certain portions of travel
     {
@@ -68,7 +71,7 @@ void DistanceMotionPlanner::initMotionPlanner()
                 t1_ = accelDuration;
                 tEnd_ = t1_ + cruiseDuration_;
                 t2_ = tEnd_;
-                acceleration1_ = acceleration_;
+                finalSpeed_ = cruiseSpeed_;
             }
             else // Impossible: Will be traveling slower than cruiseSpeed at destination
             {
@@ -85,8 +88,7 @@ void DistanceMotionPlanner::initMotionPlanner()
                 t1_ = 0;
                 t2_ = cruiseDuration_;
                 tEnd_ = t2_ + accelDuration;
-                velocity0_ = cruiseSpeed_;
-                acceleration2_ = -acceleration_;
+                initialSpeed_ = cruiseSpeed_;
             }
             else // Impossible: Will have non-zero speed when you reach the destination
             {
@@ -103,8 +105,6 @@ void DistanceMotionPlanner::initMotionPlanner()
                 t1_ = accelDuration;
                 t2_ = accelDuration + cruiseDuration_;
                 tEnd_ = t2_ + accelDuration;
-                acceleration1_ = acceleration_;
-                acceleration2_ = -acceleration_;
             }
             else // Will not reach cruiseSpeed during travel
             {
@@ -114,6 +114,7 @@ void DistanceMotionPlanner::initMotionPlanner()
                 tEnd_ = tMid_ * 2;
             }
         }
+        maxSpeed_ = acceleration_ * t1_;
     }
 }
 
@@ -137,14 +138,14 @@ Vector2f DistanceMotionPlanner::computeState(float t)
             state(0) = cruiseSpeed_ * t;
             state(1) = cruiseSpeed_;
         }
-        else if (t > tEnd_) // Do not know anything about times outside this interval
-        {
-            state(0) = distance_;
-            state(1) = cruiseSpeed_;
-        }
         else if (t < 0)
         {
             state(0) = 0;
+            state(1) = cruiseSpeed_;
+        }
+        else if (t > tEnd_) 
+        {
+            state(0) = distance_;
             state(1) = cruiseSpeed_;
         }
     }
@@ -154,17 +155,34 @@ Vector2f DistanceMotionPlanner::computeState(float t)
         {
             float time1 = 0, time2 = 0, time3 = 0;
 
-            // t in [t, t1] range - accelarate from rest to cruiseSpeed
+            // time1 in [t, t1] range - accelarate from rest to cruiseSpeed
             time1 = (t <= t1_) ? t : t1_;
-            state(0) = velocity0_ * time1 + 0.5 * acceleration1_ * pow(time1, 2);
-            state(1) = acceleration1_ * time1;
+            state(0) = initialVelocity_ * time1 + 0.5 * acceleration_ * pow(time1, 2);
+            state(1) = acceleration_ * time1;
 
-            // t in (t1, t2] range - move at cruiseSpeed
+            // time2 in (t1, t2] range - traveling at cruiseSpeed
             time2 = (t > t1_ && t <= t2_) ? (t - t1_) : 0;
             time2 = (t > t2_) ? (t2_ - t1_) : time2;
-            state(0) = state(0) + cruiseSpeed * time2;
+            if (time2 > 0)
+                state(0) = state(0) + cruiseSpeed * time2; // state(1) remains as is
 
-            // t in (t2, tEnd] range - accelerate from cruiseSPeed to rest
+            // time3 in (t2, tEnd] range - accelerate from cruiseSPeed to rest
+            time3 = (t > t2_) ? (t - t2_) : 0;
+            if (time3 > 0)
+            {
+                state(0) = state(0) + maxSpeed_ * time3 - 0.5 * acceleration_ * pow(time3, 2);
+                state(1) = maxSpeed_ - acceleration_ * time3;
+            }
+        }
+        else if (t < 0)
+        {
+            state(0) = 0;
+            state(1) = initialSpeed_;
+        }
+        else if (t > tEnd_)
+        {
+            state(0) = distance_;
+            state(1) = finalSpeed_;
         }
     }
 }

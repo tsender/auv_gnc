@@ -15,7 +15,7 @@ class DistanceMotionPlanner
 {
 private:
     float distance_, cruiseSpeed_, acceleration_;
-    float cruiseDuration_, velocity0_, acceleration1_, acceleration2_;
+    float cruiseDuration_, initialSpeed_, maxSpeed_, finalSpeed_;
     int accelSeq_;
     float t1_, t2_, tMid_, tEnd_; // Key times. At cruiseSpeed for in the time interval [t1_, t2_]
     bool accelerate_;
