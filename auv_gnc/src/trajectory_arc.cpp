@@ -1,76 +1,77 @@
-#include "auv_gnc/trajectory_line.hpp"
+#include "auv_gnc/trajectory_arc.hpp"
 
 namespace AUV_GNC
 {
 namespace Translation
 {
 /**
- * @param initialPos Initial position in inertial-frame [x; y; z] in [m]
- * @param nominalSpeed Nominal travel speed, in [m/s]
- * @param acceleration Desired (absolute) acceleration, in [m/s^2]
- * @param seq Acceleration sequence (SEQ_NONE, SEQ_START, SEQ_END, SEQ_BOTH). See DistanceMotionPlanner for actual names
+ * @param initialPos Initial position in inertial-frame [x; y; z], in [m].
+ * @param unitTangent Unit vector tangent to initial velocity.
+ * @param unitNormal Unit vector normal to unitTangent, extending from initialPos towards rotation axis.
+ * @param radius Radius of arc, in [m].
+ * @param revAngle Angle of revolution for the arc, in [deg]
+ * @param acceleration Desired (absolute) acceleration, in [m/s^2].
+ * @param seq Acceleration sequence (SEQ_NONE, SEQ_START, SEQ_END, SEQ_BOTH). See SegmentPlanner for actual names.
  */
-Line::Line(const Ref<const Vector3f> initialPos, float nominalSpeed, float acceleration, int seq)
+Arc::Arc(const Ref<const Vector3f> initialPos, const Ref<const Vector3f> unitTangent, const Ref<const Vector3f> unitNormal,
+         float radius, float revAngle, float nominalSpeed, float acceleration, int seq)
 {
     initialPos_ = initialPos;
+    unitTangent_ = unitTangent.normalized();
+    unitNormal_ = unitNormal.normalized();
+    radius_ = abs(radius);
+    revAngle_ = abs(revAngle);
+    insertionMap_.col(0) = unitTangent_;
+    insertionMap_.col(1) = unitNormal_;
+
     if (nominalSpeed <= 0) // TODO: May need to be strictly less than 0, will see later
-        cruiseSpeed_ = Line::DEFAULT_SPEED;
+        cruiseSpeed_ = Arc::DEFAULT_SPEED;
     else
         cruiseSpeed_ = abs(nominalSpeed);
     acceleration_ = acceleration;
     accelSeq_ = seq;
 
-    initDMP_ = false;
-    finalPos_.setZero();
-    insertionMap_.setZero();
+    float distance = radius_ * revAngle_ * M_PI / 180.0;
+    segPlanner_ = new SegmentPlanner(distance, cruiseSpeed_, acceleration_, accelSeq_);
 }
 
 /**
- * @param finalPos Desired final position in inertial frame [x; y; z], in [m]
+ * @brief Get travel time for this arc segment, in [s].
  */
-void Line::createSegment(const Ref<const Vector3f> finalPos)
+float Arc::getTravelTime()
 {
-    finalPos_ = finalPos;
-    Vector3f delta;
-    delta = finalPos_ - initialPos_;
-    float distance = delta.norm();
-
-    dmp_ = new DistanceMotionPlanner(distance, cruiseSpeed_, acceleration_, accelSeq_);
-    insertionMap_ = delta.normalized();
-    initDMP_ = true;
-}
-
-/**
- * @brief Get travel time for this line segment
- */
-float Line::getTravelTime()
-{
-    if (initDMP_)
-        return dmp_->getTravelTime();
-    else
-        return -1;
+    return segPlanner_->getTravelTime();
 }
 
 /**
  * @param time Desired time to compute the state vector at.
  * @brief Computes the state vector at a given time instance. Returns position and velocity in inertial-frame.
  */
-Vector12f Line::computeState(float time)
+Vector12f Arc::computeState(float time)
 {
     Vector12f state;
     state.setZero();
 
-    if (initDMP_)
-    {
-        Vector2f dmpState;
-        dmpState = dmp_->computeState(time);
+    Vector2f segState;
+    segState = segPlanner_->computeState(time);
 
-        Vector3f inertialPos = initialPos_ + insertionMap_ * dmpState(0);
-        Vector3f inertialVelocity = insertionMap_ * dmpState(1);
+    float theta = segState(0) / radius_;    // Current angle, in the plane of rotation
+    float thetaDot = segState(1) / radius_; // Current angle rate of change, in the plane of rotation
 
-        state.segment<3>(0) = inertialPos;
-        state.segment<3>(3) = inertialVelocity;
-    }
+    Vector2f inPlanePos, inPlaneVelocity;
+    inPlanePos.setZero();
+    inPlaneVelocity.setZero();
+
+    inPlanePos(0) = radius_ * cos(theta);                  // x = R*cos(theta)
+    inPlanePos(1) = radius_ * sin(theta);                  // y = R*sin(theta)
+    inPlaneVelocity(0) = -radius_ * thetaDot * sin(theta); // xDot = -R*thetaDot*sin(theta)
+    inPlaneVelocity(1) = radius_ * thetaDot * cos(theta);  // yDot = R*thetaDot*cos(theta)
+
+    Vector3f inertialPos = initialPos_ + insertionMap_ * inPlanePos;
+    Vector3f inertialVelocity = insertionMap_ * inPlaneVelocity;
+
+    state.segment<3>(0) = inertialPos;
+    state.segment<3>(3) = inertialVelocity;
 
     return state;
 }

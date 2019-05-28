@@ -1,4 +1,4 @@
-#include "auv_gnc/distance_motion_planner.hpp"
+#include "auv_gnc/segment_planner.hpp"
 
 namespace AUV_GNC
 {
@@ -6,15 +6,15 @@ namespace AUV_GNC
  * @param startPos Starting position
  * @param nominalSpeed Desired cruise speed
  */
-DistanceMotionPlanner::DistanceMotionPlanner(float distance, float nominalSpeed, float accel, int seq)
+SegmentPlanner::SegmentPlanner(float distance, float nominalSpeed, float accel, int seq)
 {
     distance_ = distance;
     if (nominalSpeed <= 0) // TODO: May need to be strictly less than 0, will see later
-        cruiseSpeed_ = DistanceMotionPlanner::DEFAULT_SPEED;
+        cruiseSpeed_ = SegmentPlanner::DEFAULT_SPEED;
     else
         cruiseSpeed_ = abs(nominalSpeed);
 
-    if (accel == 0 || seq == DistanceMotionPlanner::SEQ_NONE) // Default case
+    if (accel == 0 || seq == SegmentPlanner::SEQ_NONE) // Default case
     {
         accelerate_ = false;
         acceleration_ = 0;
@@ -22,7 +22,7 @@ DistanceMotionPlanner::DistanceMotionPlanner(float distance, float nominalSpeed,
     }
     else
     {
-        if (seq >= DistanceMotionPlanner::SEQ_NONE && seq <= DistanceMotionPlanner::SEQ_BOTH) // Valid sequence
+        if (seq >= SegmentPlanner::SEQ_NONE && seq <= SegmentPlanner::SEQ_BOTH) // Valid sequence
         {
             accelerate_ = true;
             acceleration_ = accel;
@@ -32,7 +32,7 @@ DistanceMotionPlanner::DistanceMotionPlanner(float distance, float nominalSpeed,
         {
             accelerate_ = false; // Default to constant speed (accel = 0)
             acceleration_ = 0;
-            accelSeq_ = DistanceMotionPlanner::SEQ_NONE;
+            accelSeq_ = SegmentPlanner::SEQ_NONE;
         }
     }
 
@@ -41,11 +41,11 @@ DistanceMotionPlanner::DistanceMotionPlanner(float distance, float nominalSpeed,
     cruiseDuration_ = 0;
     initialSpeed_ = 0, maxSpeed_ = 0, finalSpeed_ = 0;
 
-    DistanceMotionPlanner::initMotionPlanner();
+    SegmentPlanner::initMotionPlanner();
 }
 
 // Initialize Motion Planner - calculate travel parameters
-void DistanceMotionPlanner::initMotionPlanner()
+void SegmentPlanner::initMotionPlanner()
 {
     // Exit if distance is 0
     if (distance_ == 0)
@@ -65,7 +65,7 @@ void DistanceMotionPlanner::initMotionPlanner()
         float accelDuration = cruiseSpeed_ / acceleration_;           // Assuming accelerating from rest
         float accelDist = 0.5 * pow(cruiseSpeed_, 2) / acceleration_; // Or 0.5*acceleration*t^2
 
-        if (accelSeq_ == DistanceMotionPlanner::SEQ_START)
+        if (accelSeq_ == SegmentPlanner::SEQ_START)
         {
             if (accelDist <= distance_) // Possible: Will be traveling at cruiseSpeed at destination
             {
@@ -78,11 +78,11 @@ void DistanceMotionPlanner::initMotionPlanner()
             else // Impossible: Will be traveling slower than cruiseSpeed at destination
             {
                 std::stringstream ss;
-                ss << "DistanceMotionPlanner: SEQ_START - Will be traveling slower than cruiseSpeed at destination. Decrease speed or increase acceleration." << std::endl;
+                ss << "SegmentPlanner: SEQ_START - Will be traveling slower than cruiseSpeed at destination. Decrease speed or increase acceleration." << std::endl;
                 throw std::runtime_error(ss.str());
             }
         }
-        else if (accelSeq_ == DistanceMotionPlanner::SEQ_END)
+        else if (accelSeq_ == SegmentPlanner::SEQ_END)
         {
             if (accelDist <= distance_) // Possible: Will be able to accelerate from cruiseSpeed to rest
             {
@@ -95,11 +95,11 @@ void DistanceMotionPlanner::initMotionPlanner()
             else // Impossible: Will have non-zero speed when you reach the destination
             {
                 std::stringstream ss;
-                ss << "DistanceMotionPlanner: SEQ_END -  Will have non-zero speed at destination. Decrease speed or increase acceleration." << std::endl;
+                ss << "SegmentPlanner: SEQ_END -  Will have non-zero speed at destination. Decrease speed or increase acceleration." << std::endl;
                 throw std::runtime_error(ss.str());
             }
         }
-        else if (accelSeq_ == DistanceMotionPlanner::SEQ_BOTH)
+        else if (accelSeq_ == SegmentPlanner::SEQ_BOTH)
         {
             if (2 * accelDist <= distance_) // Will reach cruise speed for some duration >= 0
             {
@@ -120,7 +120,7 @@ void DistanceMotionPlanner::initMotionPlanner()
     }
 }
 
-float DistanceMotionPlanner::getTravelTime()
+float SegmentPlanner::getTravelTime()
 {
     return tEnd_;
 }
@@ -128,7 +128,7 @@ float DistanceMotionPlanner::getTravelTime()
 /**
  * @param t Current time for state to be computed (state = [position, speed])
  **/
-Vector2f DistanceMotionPlanner::computeState(float t)
+Vector2f SegmentPlanner::computeState(float t)
 {
     Vector2f state; // [position; speed]
     state.setZero();

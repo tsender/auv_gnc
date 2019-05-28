@@ -5,14 +5,18 @@ namespace AUV_GNC
 namespace Translation
 {
 /**
- * @param initialPos Initial position in inertial-frame [x; y; z] in [m]
- * @param nominalSpeed Nominal travel speed, in [m/s]
- * @param acceleration Desired (absolute) acceleration, in [m/s^2]
- * @param seq Acceleration sequence (SEQ_NONE, SEQ_START, SEQ_END, SEQ_BOTH). See DistanceMotionPlanner for actual names
+ * @param initialPos Initial position in inertial-frame [x; y; z], in [m].
+ * @param finalPos Desired final position in inertial frame [x; y; z], in [m].
+ * @param nominalSpeed Nominal travel speed, in [m/s].
+ * @param acceleration Desired (absolute) acceleration, in [m/s^2].
+ * @param seq Acceleration sequence (SEQ_NONE, SEQ_START, SEQ_END, SEQ_BOTH). See SegmentPlanner for actual names.
  */
-Line::Line(const Ref<const Vector3f> initialPos, float nominalSpeed, float acceleration, int seq)
+Line::Line(const Ref<const Vector3f> initialPos, const Ref<const Vector3f> finalPos,
+           float nominalSpeed, float acceleration, int seq)
 {
     initialPos_ = initialPos;
+    finalPos_ = finalPos;
+
     if (nominalSpeed <= 0) // TODO: May need to be strictly less than 0, will see later
         cruiseSpeed_ = Line::DEFAULT_SPEED;
     else
@@ -20,35 +24,19 @@ Line::Line(const Ref<const Vector3f> initialPos, float nominalSpeed, float accel
     acceleration_ = acceleration;
     accelSeq_ = seq;
 
-    initDMP_ = false;
-    finalPos_.setZero();
-    insertionMap_.setZero();
-}
-
-/**
- * @param finalPos Desired final position in inertial frame [x; y; z], in [m]
- */
-void Line::createSegment(const Ref<const Vector3f> finalPos)
-{
-    finalPos_ = finalPos;
     Vector3f delta;
     delta = finalPos_ - initialPos_;
     float distance = delta.norm();
-
-    dmp_ = new DistanceMotionPlanner(distance, cruiseSpeed_, acceleration_, accelSeq_);
+    segPlanner_ = new SegmentPlanner(distance, cruiseSpeed_, acceleration_, accelSeq_);
     insertionMap_ = delta.normalized();
-    initDMP_ = true;
 }
 
 /**
- * @brief Get travel time for this line segment
+ * @brief Get travel time for this line segment, in [s].
  */
 float Line::getTravelTime()
 {
-    if (initDMP_)
-        return dmp_->getTravelTime();
-    else
-        return -1;
+    return segPlanner_->getTravelTime();
 }
 
 /**
@@ -60,17 +48,14 @@ Vector12f Line::computeState(float time)
     Vector12f state;
     state.setZero();
 
-    if (initDMP_)
-    {
-        Vector2f dmpState;
-        dmpState = dmp_->computeState(time);
+    Vector2f segState;
+    segState = segPlanner_->computeState(time);
 
-        Vector3f inertialPos = initialPos_ + insertionMap_ * dmpState(0);
-        Vector3f inertialVelocity = insertionMap_ * dmpState(1);
+    Vector3f inertialPos = initialPos_ + insertionMap_ * segState(0);
+    Vector3f inertialVelocity = insertionMap_ * segState(1);
 
-        state.segment<3>(0) = inertialPos;
-        state.segment<3>(3) = inertialVelocity;
-    }
+    state.segment<3>(0) = inertialPos;
+    state.segment<3>(3) = inertialVelocity;
 
     return state;
 }

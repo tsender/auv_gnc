@@ -12,7 +12,7 @@ namespace AUV_GNC
 // This class performs motion planning along a single axis using the distance to be traveled, 
 // with which is constrains velocity to a trapezoidal profile
 
-class DistanceMotionPlanner
+class SegmentPlanner
 {
 private:
     float distance_, cruiseSpeed_, acceleration_;
@@ -27,7 +27,7 @@ public:
     static const int SEQ_BOTH = 3;
     static const float DEFAULT_SPEED = 1.0;
     
-    DistanceMotionPlanner(float distance, float nominalSpeed, float accel = 0.0, int seq = DistanceMotionPlanner::SEQ_NONE);
+    SegmentPlanner(float distance, float nominalSpeed, float accel = 0.0, int seq = SegmentPlanner::SEQ_NONE);
     void initMotionPlanner();
     float getTravelTime();
     Vector2f computeState(float t);
