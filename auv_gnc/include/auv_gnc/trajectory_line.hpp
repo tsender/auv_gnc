@@ -10,27 +10,28 @@ using namespace Eigen;
 
 namespace AUV_GNC
 {
-namespace Translation
+namespace Trajectory
 {
 // Creates a line segment in space using the SegmentPlanner for position/speed along the segment.
 // Assumes the speed is either zero or equal to the speed entered in the constructor
 class Line : public TrajectoryGenerator
 {
 private:
-    SegmentPlanner *segPlanner_;
-    float cruiseSpeed_, acceleration_;
-    int accelSeq_;
-    Vector3f initialPos_, finalPos_, insertionMap_;
-public:
-    static const float DEFAULT_SPEED = 0.5; // [m/s]
-    static const float DEFAULT_ACCEL = 0.2; // [m/s^2]
+  SegmentPlanner *segPlanner_;
+  float cruiseSpeed_, acceleration_;
+  int accelSeq_;
+  Vector3f initialPos_, finalPos_, insertionMap_;
 
-    Line(const Ref<const Vector3f> initialPos, const Ref<const Vector3f> finalPos, 
-        float nominalSpeed = Line::DEFAULT_SPEED, float acceleration = 0.0, int seq = SegmentPlanner::SEQ_NONE);
-    float getTravelTime();
-    Vector12f computeState(float time);
+public:
+  static const float DEFAULT_SPEED = 0.5; // [m/s]
+  static const float DEFAULT_ACCEL = 0.2; // [m/s^2]
+
+  Line(const Ref<const Vector3f> initialPos, const Ref<const Vector3f> finalPos,
+       float nominalSpeed = Line::DEFAULT_SPEED, float acceleration = 0.0, int seq = SegmentPlanner::SEQ_NONE);
+  float getTravelTime();
+  Vector12f computeState(float time);
 };
-}
-}
+} // namespace Trajectory
+} // namespace AUV_GNC
 
 #endif

@@ -5,7 +5,8 @@ namespace AUV_GNC
 namespace AUVMathLib
 {
 // Return rotation matrix about a single axis
-Matrix3f getAxisRotation(int axis, float angle)
+// Angle is in [rad]
+Matrix3f getRotationMat(int axis, float angle)
 {
     Matrix3f R = Matrix3f::Zero();
     RowVector3f row1, row2, row3;
@@ -39,17 +40,17 @@ Matrix3f getAxisRotation(int axis, float angle)
     return R;
 }
 
-// Get rotation matrix from world-frame to B-frame using Euler Angles (yaw, pitch, roll)
+// Get rotation matrix from world-frame to B-frame using Euler Angles (roll, pitch, yaw)
 // Ex. Vb = R * Vw, Vb = vector in B-frame coordinates, Vw = vector in world-frame coordinates
 // Parameters:
-//      attitude = Eigen::Vector3f of yaw, pitch, and roll (in this order)
-Matrix3f getEulerRotMat(const Ref<const Vector3f> &attitude)
+//      attitude = Eigen::Vector3f of roll, pitch, and yaw [rad] (in this order)
+Matrix3f getEulerRotationMat(const Ref<const Vector3f> &attitude)
 {
     Matrix3f R = Matrix3f::Identity();
 
     int axis = 1;
-    for (int i = 2; i >= 0; i--)
-        R = R * AUVMathLib::getAxisRotation(axis++, attitude(i)); // R1(phi) * R2(theta) * R3(psi)
+    for (int i = 0; i < 3; i++)
+        R = R * AUVMathLib::getRotationMat(axis++, attitude(i)); // R1(phi) * R2(theta) * R3(psi)
 
     return R;
 }
@@ -58,7 +59,7 @@ Matrix3f getEulerRotMat(const Ref<const Vector3f> &attitude)
 // Parameters:
 //   velBF = vel expressed in body-frame
 //   angVelBF = ang. vel expressed in the body-frame
-MatrixXf sign(const Ref<const MatrixXf>& mat)
+MatrixXf sign(const Ref<const MatrixXf> &mat)
 {
     MatrixXf signMat = mat;
 
@@ -78,24 +79,27 @@ MatrixXf sign(const Ref<const MatrixXf>& mat)
 }
 
 //template <typename T>
-int sign(double x){
+int sign(double x)
+{
     if (x > 0)
         return 1;
-    else 
+    else
         return -1;
 }
 
-int sign(float x){
+int sign(float x)
+{
     if (x > 0)
         return 1;
-    else 
+    else
         return -1;
 }
 
-int sign(int x){
+int sign(int x)
+{
     if (x > 0)
         return 1;
-    else 
+    else
         return -1;
 }
 
@@ -115,15 +119,14 @@ Matrix3f skewSym(const Ref<const Vector3f> &v)
 // Constrain 'x' to conform to the sawtooth profile
 float sawtoothWave(float x, float period, float max)
 {
-    return max * 2 * (x/period - floor(0.5 + x/period));
+    return max * 2 * (x / period - floor(0.5 + x / period));
 }
-
 
 // Constrain 'x' to conform to the triangulat profile
 float triangularWave(float x, float period, float max)
 {
-    float f = floor(0.5 + 2*x/period);
-    return max * 2 * (2*x/period - f) * pow(-1,f);
+    float f = floor(0.5 + 2 * x / period);
+    return max * 2 * (2 * x / period - f) * pow(-1, f);
 }
 
 // Returns value within the bounds of roll/yaw values: [-180, +180] deg
@@ -139,5 +142,56 @@ float pitchMap(float x)
 {
     return AUVMathLib::triangularWave(x, 360, 90);
 }
+
+// Constrains roll/yaw to [-180,+180] deg and pitch to [-90,+90] deg
+// Attitude in (roll, pitch, yaw) [deg]
+Vector3f getConstrainedAttitude(const Ref<const Vector3f> attitude)
+{
+    Vector3f constrainedAttitude = Vector3f::Zero();
+    constrainedAttitude(0) = AUVMathLib::rollYawMap(attitude(0));
+    constrainedAttitude(1) = AUVMathLib::pitchMap(attitude(1));
+    constrainedAttitude(2) = AUVMathLib::rollYawMap(attitude(2));
+    return constrainedAttitude;
+}
+
+// Compute body-rates (PQR) from Euler angle rates (rollDot, pitchDot, yawDot) [same unit as input]
+// Attitude in (roll, pitch, yaw) [deg]
+Vector3f eulerDot2PQR(const Ref<const Vector3f> attitude, const Ref<const Vector3f> eulerDot)
+{
+    float phi = attitude(0);
+    float theta = attitude(1);
+    float psi = attitude(2);
+
+    Matrix3f mat = Matrix3f::Zero();
+    RowVector3f row1, row2, row3;
+
+    row1 << 1, 0, -sin(theta);
+    row2 << 0 , cos(phi), sin(phi) * cos(theta);
+    row3 << 0, -sin(phi), cos(phi) * cos(theta);
+
+    mat << row1, row2, row3;
+    Vector3f pqr = mat * eulerDot;
+    return pqr;
+}
+
+// Compute Euler angle rates (rollDot, pitchDot, yawDot) from body-rates (PQR) [same unit as input]
+Vector3f pqr2EulerDot(const Ref<const Vector3f> attitude, const Ref<const Vector3f> pqr)
+{
+    float phi = attitude(0);
+    float theta = attitude(1);
+    float psi = attitude(2);
+
+    Matrix3f mat = Matrix3f::Zero();
+    RowVector3f row1, row2, row3;
+
+    row1 << 1, sin(phi) * tan(theta), cos(phi) * tan(theta);
+    row2 << 0 , cos(phi), -sin(phi);
+    row3 << 0 , sin(phi) / cos(theta), cos(phi) / cos(theta);
+
+    mat << row1, row2, row3;
+    Vector3f eulerDot = mat * pqr;
+    return eulerDot;
+}
+
 } // namespace AUVMathLib
 } // namespace AUV_GNC

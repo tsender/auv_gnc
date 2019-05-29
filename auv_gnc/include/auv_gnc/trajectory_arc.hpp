@@ -10,7 +10,7 @@ using namespace Eigen;
 
 namespace AUV_GNC
 {
-namespace Translation
+namespace Trajectory
 {
 typedef Matrix<float, 3, 2> Matrix32f;
 
@@ -19,22 +19,23 @@ typedef Matrix<float, 3, 2> Matrix32f;
 class Arc : public TrajectoryGenerator
 {
 private:
-    SegmentPlanner *segPlanner_;
-    float cruiseSpeed_, acceleration_;
-    int accelSeq_;
-    Vector3f initialPos_, unitTangent_, unitNormal_, unitAxis_;
-    float radius_, revAngle_;
-    Matrix32f insertionMap_;
-public:
-    static const float DEFAULT_SPEED = 0.5; // [m/s]
-    static const float DEFAULT_ACCEL = 0.2; // [m/s^2]
+  SegmentPlanner *segPlanner_;
+  float cruiseSpeed_, acceleration_;
+  int accelSeq_;
+  Vector3f initialPos_, unitTangent_, unitNormal_, unitAxis_;
+  float radius_, theta_;
+  Matrix32f insertionMap_;
 
-    Arc(const Ref<const Vector3f> initialPos, const Ref<const Vector3f> unitTangent, const Ref<const Vector3f> unitNormal,
-         float radius, float revAngle, float nominalSpeed = Arc::DEFAULT_SPEED, float acceleration = 0.0, int seq = SegmentPlanner::SEQ_NONE);
-    float getTravelTime();
-    Vector12f computeState(float time);
+public:
+  static const float DEFAULT_SPEED = 0.5; // [m/s]
+  static const float DEFAULT_ACCEL = 0.2; // [m/s^2]
+
+  Arc(const Ref<const Vector3f> initialPos, const Ref<const Vector3f> unitTangent, const Ref<const Vector3f> unitNormal,
+      float radius, float theta, float nominalSpeed = Arc::DEFAULT_SPEED, float acceleration = 0.0, int seq = SegmentPlanner::SEQ_NONE);
+  float getTravelTime();
+  Vector12f computeState(float time);
 };
-}
-}
+} // namespace Trajectory
+} // namespace AUV_GNC
 
 #endif

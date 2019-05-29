@@ -2,14 +2,14 @@
 
 namespace AUV_GNC
 {
-namespace Translation
+namespace Trajectory
 {
 /**
  * @param initialPos Initial position in inertial-frame [x; y; z], in [m].
  * @param finalPos Desired final position in inertial frame [x; y; z], in [m].
  * @param nominalSpeed Nominal travel speed, in [m/s].
  * @param acceleration Desired (absolute) acceleration, in [m/s^2].
- * @param seq Acceleration sequence (SEQ_NONE, SEQ_START, SEQ_END, SEQ_BOTH). See SegmentPlanner for actual names.
+ * @param seq Acceleration sequence, can be one of SegmentPlanner::(SEQ_NONE, SEQ_START, SEQ_END, SEQ_BOTH)
  */
 Line::Line(const Ref<const Vector3f> initialPos, const Ref<const Vector3f> finalPos,
            float nominalSpeed, float acceleration, int seq)
@@ -48,16 +48,14 @@ Vector12f Line::computeState(float time)
     Vector12f state;
     state.setZero();
 
-    Vector2f segState;
-    segState = segPlanner_->computeState(time);
+    Vector2f segState = segPlanner_->computeState(time);
 
     Vector3f inertialPos = initialPos_ + insertionMap_ * segState(0);
     Vector3f inertialVelocity = insertionMap_ * segState(1);
 
-    state.segment<3>(0) = inertialPos;
-    state.segment<3>(3) = inertialVelocity;
+    state.head<6>() << inertialPos, inertialVelocity;
 
     return state;
 }
-} // namespace Translation
+} // namespace Trajectory
 } // namespace AUV_GNC

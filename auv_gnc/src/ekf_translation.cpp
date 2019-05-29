@@ -66,7 +66,7 @@ VectorXf EKFTranslation::update(float dt, const Ref<const Vector3f> &attitude, c
     Matrix3f dtMat = dtVector.asDiagonal(); // Diagonal matrix of dt
 
     // Rotation matrix from B-frame to I-frame
-    Matrix3f Rotb2i = AUVMathLib::getEulerRotMat(attitude).transpose();
+    Matrix3f Rotb2i = AUVMathLib::getEulerRotationMat(attitude).transpose();
 
     // Constant Acceleration model:
     // x = x_prev + dt*v + (0.5*dt^2)*a

@@ -12,9 +12,9 @@ namespace AUV_GNC
 // Useful math tools
 namespace AUVMathLib
 {
-Matrix3f getAxisRotation(int axis, float angle);
+Matrix3f getRotationMat(int axis, float angle);
 
-Matrix3f getEulerRotMat(const Ref<const Vector3f> &attitude);
+Matrix3f getEulerRotationMat(const Ref<const Vector3f> &attitude);
 
 MatrixXf sign(const Ref<const MatrixXf>& mat);
 
@@ -28,6 +28,10 @@ float sawtoothWave(float x, float period, float max);
 float triangularWave(float x, float period, float max);
 float rollYawMap(float x);
 float pitchMap(float x);
+Vector3f getConstrainedAttitude(const Ref<const Vector3f> attitude);
+
+Vector3f eulerDot2PQR(const Ref<const Vector3f> attitude, const Ref<const Vector3f> eulerDot);
+Vector3f pqr2EulerDot(const Ref<const Vector3f> attitude, const Ref<const Vector3f> pqr);
 } // namespace AUVMathLib
 } // namespace AUV_GNC
 
