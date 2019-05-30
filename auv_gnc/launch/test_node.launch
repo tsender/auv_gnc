@@ -1,5 +1,0 @@
-
-<launch>
-  <node pkg="auv_gnc" type="test_node" name="test_node" output="screen">
-  </node>
-</launch>

@@ -1,8 +1,9 @@
 #ifndef TRAJECTORY_ROTATION
 #define TRAJECTORY_ROTATION
 
-#include "auv_gnc/trajectory_generator_abstract.hpp"
-#include "auv_gnc/segment_planner.hpp"
+#include "auv_guidance/trajectory_generator_abstract.hpp"
+#include "auv_guidance/segment_planner.hpp"
+#include "auv_navigation/auv_math_lib.hpp"
 #include "eigen3/Eigen/Dense"
 #include "math.h"
 
@@ -18,13 +19,14 @@ class EulerRotation : public TrajectoryGenerator
 {
 private:
   SegmentPlanner *segPlanner_;
-  float cruiseSpeed_, acceleration_, delatTheta_;
+  float cruiseSpeed_, acceleration_, deltaTheta_;
   int accelSeq_, eulerAngle_;
   Vector3f initialAttitude_;
 
 public:
-  static const float DEFAULT_SPEED = 45;  // [deg/s]
-  static const float DEFAULT_ACCEL = 180; // [deg/s^2]
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  static const float DEFAULT_SPEED = M_PI/4;  // [pi/2 rad/s] = [45 deg/s]
+  static const float DEFAULT_ACCEL = M_PI; // [pi rad/s^2] = [deg/s^2]
   static const int ROLL = 0;
   static const int PITCH = 1;
   static const int YAW = 2;

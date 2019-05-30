@@ -1,8 +1,8 @@
 #ifndef EKF_TRANSLATION
 #define EKF_TRANSLATION
 
-#include "auv_gnc/kalman_filter.hpp"
-#include "auv_gnc/auv_math_lib.hpp"
+#include "auv_navigation/kalman_filter.hpp"
+#include "auv_navigation/auv_math_lib.hpp"
 #include "eigen3/Eigen/Dense"
 #include "math.h"
 #include <sstream>

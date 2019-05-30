@@ -1,0 +1,5 @@
+
+<launch>
+  <node pkg="auv_navigation" type="test_node" name="test_node" output="screen">
+  </node>
+</launch>

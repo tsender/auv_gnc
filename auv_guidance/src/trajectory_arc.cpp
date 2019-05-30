@@ -1,4 +1,4 @@
-#include "auv_gnc/trajectory_arc.hpp"
+#include "auv_guidance/trajectory_arc.hpp"
 
 namespace AUV_GNC
 {
@@ -69,7 +69,8 @@ Vector12f Arc::computeState(float time)
     Vector3f inertialPos = initialPos_ + insertionMap_ * inPlanePos;
     Vector3f inertialVelocity = insertionMap_ * inPlaneVelocity;
 
-    state.head<6>() << inertialPos, inertialVelocity;
+    state.head<3>() = inertialPos;
+    state.segment<3>(6) = inertialVelocity; // Will get expressed in body-frame at later step
 
     return state;
 }

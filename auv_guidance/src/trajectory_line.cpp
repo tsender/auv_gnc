@@ -1,4 +1,4 @@
-#include "auv_gnc/trajectory_line.hpp"
+#include "auv_guidance/trajectory_line.hpp"
 
 namespace AUV_GNC
 {
@@ -53,7 +53,8 @@ Vector12f Line::computeState(float time)
     Vector3f inertialPos = initialPos_ + insertionMap_ * segState(0);
     Vector3f inertialVelocity = insertionMap_ * segState(1);
 
-    state.head<6>() << inertialPos, inertialVelocity;
+    state.head<3>() = inertialPos;
+    state.segment<3>(6) = inertialVelocity; // Will get expressed in body-frame at later step
 
     return state;
 }

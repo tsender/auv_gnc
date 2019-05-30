@@ -1,4 +1,4 @@
-#include "auv_gnc/ekf_translation.hpp"
+#include "auv_navigation/ekf_translation.hpp"
 
 namespace AUV_GNC
 {
@@ -46,7 +46,7 @@ void EKFTranslation::init(const Ref<const VectorXf> &Xo)
 
 // Inertial Measurement Update - sensor readings are from inertial sensors
 // dt = time step [s] since last call of this update function
-// attitude = Euler Angles in the order of (yaw, pitch, roll)
+// attitude = Euler Angles in the order of (roll, pitch, yaw) [rad]
 // sensorMask = indicates if the sensor (pos, vel, and/or accel) has new data
 // Z = the actual sensor data, same format as Zmask
 VectorXf EKFTranslation::update(float dt, const Ref<const Vector3f> &attitude, const Ref<const Vector3i> &sensorMask, const Ref<const Matrix3f> &Zmat)

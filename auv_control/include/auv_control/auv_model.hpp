@@ -3,7 +3,7 @@
 
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"
-#include "auv_gnc/auv_math_lib.hpp"
+#include "auv_navigation/auv_math_lib.hpp"
 #include <cppad/cppad.hpp>
 
 using namespace Eigen;
@@ -72,12 +72,13 @@ public:
   static const float GRAVITY = 9.80665;    // [m/s^2]
   static const float WATER_DENSITY = 1000; // [kg/m^3]
 
+  // Useful indeces
   static const int xI_ = 0;    // Inertial X-pos, expressed in I-frame
   static const int yI_ = 1;    // Inertial Y-pos, expressed in I-frame
   static const int zI_ = 2;    // Inertial Z-pos, expressed in I-frame
-  static const int psi_ = 3;   // Yaw
+  static const int phi_ = 3;   // Roll
   static const int theta_ = 4; // Pitch
-  static const int phi_ = 5;   // Roll
+  static const int psi_ = 5;   // Yaw
   static const int U_ = 6;     // Inertial X velocity , expressed in B-frame
   static const int V_ = 7;     // Inertial Y velocity , expressed in B-frame
   static const int W_ = 8;     // Inertial Z velocity , expressed in B-frame

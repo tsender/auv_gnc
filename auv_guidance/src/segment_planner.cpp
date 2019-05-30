@@ -1,4 +1,4 @@
-#include "auv_gnc/segment_planner.hpp"
+#include "auv_guidance/segment_planner.hpp"
 
 namespace AUV_GNC
 {

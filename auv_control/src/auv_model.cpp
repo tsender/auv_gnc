@@ -1,4 +1,4 @@
-#include "auv_gnc/auv_model.hpp"
+#include "auv_control/auv_model.hpp"
 
 namespace AUV_GNC
 {
@@ -65,7 +65,7 @@ Vector6f AUVModel::getTotalThrustLoad(const Ref<const VectorXf> &thrusts)
 
 // Get forces/moments due to to vehicle's weight and buoyancy as expressed in the B-frame
 // Parameters:
-//      attitude = Eigen::Vector3f of yaw, pitch, and roll (in this order)
+//      attitude = Eigen::Vector3f of roll, pitch, and yaw [rad] (in this order)
 Vector6f AUVModel::getWeightLoad(const Ref<const Vector3f> &attitude)
 {
     Vector6f weightLoad;
@@ -111,11 +111,11 @@ Matrix12f AUVModel::getStateJacobian(const Ref<const Vector12f> &ref)
     Xdot.head<3>() = ADRotb2i * Xdot.segment<3>(U_);
 
     // 2. Time-derivatives of: psi, theta, and phi
-    Xdot[psi_] = (X[Q_] * CppAD::sin(X[phi_]) + X[R_] * CppAD::cos(X[phi_])) / cos(X[theta_]);
+    Xdot[phi_] = X[P_] + (X[Q_] * CppAD::sin(X[phi_]) + X[R_] * CppAD::cos(X[phi_])) * CppAD::tan(X[theta_]);
 
     Xdot[theta_] = X[Q_] * CppAD::cos(X[phi_]) - X[R_] * CppAD::sin(X[phi_]);
 
-    Xdot[phi_] = X[P_] + (X[Q_] * CppAD::sin(X[phi_]) + X[R_] * CppAD::cos(X[phi_])) * CppAD::tan(X[theta_]);
+    Xdot[psi_] = (X[Q_] * CppAD::sin(X[phi_]) + X[R_] * CppAD::cos(X[phi_])) / cos(X[theta_]);
 
     // 3. Time-derivatives of : U, V, W
     ADVectorXd transportUVW = X.segment<3>(P_).cross(X.segment<3>(U_)); // [p, q, r] x [u, v, w]

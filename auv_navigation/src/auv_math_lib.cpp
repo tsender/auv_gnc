@@ -1,4 +1,4 @@
-#include "auv_gnc/auv_math_lib.hpp"
+#include "auv_navigation/auv_math_lib.hpp"
 
 namespace AUV_GNC
 {
@@ -61,7 +61,8 @@ Matrix3f getEulerRotationMat(const Ref<const Vector3f> &attitude)
 //   angVelBF = ang. vel expressed in the body-frame
 MatrixXf sign(const Ref<const MatrixXf> &mat)
 {
-    MatrixXf signMat = mat;
+    MatrixXf signMat(mat.rows(), mat.cols());
+    signMat.setZero();
 
     for (int i = 0; i < mat.rows(); i++)
     {
@@ -71,36 +72,36 @@ MatrixXf sign(const Ref<const MatrixXf> &mat)
                 signMat(i, j) = 1;
             else if (mat(i, j) < 0)
                 signMat(i, j) = -1;
-            else
-                signMat(i, j) = 0;
         }
     }
     return signMat;
 }
 
-//template <typename T>
 int sign(double x)
 {
     if (x > 0)
         return 1;
-    else
+    else if (x < 0)
         return -1;
+    return 0;
 }
 
 int sign(float x)
 {
     if (x > 0)
         return 1;
-    else
+    else if (x < 0)
         return -1;
+    return 0;
 }
 
 int sign(int x)
 {
     if (x > 0)
         return 1;
-    else
+    else if (x < 0)
         return -1;
+    return 0;
 }
 
 Matrix3f skewSym(const Ref<const Vector3f> &v)
@@ -129,22 +130,24 @@ float triangularWave(float x, float period, float max)
     return max * 2 * (2 * x / period - f) * pow(-1, f);
 }
 
-// Returns value within the bounds of roll/yaw values: [-180, +180] deg
+// Returns value within the bounds of roll/yaw values: [-180, +180] deg = [-pi, +pi] rad
 // Follows sawtooth profile
+// x is in [rad]
 float rollYawMap(float x)
 {
-    return AUVMathLib::sawtoothWave(x, 360, 180);
+    return AUVMathLib::sawtoothWave(x, 2*M_PI, M_PI);
 }
 
-// Returns value within the bounds of pitch values: [-90, +90] deg
+// Returns value within the bounds of pitch values: [-90, +90] deg = [-pi/2, +pi/2] rad
 // Follows triangular profile
+// x is in [rad]
 float pitchMap(float x)
 {
-    return AUVMathLib::triangularWave(x, 360, 90);
+    return AUVMathLib::triangularWave(x, 2*M_PI, M_PI/2);
 }
 
 // Constrains roll/yaw to [-180,+180] deg and pitch to [-90,+90] deg
-// Attitude in (roll, pitch, yaw) [deg]
+// Attitude in (roll, pitch, yaw) [rad]
 Vector3f getConstrainedAttitude(const Ref<const Vector3f> attitude)
 {
     Vector3f constrainedAttitude = Vector3f::Zero();
@@ -155,7 +158,8 @@ Vector3f getConstrainedAttitude(const Ref<const Vector3f> attitude)
 }
 
 // Compute body-rates (PQR) from Euler angle rates (rollDot, pitchDot, yawDot) [same unit as input]
-// Attitude in (roll, pitch, yaw) [deg]
+// Attitude in (roll, pitch, yaw) [rad]
+// eulerDot in [rad/s]
 Vector3f eulerDot2PQR(const Ref<const Vector3f> attitude, const Ref<const Vector3f> eulerDot)
 {
     float phi = attitude(0);
@@ -175,6 +179,8 @@ Vector3f eulerDot2PQR(const Ref<const Vector3f> attitude, const Ref<const Vector
 }
 
 // Compute Euler angle rates (rollDot, pitchDot, yawDot) from body-rates (PQR) [same unit as input]
+// Attitude in [rad]
+// pqr in [rad/s]
 Vector3f pqr2EulerDot(const Ref<const Vector3f> attitude, const Ref<const Vector3f> pqr)
 {
     float phi = attitude(0);

@@ -1,7 +1,7 @@
 #ifndef POSE_EDKF_INTERFACE
 #define POSE_EDKF_INTERFACE
 
-#include "auv_gnc/auv_math_lib.hpp"
+#include "auv_navigation/auv_math_lib.hpp"
 #include "ros/ros.h"
 #include "eigen3/Eigen/Dense"
 #include "math.h"

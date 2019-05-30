@@ -1,8 +1,8 @@
 #ifndef TRAJECTORY_LINE
 #define TRAJECTORY_LINE
 
-#include "auv_gnc/trajectory_generator_abstract.hpp"
-#include "auv_gnc/segment_planner.hpp"
+#include "auv_guidance/trajectory_generator_abstract.hpp"
+#include "auv_guidance/segment_planner.hpp"
 #include "eigen3/Eigen/Dense"
 #include "math.h"
 
@@ -23,6 +23,7 @@ private:
   Vector3f initialPos_, finalPos_, insertionMap_;
 
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   static const float DEFAULT_SPEED = 0.5; // [m/s]
   static const float DEFAULT_ACCEL = 0.2; // [m/s^2]
 

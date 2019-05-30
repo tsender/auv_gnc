@@ -1,4 +1,4 @@
-#include "auv_gnc/test_node.hpp"
+#include "auv_navigation/test_node.hpp"
 
 namespace Eigen {
 template<typename X, typename BinOp>
