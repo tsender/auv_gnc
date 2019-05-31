@@ -3,17 +3,17 @@
 namespace AUV_GNC
 {
 AUVModel::AUVModel(float mass, float volume, float fluid_density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3f> &cob,
-                  const Ref<const Matrix62f> &drag, const Ref<const Matrix5Xf> &thrusters)
+                   const Ref<const Matrix62f> &drag, const Ref<const Matrix5Xf> &thrusters)
 {
-    mass_ = mass;          // [kg]
-    inertia_ = inertia; // 3x3 inertia matrix
-    volume_ = volume;           // [m^3]
-    density_ = fluid_density;   // [kg/m^3]
+    mass_ = mass;             // [kg]
+    inertia_ = inertia;       // 3x3 inertia matrix
+    volume_ = volume;         // [m^3]
+    density_ = fluid_density; // [kg/m^3]
     CoB_ = cob;
     dragCoeffs_ = drag;
     thrusters_ = thrusters;
     numThrusters_ = thrusters_.cols();
-    Fg_ = mass_ * GRAVITY;      // Force due to gravity [N]
+    Fg_ = mass_ * GRAVITY;              // Force due to gravity [N]
     Fb_ = density_ * volume_ * GRAVITY; // Buoyant Force [N]
 
     // Get primary and products of inertia elements
@@ -88,8 +88,10 @@ Vector6f AUVModel::getWeightLoad(const Ref<const Vector3f> &attitude)
 
 // Compute the 12x12 Jacobian of the A-matrix
 // DO NOT CHANGE !!!!!!
-Matrix12f AUVModel::getStateJacobian(const Ref<const Vector12f> &ref)
+Matrix12f AUVModel::getSystemMatrix(const Ref<const Vector12f> &ref)
 {
+    double q0 = sqrt(1.0 - pow(ref(q1_), 2) + pow(ref(q2_), 2) + pow(ref(q3_), 2)); // Get q0 from quaternion
+
     // Variables for Auto Diff.
     size_t n = 12, m = 3;
     ADVectorXd X(n), Xdot(n);
@@ -99,8 +101,19 @@ Matrix12f AUVModel::getStateJacobian(const Ref<const Vector12f> &ref)
     // Calling this function will BEGIN the recording sequence
     CppAD::Independent(X);
 
+    ADMatrixXd Rquat(3, 3);
+    Rquat(0, 0) = q0 * q0 + X[q1_] * X[q1_] - X[q2_] * X[q2_] - X[q3_] * X[q3_];
+    Rquat(1, 1) = q0 * q0 - X[q1_] * X[q1_] + X[q2_] * X[q2_] - X[q3_] * X[q3_];
+    Rquat(2, 2) = q0 * q0 - X[q1_] * X[q1_] - X[q2_] * X[q2_] + X[q3_] * X[q3_];
+    Rquat(0, 1) = 2 * X[q1_] * X[q2_] + 2 * q0 * X[q3_];
+    Rquat(1, 0) = 2 * X[q1_] * X[q2_] - 2 * q0 * X[q3_];
+    Rquat(0, 2) = 2 * X[q1_] * X[q3_] - 2 * q0 * X[q2_];
+    Rquat(2, 0) = 2 * X[q1_] * X[q3_] + 2 * q0 * X[q2_];
+    Rquat(1, 2) = 2 * X[q2_] * X[q3_] + 2 * q0 * X[q1_];
+    Rquat(2, 1) = 2 * X[q2_] * X[q3_] - 2 * q0 * X[q1_];
+
     // Get Rotation Matrices (Matrices filled by column-order)
-    ADMatrixXd ADRotX, ADRotY, ADRotZ, ADRoti2b, ADRotb2i;
+    /*ADMatrixXd ADRotX, ADRotY, ADRotZ, ADRoti2b, ADRotb2i;
     ADRotX << 1, 0, 0, 0, CppAD::cos(X[phi_]), -CppAD::sin(X[phi_]), 0, CppAD::sin(X[phi_]), CppAD::cos(X[phi_]);
     ADRotY << CppAD::cos(X[theta_]), 0, CppAD::sin(X[theta_]), 0, 1, 0, -CppAD::sin(X[theta_]), 0, CppAD::cos(X[theta_]);
     ADRotZ << CppAD::cos(X[psi_]), -CppAD::sin(X[psi_]), 0, CppAD::sin(X[psi_]), CppAD::cos(X[psi_]), 0, 0, 0, 1;
@@ -131,11 +144,11 @@ Matrix12f AUVModel::getStateJacobian(const Ref<const Vector12f> &ref)
     // 4. Time-derivatives of: P, Q, R
     ADVectorXd transportPQR;
     transportPQR = X.segment<3>(P_).cross(inertia_ * X.segment<3>(P_)); // [p, q, r] x I*[p, q, r]
-    Xdot.segment<3>(P_) = -inertia_.inverse() * transportPQR;
+    Xdot.segment<3>(P_) = -inertia_.inverse() * transportPQR;*/
 
     // Compute Jacobian
     std::vector<double> x;
-    for(int i = 0; i < 12; i++)
+    for (int i = 0; i < 12; i++)
         x.push_back(ref(i));
     CppAD::ADFun<double> f(X, Xdot);
     jac = f.Jacobian(x);
@@ -144,10 +157,10 @@ Matrix12f AUVModel::getStateJacobian(const Ref<const Vector12f> &ref)
     A.setZero();
 
     // Put jac elements into matrix format
-    for(int i = 0; i < 12; i++)
-        for(int j = 0; j < 12; j++)
-            A(i,j) = (float)jac[i*12 + j];
+    for (int i = 0; i < 12; i++)
+        for (int j = 0; j < 12; j++)
+            A(i, j) = (float)jac[i * 12 + j];
 
     return A;
 }
-}
+} // namespace AUV_GNC

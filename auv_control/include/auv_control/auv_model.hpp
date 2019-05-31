@@ -44,6 +44,7 @@ typedef Matrix<float, 12, 1> Vector12f;
 typedef Matrix<float, 9, 1> Vector9f;
 typedef Matrix<float, 6, 1> Vector6f;
 typedef Matrix<float, 5, 1> Vector5f;
+typedef Matrix<float, 4, 1> Vector4f;
 
 typedef Matrix<CppAD::AD<double>, Dynamic, Dynamic> ADMatrixXd;
 typedef Matrix<CppAD::AD<double>, Dynamic, 1> ADVectorXd;
@@ -73,28 +74,28 @@ public:
   static const float WATER_DENSITY = 1000; // [kg/m^3]
 
   // Useful indeces
-  static const int xI_ = 0;    // Inertial X-pos, expressed in I-frame
-  static const int yI_ = 1;    // Inertial Y-pos, expressed in I-frame
-  static const int zI_ = 2;    // Inertial Z-pos, expressed in I-frame
-  static const int phi_ = 3;   // Roll
-  static const int theta_ = 4; // Pitch
-  static const int psi_ = 5;   // Yaw
-  static const int U_ = 6;     // Inertial X velocity , expressed in B-frame
-  static const int V_ = 7;     // Inertial Y velocity , expressed in B-frame
-  static const int W_ = 8;     // Inertial Z velocity , expressed in B-frame
-  static const int P_ = 9;     // Inertial X angular velocity , expressed in B-frame
-  static const int Q_ = 10;    // Inertial Y angular velocity , expressed in B-frame
-  static const int R_ = 11;    // Inertial Z angular velocity , expressed in B-frame
+  static const int xI_ = 0; // Inertial X-pos, expressed in I-frame
+  static const int yI_ = 1; // Inertial Y-pos, expressed in I-frame
+  static const int zI_ = 2; // Inertial Z-pos, expressed in I-frame
+  static const int q1_ = 3; // Quaternion (I->B Frame) i-component
+  static const int q2_ = 4; // Quaternion (I->B Frame) j-component
+  static const int q3_ = 5; // Quaternion (I->B Frame) k-component
+  static const int U_ = 6;  // Inertial X velocity , expressed in B-frame
+  static const int V_ = 7;  // Inertial Y velocity , expressed in B-frame
+  static const int W_ = 8;  // Inertial Z velocity , expressed in B-frame
+  static const int P_ = 9;  // Inertial X angular velocity , expressed in B-frame
+  static const int Q_ = 10; // Inertial Y angular velocity , expressed in B-frame
+  static const int R_ = 11; // Inertial Z angular velocity , expressed in B-frame
 
   AUVModel(float mass, float volume, float fluid_density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3f> &cob,
-                  const Ref<const Matrix62f> &drag, const Ref<const Matrix5Xf> &thrusters);
+           const Ref<const Matrix62f> &drag, const Ref<const Matrix5Xf> &thrusters);
 
   void setThrustCoeffs();
   Vector6f getTotalThrustLoad(const Ref<const VectorXf> &thrusts);
   Vector6f getWeightLoad(const Ref<const Vector3f> &attitude);
 
   void setInitialLQRJacobianA();
-  Matrix12f getStateJacobian(const Ref<const Vector12f> &ref);
+  Matrix12f getSystemMatrix(const Ref<const Vector12f> &ref);
 };
 } // namespace AUV_GNC
 
