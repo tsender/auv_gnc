@@ -2,8 +2,8 @@
 
 namespace AUV_GNC
 {
-AUVModel::AUVModel(float mass, float volume, float fluid_density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3f> &cob,
-                   const Ref<const Matrix62f> &drag, const Ref<const Matrix5Xf> &thrusters)
+AUVModel::AUVModel(double mass, double volume, double fluid_density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3d> &cob,
+                   const Ref<const Matrix62d> &drag, const Ref<const Matrix5Xd> &thrusters)
 {
     mass_ = mass;             // [kg]
     inertia_ = inertia;       // 3x3 inertia matrix
@@ -16,15 +16,8 @@ AUVModel::AUVModel(float mass, float volume, float fluid_density, const Ref<cons
     Fg_ = mass_ * GRAVITY;              // Force due to gravity [N]
     Fb_ = density_ * volume_ * GRAVITY; // Buoyant Force [N]
 
-    // Get primary and products of inertia elements
-    Ixx_ = inertia_(0, 0);
-    Iyy_ = inertia_(1, 1);
-    Izz_ = inertia_(2, 2);
-    Ixy_ = -inertia_(0, 1);
-    Ixz_ = -inertia_(0, 2);
-    Iyz_ = -inertia_(1, 2);
-
     AUVModel::setThrustCoeffs();
+    AUVModel::setLinearizedInputMatrix();
 }
 
 // Set the thruster coefficients. Each column corresponds to a single thruster.
@@ -51,9 +44,9 @@ void AUVModel::setThrustCoeffs()
 // Get total thruster forces/moments as expressed in the B-frame
 // Parameters:
 //      thrusts = VectorXf of force exerted on vehicle by each thruster
-Vector6f AUVModel::getTotalThrustLoad(const Ref<const VectorXf> &thrusts)
+Vector6d AUVModel::getTotalThrustLoad(const Ref<const VectorXd> &thrusts)
 {
-    Vector6f thrustLoad;
+    Vector6d thrustLoad;
     thrustLoad.setZero();
 
     if (thrusts.rows() == numThrusters_)
@@ -63,10 +56,10 @@ Vector6f AUVModel::getTotalThrustLoad(const Ref<const VectorXf> &thrusts)
     return thrustLoad;
 }
 
-// Get forces/moments due to to vehicle's weight and buoyancy as expressed in the B-frame
+/*// Get forces/moments due to to vehicle's weight and buoyancy as expressed in the B-frame
 // Parameters:
 //      attitude = Eigen::Vector3f of roll, pitch, and yaw [rad] (in this order)
-Vector6f AUVModel::getWeightLoad(const Ref<const Vector3f> &attitude)
+Vector6d AUVModel::getWeightLoad(const Ref<const Vector3d> &attitude)
 {
     Vector6f weightLoad;
     weightLoad.setZero();
@@ -84,13 +77,15 @@ Vector6f AUVModel::getWeightLoad(const Ref<const Vector3f> &attitude)
     weightLoad.tail<3>() = CoB_.cross((-Fb_ * coeffs)); // Moments, expressed in B-frame
 
     return weightLoad;
-}
+}*/
 
-// Compute the 12x12 Jacobian of the A-matrix
-// DO NOT CHANGE !!!!!!
-Matrix12f AUVModel::getSystemMatrix(const Ref<const Vector12f> &ref)
+/**
+ * \param ref Reference state for a given time instance
+ * \brief Compute the 12x12 Jacobian of the A-matrix
+ */
+Matrix12d AUVModel::getLinearizedSystemMatrix(const Ref<const Vector12d> &ref)
 {
-    double q0 = sqrt(1.0 - pow(ref(q1_), 2) + pow(ref(q2_), 2) + pow(ref(q3_), 2)); // Get q0 from quaternion
+    double q0 = sqrt(1.0 - pow(ref(q1_), 2) + pow(ref(q2_), 2) + pow(ref(q3_), 2)); // Get q0 from unit quaternion
 
     // Variables for Auto Diff.
     size_t n = 12, m = 3;
@@ -98,19 +93,47 @@ Matrix12f AUVModel::getSystemMatrix(const Ref<const Vector12f> &ref)
     std::vector<double> jac(n * n); // Create nxn Jacobian matrix
 
     // MUST set X to contain INDEPENDENT variables
-    // Calling this function will BEGIN the recording sequence
-    CppAD::Independent(X);
+    CppAD::Independent(X); // Begin recording sequence
 
-    ADMatrixXd Rquat(3, 3);
-    Rquat(0, 0) = q0 * q0 + X[q1_] * X[q1_] - X[q2_] * X[q2_] - X[q3_] * X[q3_];
-    Rquat(1, 1) = q0 * q0 - X[q1_] * X[q1_] + X[q2_] * X[q2_] - X[q3_] * X[q3_];
-    Rquat(2, 2) = q0 * q0 - X[q1_] * X[q1_] - X[q2_] * X[q2_] + X[q3_] * X[q3_];
-    Rquat(0, 1) = 2 * X[q1_] * X[q2_] + 2 * q0 * X[q3_];
-    Rquat(1, 0) = 2 * X[q1_] * X[q2_] - 2 * q0 * X[q3_];
-    Rquat(0, 2) = 2 * X[q1_] * X[q3_] - 2 * q0 * X[q2_];
-    Rquat(2, 0) = 2 * X[q1_] * X[q3_] + 2 * q0 * X[q2_];
-    Rquat(1, 2) = 2 * X[q2_] * X[q3_] + 2 * q0 * X[q1_];
-    Rquat(2, 1) = 2 * X[q2_] * X[q3_] - 2 * q0 * X[q1_];
+    ADMatrix3d ADRquat;
+    ADRquat(0, 0) = q0 * q0 + X[q1_] * X[q1_] - X[q2_] * X[q2_] - X[q3_] * X[q3_];
+    ADRquat(1, 1) = q0 * q0 - X[q1_] * X[q1_] + X[q2_] * X[q2_] - X[q3_] * X[q3_];
+    ADRquat(2, 2) = q0 * q0 - X[q1_] * X[q1_] - X[q2_] * X[q2_] + X[q3_] * X[q3_];
+    ADRquat(0, 1) = 2 * X[q1_] * X[q2_] + 2 * q0 * X[q3_];
+    ADRquat(1, 0) = 2 * X[q1_] * X[q2_] - 2 * q0 * X[q3_];
+    ADRquat(0, 2) = 2 * X[q1_] * X[q3_] - 2 * q0 * X[q2_];
+    ADRquat(2, 0) = 2 * X[q1_] * X[q3_] + 2 * q0 * X[q2_];
+    ADRquat(1, 2) = 2 * X[q2_] * X[q3_] + 2 * q0 * X[q1_];
+    ADRquat(2, 1) = 2 * X[q2_] * X[q3_] - 2 * q0 * X[q1_];
+
+    // Translational States
+    // 1. Time derivatives of: xI, yI, zI (expressed in I-frame)
+    Xdot.head<3>() = ADRquat.transpose() * Xdot.segment<3>(U_);
+
+    // 2. Time-derivatives of: U, V, W (expressed in B-frame)
+    Vector3d weightAccel = Vector3d::Zero();
+    weightAccel(2) = (Fg_ - Fb_) / mass_;
+    ADVector3d transDrag; // Translation drag accel
+    transDrag(0) = (dragCoeffs_(0, 0) * X[U_] + 0.5 * AUVMathLib::sign(ref(U_)) * density_ * dragCoeffs_(0, 1) * X[U_] * X[U_]) / mass_;
+    transDrag(1) = (dragCoeffs_(1, 0) * X[V_] + 0.5 * AUVMathLib::sign(ref(V_)) * density_ * dragCoeffs_(1, 1) * X[V_] * X[V_]) / mass_;
+    transDrag(2) = (dragCoeffs_(2, 0) * X[W_] + 0.5 * AUVMathLib::sign(ref(W_)) * density_ * dragCoeffs_(2, 1) * X[W_] * X[W_]) / mass_;
+    Xdot.segment<3>(U_) = (ADRquat * weightAccel) - transDrag - (X.segment<3>(P_).cross(X.segment<3>(U_)));
+
+    // Rotational States
+    // 3. Time Derivatives of: q1, q2, q3 (remember, quaternion represents the B-frame orientation wrt to the I-frame)
+    ADMatrix3d qoIdentity;
+    Matrix3d identity = Matrix3d::Identity();
+    qoIdentity = identity * q0;
+    Xdot.segment<3>(q1_) = 0.5 * (qoIdentity * X.segment<3>(P_) + X.segment<3>(q1_).cross(X.segment<3>(P_)));
+
+    // 4. Time Derivatives of: P, Q, R (expressed in B-frame)
+    Vector3d forceBuoyancy = Vector3d::Zero();
+    forceBuoyancy(2) = -Fb_;
+    ADVector3d rotDrag; // Rotational drag accel
+    rotDrag(0) = (dragCoeffs_(3, 0) * X[P_] + 0.5 * AUVMathLib::sign(ref(P_)) * density_ * dragCoeffs_(3, 1) * X[P_] * X[P_]);
+    rotDrag(1) = (dragCoeffs_(4, 0) * X[Q_] + 0.5 * AUVMathLib::sign(ref(Q_)) * density_ * dragCoeffs_(4, 1) * X[Q_] * X[Q_]);
+    rotDrag(2) = (dragCoeffs_(5, 0) * X[R_] + 0.5 * AUVMathLib::sign(ref(R_)) * density_ * dragCoeffs_(5, 1) * X[R_] * X[R_]);
+    Xdot.segment<3>(P_) = inertia_.inverse() * (-rotDrag + CoB_.cross(ADRquat * forceBuoyancy) - X.segment<3>(P_).cross(inertia_ * X.segment<3>(P_)));
 
     // Get Rotation Matrices (Matrices filled by column-order)
     /*ADMatrixXd ADRotX, ADRotY, ADRotZ, ADRoti2b, ADRotb2i;
@@ -121,7 +144,7 @@ Matrix12f AUVModel::getSystemMatrix(const Ref<const Vector12f> &ref)
     ADRotb2i = ADRoti2b.transpose();     // Body to Inertial
 
     // 1. Time derivatives of: xI, yI, zI,
-    Xdot.head<3>() = ADRotb2i * Xdot.segment<3>(U_);
+    Xdot.head<3>() = ADRotb2i * X.segment<3>(U_);
 
     // 2. Time-derivatives of: psi, theta, and phi
     Xdot[phi_] = X[P_] + (X[Q_] * CppAD::sin(X[phi_]) + X[R_] * CppAD::cos(X[phi_])) * CppAD::tan(X[theta_]);
@@ -153,7 +176,7 @@ Matrix12f AUVModel::getSystemMatrix(const Ref<const Vector12f> &ref)
     CppAD::ADFun<double> f(X, Xdot);
     jac = f.Jacobian(x);
 
-    Matrix12f A;
+    Matrix12d A;
     A.setZero();
 
     // Put jac elements into matrix format
@@ -162,5 +185,24 @@ Matrix12f AUVModel::getSystemMatrix(const Ref<const Vector12f> &ref)
             A(i, j) = (float)jac[i * 12 + j];
 
     return A;
+}
+
+/**
+ * \brief Set the control input matrix.
+ */
+void AUVModel::setLinearizedInputMatrix()
+{
+    B_.resize(12, numThrusters_);
+    B_.setZero();
+    B_.block(U_, 0, 3, numThrusters_) = thrustCoeffs_.block(0, 0, 3, numThrusters_);
+    B_.block(P_, 0, 3, numThrusters_) = inertia_.inverse() * thrustCoeffs_.block(3, 0, 3, numThrusters_);
+}
+
+/**
+ * \brief Return the current control input matrix.
+ */
+Matrix12Xd AUVModel::getLinearizedInputMatrix()
+{
+    return B_;
 }
 } // namespace AUV_GNC

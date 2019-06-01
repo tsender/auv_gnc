@@ -33,22 +33,22 @@ struct ScalarBinaryOpTraits<X, CppAD::AD<X>, BinOp>
 
 namespace AUV_GNC
 {
-typedef Matrix<float, 12, 12> Matrix12f;
-typedef Matrix<float, 6, 2> Matrix62f;
-typedef Matrix<float, 3, 2> Matrix32f;
-typedef Matrix<float, 9, 9> Matrix9f;
-typedef Matrix<float, 6, Dynamic> Matrix6Xf;
-typedef Matrix<float, 5, Dynamic> Matrix5Xf;
+typedef Matrix<double, 12, 12> Matrix12d;
+typedef Matrix<double, 12, Dynamic> Matrix12Xd;
+typedef Matrix<double, 6, 2> Matrix62d;
+typedef Matrix<double, 6, Dynamic> Matrix6Xd;
+typedef Matrix<double, 5, Dynamic> Matrix5Xd;
 
-typedef Matrix<float, 12, 1> Vector12f;
-typedef Matrix<float, 9, 1> Vector9f;
-typedef Matrix<float, 6, 1> Vector6f;
-typedef Matrix<float, 5, 1> Vector5f;
-typedef Matrix<float, 4, 1> Vector4f;
+typedef Matrix<double, 12, 1> Vector12d;
+typedef Matrix<double, 9, 1> Vector9d;
+typedef Matrix<double, 6, 1> Vector6d;
+typedef Matrix<double, 5, 1> Vector5d;
+typedef Matrix<double, 4, 1> Vector4d;
 
-typedef Matrix<CppAD::AD<double>, Dynamic, Dynamic> ADMatrixXd;
+typedef Matrix<CppAD::AD<double>, 3, 3> ADMatrix3d;
 typedef Matrix<CppAD::AD<double>, Dynamic, 1> ADVectorXd;
-typedef Matrix<CppAD::AD<double>, 1, Dynamic> ADRowVectorXd;
+typedef Matrix<CppAD::AD<double>, 3, 1> ADVector3d;
+//typedef Matrix<CppAD::AD<double>, 1, Dynamic> ADRowVectorXd;
 
 // AUV Model
 // Contains information about an AUV's attributes: mass, volume inertia, drag, and thruster properties
@@ -56,14 +56,14 @@ typedef Matrix<CppAD::AD<double>, 1, Dynamic> ADRowVectorXd;
 class AUVModel
 {
 private:
-  float mass_, volume_, density_, Fg_, Fb_;
-  float Ixx_, Ixy_, Ixz_, Iyy_, Iyz_, Izz_;
+  double mass_, volume_, density_, Fg_, Fb_;
   int numThrusters_;
   Matrix3d inertia_; // Inertia 3x3 matrix
-  Matrix62f dragCoeffs_;
-  Matrix5Xf thrusters_;
-  Matrix6Xf thrustCoeffs_;
-  Vector3f CoB_; // Center of buoyancy position relative to CoM
+  Matrix62d dragCoeffs_;
+  Matrix5Xd thrusters_;
+  Matrix6Xd thrustCoeffs_;
+  Vector3d CoB_; // Center of buoyancy position relative to CoM
+  Matrix12Xd B_; // Linearized control input matrix
 
 public:
   // Calling this macro will fix alignment issues on members that are fixed-size Eigen objects
@@ -77,25 +77,26 @@ public:
   static const int xI_ = 0; // Inertial X-pos, expressed in I-frame
   static const int yI_ = 1; // Inertial Y-pos, expressed in I-frame
   static const int zI_ = 2; // Inertial Z-pos, expressed in I-frame
-  static const int q1_ = 3; // Quaternion (I->B Frame) i-component
-  static const int q2_ = 4; // Quaternion (I->B Frame) j-component
-  static const int q3_ = 5; // Quaternion (I->B Frame) k-component
-  static const int U_ = 6;  // Inertial X velocity , expressed in B-frame
-  static const int V_ = 7;  // Inertial Y velocity , expressed in B-frame
-  static const int W_ = 8;  // Inertial Z velocity , expressed in B-frame
+  static const int U_ = 3;  // Inertial X velocity , expressed in B-frame
+  static const int V_ = 4;  // Inertial Y velocity , expressed in B-frame
+  static const int W_ = 5;  // Inertial Z velocity , expressed in B-frame
+  static const int q1_ = 6; // Quaternion (I->B Frame) i-component
+  static const int q2_ = 7; // Quaternion (I->B Frame) j-component
+  static const int q3_ = 8; // Quaternion (I->B Frame) k-component
   static const int P_ = 9;  // Inertial X angular velocity , expressed in B-frame
   static const int Q_ = 10; // Inertial Y angular velocity , expressed in B-frame
   static const int R_ = 11; // Inertial Z angular velocity , expressed in B-frame
 
-  AUVModel(float mass, float volume, float fluid_density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3f> &cob,
-           const Ref<const Matrix62f> &drag, const Ref<const Matrix5Xf> &thrusters);
+  AUVModel(double mass, double volume, double fluid_density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3d> &cob,
+           const Ref<const Matrix62d> &drag, const Ref<const Matrix5Xd> &thrusters);
 
   void setThrustCoeffs();
-  Vector6f getTotalThrustLoad(const Ref<const VectorXf> &thrusts);
-  Vector6f getWeightLoad(const Ref<const Vector3f> &attitude);
+  Vector6d getTotalThrustLoad(const Ref<const VectorXd> &thrusts);
+  //Vector6d getWeightLoad(const Ref<const Vector3d> &attitude);
 
-  void setInitialLQRJacobianA();
-  Matrix12f getSystemMatrix(const Ref<const Vector12f> &ref);
+  Matrix12d getLinearizedSystemMatrix(const Ref<const Vector12d> &ref);
+  void setLinearizedInputMatrix();
+  Matrix12Xd getLinearizedInputMatrix();
 };
 } // namespace AUV_GNC
 
