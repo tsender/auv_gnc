@@ -3,6 +3,7 @@
 
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"
+#include "auv_control/nominal_thrust_solver.hpp"
 #include "auv_navigation/auv_math_lib.hpp"
 #include <cppad/cppad.hpp>
 
@@ -37,6 +38,7 @@ typedef Matrix<double, 12, 12> Matrix12d;
 typedef Matrix<double, 12, Dynamic> Matrix12Xd;
 typedef Matrix<double, 6, 2> Matrix62d;
 typedef Matrix<double, 6, Dynamic> Matrix6Xd;
+typedef Matrix<double, 6, 10> Matrix610d;
 typedef Matrix<double, 5, Dynamic> Matrix5Xd;
 
 typedef Matrix<double, 12, 1> Vector12d;
@@ -69,9 +71,9 @@ public:
   // Calling this macro will fix alignment issues on members that are fixed-size Eigen objects
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  static const float PI = 3.141592653;
-  static const float GRAVITY = 9.80665;    // [m/s^2]
-  static const float WATER_DENSITY = 1000; // [kg/m^3]
+  static const double PI = 3.141592653;
+  static const double GRAVITY = 9.80665;    // [m/s^2]
+  static const double WATER_DENSITY = 1000; // [kg/m^3]
 
   // Useful indeces
   static const int xI_ = 0; // Inertial X-pos, expressed in I-frame
@@ -87,8 +89,8 @@ public:
   static const int Q_ = 10; // Inertial Y angular velocity , expressed in B-frame
   static const int R_ = 11; // Inertial Z angular velocity , expressed in B-frame
 
-  AUVModel(double mass, double volume, double fluid_density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3d> &cob,
-           const Ref<const Matrix62d> &drag, const Ref<const Matrix5Xd> &thrusters);
+  AUVModel(double mass, double volume, double fluid_density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3d> &CoB,
+           const Ref<const Matrix62d> &dragCoeffs, const Ref<const Matrix5Xd> &thrusters);
 
   void setThrustCoeffs();
   Vector6d getTotalThrustLoad(const Ref<const VectorXd> &thrusts);

@@ -44,7 +44,7 @@ void GetRotationYPR2Body(Ref<MatrixXf> R, float yaw, float pitch, float roll)
     R(2, 2) = c_phi * c_theta;
 }
 
-TestNode::TestNode() : nh("pose_edkf")
+TestNode::TestNode() : nh("~")
 {
     /*int n = 2;
     int m = 3;
@@ -179,6 +179,45 @@ TestNode::TestNode() : nh("pose_edkf")
     test2 << 2, 4, 6;
     test = test1.cwiseProduct(test2);
     cout << "test: " << test << endl;
+
+    double array[4] = {2,0,1,-3};
+    double *aPtr = array;
+    Eigen::Map<const Eigen::Matrix<double, 4, 1> > arrayEigen(aPtr);
+    cout << "Mapped array pointer: " << arrayEigen << endl;
+
+    //Eigen::Map<const Eigen::Quaternion<double> > quat2(aPtr);
+    Eigen::Quaterniond quat1(aPtr);
+    Eigen::Quaterniond quat2(2,0,1,-3);
+    Vector3d vec1;
+    vec1 << 1, 2, 3;
+    cout << "Mapped quaternion from array pointer: " << quat1.w() << endl << quat1.vec() << endl;
+    cout << "Mapped quaternion2 from array: " << quat2.w() << endl << quat2.vec() << endl;
+    cout << "Quaternion2 * Vector3d: " << quat2 * vec1 << endl;
+
+    double w, x, y, z;
+    nh.getParam("w", w);
+    nh.getParam("x", x);
+    nh.getParam("y", y);
+    nh.getParam("z", z);
+    Eigen::Quaterniond quat3(w,x,y,z);
+    Vector3d vWorld;
+    vWorld << 0.707, 0.707, 0;
+    cout << "Eigen directly, Body roll 90 deg, rotated vector: " << quat3 * vWorld << endl;
+    cout << "Eigen toRotMat, Body roll 90 deg, rotated vector: " << quat3.toRotationMatrix() * vWorld << endl;
+
+    Eigen::Matrix3d Rquat;
+    Eigen::Matrix<double, 4, 1> q;
+    q << w, x, y, z;
+    Rquat(0, 0) = q(0) * q(0) + q(1) * q(1) - q(2) * q(2) - q(3) * q(3);
+    Rquat(1, 1) = q(0) * q(0) - q(1) * q(1) + q(2) * q(2) - q(3) * q(3);
+    Rquat(2, 2) = q(0) * q(0) - q(1) * q(1) - q(2) * q(2) + q(3) * q(3);
+    Rquat(0, 1) = 2 * q(1) * q(2) + 2 * q(0) * q(3);
+    Rquat(1, 0) = 2 * q(1) * q(2) - 2 * q(0) * q(3);
+    Rquat(0, 2) = 2 * q(1) * q(3) - 2 * q(0) * q(2);
+    Rquat(2, 0) = 2 * q(1) * q(3) + 2 * q(0) * q(2);
+    Rquat(1, 2) = 2 * q(2) * q(3) + 2 * q(0) * q(1);
+    Rquat(2, 1) = 2 * q(2) * q(3) - 2 * q(0) * q(1);
+    cout << "Mine, Body roll 90 deg, rotated vector: " << Rquat * vWorld << endl;
 }
 
 void TestNode::copy(const Ref<const MatrixXf> &m)

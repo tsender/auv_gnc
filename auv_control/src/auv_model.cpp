@@ -2,15 +2,15 @@
 
 namespace AUV_GNC
 {
-AUVModel::AUVModel(double mass, double volume, double fluid_density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3d> &cob,
-                   const Ref<const Matrix62d> &drag, const Ref<const Matrix5Xd> &thrusters)
+AUVModel::AUVModel(double mass, double volume, double fluid_density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3d> &CoB,
+                   const Ref<const Matrix62d> &dragCoeffs, const Ref<const Matrix5Xd> &thrusters)
 {
     mass_ = mass;             // [kg]
     inertia_ = inertia;       // 3x3 inertia matrix
     volume_ = volume;         // [m^3]
     density_ = fluid_density; // [kg/m^3]
-    CoB_ = cob;
-    dragCoeffs_ = drag;
+    CoB_ = CoB;
+    dragCoeffs_ = dragCoeffs;
     thrusters_ = thrusters;
     numThrusters_ = thrusters_.cols();
     Fg_ = mass_ * GRAVITY;              // Force due to gravity [N]

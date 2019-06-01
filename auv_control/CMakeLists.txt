@@ -6,12 +6,12 @@ project(auv_control)
 
 
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
   auv_navigation
   auv_guidance
 )
 
 find_package(Eigen3 REQUIRED)
+find_package(Ceres REQUIRED)
 
 ###########
 ## Build ##
@@ -19,10 +19,10 @@ find_package(Eigen3 REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp auv_navigation auv_guidance
-  DEPENDS ${Eigen3_LIBRARIES} 
+  CATKIN_DEPENDS auv_navigation auv_guidance
+  DEPENDS ${Eigen3_LIBRARIES} ${CERES_LIBRARIES}
 )
-include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS})
 
 #add_executable(test_node src/test_node.cpp src/auv_math_lib.cpp)
 #target_link_libraries(test_node ${catkin_LIBRARIES})
@@ -32,5 +32,5 @@ add_library(${PROJECT_NAME}_lib
     src/auv_model.cpp
 )
 
-#target_include_directories(${PROJECT_NAME}_lib PUBLIC include ${Eigen3_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES})
+target_include_directories(${PROJECT_NAME}_lib PUBLIC include ${Eigen3_INCLUDE_DIRS})
+#target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${CERES_LIBRARIES})
