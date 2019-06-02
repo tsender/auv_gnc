@@ -143,7 +143,7 @@ TestNode::TestNode() : nh("~")
     f.Dependent(X, Y);
     jac = f.Jacobian(x); // Jacobian for operation sequence
     cout << "New f'(-2),1 = " << jac[0] << endl;
-    cout << "New f'(-2),2 = " << jac[1] << endl;*/
+    cout << "New f'(-2),2 = " << jac[1] << endl;
 
     Matrix3d id = Matrix3d::Identity();
     Matrix3d mat;
@@ -178,7 +178,7 @@ TestNode::TestNode() : nh("~")
     test1 << 1, 2, 3;
     test2 << 2, 4, 6;
     test = test1.cwiseProduct(test2);
-    cout << "test: " << test << endl;
+    cout << "test: " << test << endl;*/
 
     double array[4] = {2,0,1,-3};
     double *aPtr = array;

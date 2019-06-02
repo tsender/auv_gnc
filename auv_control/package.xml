@@ -51,8 +51,8 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>eigen</build_depend>
   <build_depend>libceres-dev</build_depend>
-  <depend>auv_navigation</depend>
-  <depend>auv_guidance</depend>
+  <build_depend>auv_navigation</build_depend>
+  <build_depend>auv_guidance</build_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

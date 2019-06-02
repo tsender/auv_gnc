@@ -6,6 +6,8 @@
 #include "eigen3/Eigen/Core"
 #include "auv_navigation/auv_math_lib.hpp"
 
+using namespace Eigen;
+
 namespace AUV_GNC
 {
 typedef Matrix<double, 6, 1> Vector6d;
@@ -40,7 +42,7 @@ public:
     thrustCoeffs_ = thrustCoeffs;
     quaternion_ = quaternion;
     state_ = state;
-    stateDot = stateDot;
+    stateDot_ = stateDot;
   }
 
   template <typename T>
@@ -62,8 +64,11 @@ public:
     Eigen::Map<Eigen::Matrix<T, 10, 1> > residuals(residuals_ptr);
 
     // Compute quaternion
-    Eigen::Map<const Eigen::Matrix<T, 4, 1> > q(quaternion_);
-    Eigen::Matrix<T, 3, 3> Rquat;
+    // Using Eigen::Quaternion: quaternion * vector = rotates vector by the described axis-angle
+    // So: B-frame vector = quaternion.conjugate() * I-frame vector
+    // So: I-frame vector = quaternion * B-frame vector
+    Eigen::Map<const Eigen::Matrix<T, 4, 1> > quat(quaternion_[0], quaternion_[1], quaternion_[2], quaternion_[3]);
+    /*Eigen::Matrix<T, 3, 3> Rquat;
     Rquat(0, 0) = q(0) * q(0) + q(1) * q(1) - q(2) * q(2) - q(3) * q(3);
     Rquat(1, 1) = q(0) * q(0) - q(1) * q(1) + q(2) * q(2) - q(3) * q(3);
     Rquat(2, 2) = q(0) * q(0) - q(1) * q(1) - q(2) * q(2) + q(3) * q(3);
@@ -72,7 +77,7 @@ public:
     Rquat(0, 2) = 2 * q(1) * q(3) - 2 * q(0) * q(2);
     Rquat(2, 0) = 2 * q(1) * q(3) + 2 * q(0) * q(2);
     Rquat(1, 2) = 2 * q(2) * q(3) + 2 * q(0) * q(1);
-    Rquat(2, 1) = 2 * q(2) * q(3) - 2 * q(0) * q(1);
+    Rquat(2, 1) = 2 * q(2) * q(3) - 2 * q(0) * q(1);*/
 
     // Translational Equations
     Eigen::Matrix<T, 3, 1> weightAccel, transDrag;
@@ -83,7 +88,10 @@ public:
     transDrag(0) = (dragCoeffs(0, 0) * state(0) + T(0.5 * AUVMathLib::sign(state(0)) * density_) * dragCoeffs(0, 1) * state(0) * state(0)) / T(mass_);
     transDrag(1) = (dragCoeffs(1, 0) * state(1) + T(0.5 * AUVMathLib::sign(state(1)) * density_) * dragCoeffs(1, 1) * state(1) * state(1)) / T(mass_);
     transDrag(2) = (dragCoeffs(2, 0) * state(2) + T(0.5 * AUVMathLib::sign(state(2)) * density_) * dragCoeffs(2, 1) * state(2) * state(2)) / T(mass_);
-    residuals.template head<3>() = (stateDot.template head<3>()) - (Rquat * weightAccel) - transDrag - ((state.template tail<3>()).cross(state.template head<3>()));
+    residuals.template head<3>() = (stateDot.template head<3>()) - 
+                                  ((quat.conjugate() * weightAccel) - transDrag - 
+                                  (state.template tail<3>()).cross(state.template head<3>()) + 
+                                  (thrustCoeffs.template block<3,10>(0,0)) * forces);
 
     // Rotational Equations
     Eigen::Matrix<T, 3, 1> forceBuoyancy, rotDrag;
@@ -94,7 +102,10 @@ public:
     rotDrag(0) = (dragCoeffs(3, 0) * state(3) + T(0.5 * AUVMathLib::sign(state(3)) * density_) * dragCoeffs(3, 1) * state(3) * state(3));
     rotDrag(1) = (dragCoeffs(4, 0) * state(4) + T(0.5 * AUVMathLib::sign(state(4)) * density_) * dragCoeffs(4, 1) * state(4) * state(4));
     rotDrag(2) = (dragCoeffs(5, 0) * state(5) + T(0.5 * AUVMathLib::sign(state(5)) * density_) * dragCoeffs(5, 1) * state(5) * state(5));
-    residuals.template tail<3>() = (stateDot.template tail<3>()) - inertia.inverse() * (-rotDrag + CoB.cross(Rquat * forceBuoyancy) - (state.template tail<3>()).cross(inertia * (state.template tail<3>())));
+    residuals.template tail<3>() = (stateDot.template tail<3>()) - 
+                                  (inertia.inverse() * (-rotDrag + CoB.cross(quat.conjugate() * forceBuoyancy) - 
+                                  (state.template tail<3>()).cross(inertia * (state.template tail<3>()))) +
+                                  (thrustCoeffs.template block<3,10>(3,0)) * forces);
     return true;
   }
 };

@@ -6,7 +6,6 @@ project(auv_guidance)
 
 
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
   auv_navigation
 )
 
@@ -18,14 +17,8 @@ find_package(Eigen3 REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp auv_navigation
-  DEPENDS ${Eigen3_LIBRARIES} 
 )
 include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
-
-#add_executable(test_node src/test_node.cpp src/auv_math_lib.cpp)
-#target_link_libraries(test_node ${catkin_LIBRARIES})
-#add_dependencies(test_node ${catkin_EXPORTED_TARGETS})
 
 add_library(${PROJECT_NAME}_lib
     src/segment_planner.cpp
@@ -35,5 +28,12 @@ add_library(${PROJECT_NAME}_lib
     #src/parallel_trajectory.cpp
 )
 
-#target_include_directories(${PROJECT_NAME}_lib PUBLIC include ${Eigen3_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
+
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
+
+install(TARGETS ${PROJECT_NAME}_lib
+        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)

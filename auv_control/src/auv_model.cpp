@@ -95,7 +95,7 @@ Matrix12d AUVModel::getLinearizedSystemMatrix(const Ref<const Vector12d> &ref)
     // MUST set X to contain INDEPENDENT variables
     CppAD::Independent(X); // Begin recording sequence
 
-    ADMatrix3d ADRquat;
+    /*ADMatrix3d ADRquat; // This math converts I-frame vector to B-frame vector
     ADRquat(0, 0) = q0 * q0 + X[q1_] * X[q1_] - X[q2_] * X[q2_] - X[q3_] * X[q3_];
     ADRquat(1, 1) = q0 * q0 - X[q1_] * X[q1_] + X[q2_] * X[q2_] - X[q3_] * X[q3_];
     ADRquat(2, 2) = q0 * q0 - X[q1_] * X[q1_] - X[q2_] * X[q2_] + X[q3_] * X[q3_];
@@ -104,11 +104,15 @@ Matrix12d AUVModel::getLinearizedSystemMatrix(const Ref<const Vector12d> &ref)
     ADRquat(0, 2) = 2 * X[q1_] * X[q3_] - 2 * q0 * X[q2_];
     ADRquat(2, 0) = 2 * X[q1_] * X[q3_] + 2 * q0 * X[q2_];
     ADRquat(1, 2) = 2 * X[q2_] * X[q3_] + 2 * q0 * X[q1_];
-    ADRquat(2, 1) = 2 * X[q2_] * X[q3_] - 2 * q0 * X[q1_];
+    ADRquat(2, 1) = 2 * X[q2_] * X[q3_] - 2 * q0 * X[q1_];*/
+    // Using Eigen::Quaternion: quaternion * vector = rotates vector by the axis-angle specified
+    // So: B-frame vector = quaternion.conjugate() * I-frame vector
+    // So: I-frame vector = quaternion * B-frame vector
+    Eigen::Quaternion<CppAD::AD<double> > ADquat(q0, X[q1_], X[q2_], X[q3_]);
 
     // Translational States
     // 1. Time derivatives of: xI, yI, zI (expressed in I-frame)
-    Xdot.head<3>() = ADRquat.transpose() * Xdot.segment<3>(U_);
+    Xdot.head<3>() = ADquat * Xdot.segment<3>(U_);
 
     // 2. Time-derivatives of: U, V, W (expressed in B-frame)
     Vector3d weightAccel = Vector3d::Zero();
@@ -117,7 +121,7 @@ Matrix12d AUVModel::getLinearizedSystemMatrix(const Ref<const Vector12d> &ref)
     transDrag(0) = (dragCoeffs_(0, 0) * X[U_] + 0.5 * AUVMathLib::sign(ref(U_)) * density_ * dragCoeffs_(0, 1) * X[U_] * X[U_]) / mass_;
     transDrag(1) = (dragCoeffs_(1, 0) * X[V_] + 0.5 * AUVMathLib::sign(ref(V_)) * density_ * dragCoeffs_(1, 1) * X[V_] * X[V_]) / mass_;
     transDrag(2) = (dragCoeffs_(2, 0) * X[W_] + 0.5 * AUVMathLib::sign(ref(W_)) * density_ * dragCoeffs_(2, 1) * X[W_] * X[W_]) / mass_;
-    Xdot.segment<3>(U_) = (ADRquat * weightAccel) - transDrag - (X.segment<3>(P_).cross(X.segment<3>(U_)));
+    Xdot.segment<3>(U_) = (ADquat.conjugate() * weightAccel) - transDrag - (X.segment<3>(P_).cross(X.segment<3>(U_)));
 
     // Rotational States
     // 3. Time Derivatives of: q1, q2, q3 (remember, quaternion represents the B-frame orientation wrt to the I-frame)
@@ -133,7 +137,7 @@ Matrix12d AUVModel::getLinearizedSystemMatrix(const Ref<const Vector12d> &ref)
     rotDrag(0) = (dragCoeffs_(3, 0) * X[P_] + 0.5 * AUVMathLib::sign(ref(P_)) * density_ * dragCoeffs_(3, 1) * X[P_] * X[P_]);
     rotDrag(1) = (dragCoeffs_(4, 0) * X[Q_] + 0.5 * AUVMathLib::sign(ref(Q_)) * density_ * dragCoeffs_(4, 1) * X[Q_] * X[Q_]);
     rotDrag(2) = (dragCoeffs_(5, 0) * X[R_] + 0.5 * AUVMathLib::sign(ref(R_)) * density_ * dragCoeffs_(5, 1) * X[R_] * X[R_]);
-    Xdot.segment<3>(P_) = inertia_.inverse() * (-rotDrag + CoB_.cross(ADRquat * forceBuoyancy) - X.segment<3>(P_).cross(inertia_ * X.segment<3>(P_)));
+    Xdot.segment<3>(P_) = inertia_.inverse() * (-rotDrag + CoB_.cross(ADquat.conjugate() * forceBuoyancy) - X.segment<3>(P_).cross(inertia_ * X.segment<3>(P_)));
 
     // Get Rotation Matrices (Matrices filled by column-order)
     /*ADMatrixXd ADRotX, ADRotY, ADRotZ, ADRoti2b, ADRotb2i;

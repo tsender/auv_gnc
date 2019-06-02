@@ -17,8 +17,8 @@ find_package(Eigen3)
 
 catkin_package(
   INCLUDE_DIRS include
+  #LIBRARIES ${PROJECT_NAME}_lib
   CATKIN_DEPENDS roscpp
-  DEPENDS ${Eigen3_LIBRARIES} 
 )
 include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
 
@@ -32,5 +32,12 @@ add_library(${PROJECT_NAME}_lib
     src/ekf_translation.cpp
 )
 
-#target_include_directories(${PROJECT_NAME}_lib PUBLIC include ${Eigen3_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
+
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
+
+install(TARGETS ${PROJECT_NAME}_lib
+        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
