@@ -67,6 +67,13 @@ private:
   Vector3d CoB_; // Center of buoyancy position relative to CoM
   Matrix12Xd B_; // Linearized control input matrix
 
+  // Ceres Problem
+  ceres::Problem nominalThrustProblem;
+  ceres::Solver::Options nominalThrustOptions;
+  ceres::Solver::Summary nominalThrustSummary;
+  double nominalForces[10];
+  double quaternion_[4], accelState_[6], accelStateDot_[6];
+
 public:
   // Calling this macro will fix alignment issues on members that are fixed-size Eigen objects
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

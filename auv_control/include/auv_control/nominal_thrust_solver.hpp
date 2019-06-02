@@ -21,8 +21,8 @@ private:
   Vector3d CoB_;
   Matrix62d dragCoeffs_;
   Matrix610d thrustCoeffs_; // Thrust coefficients (effective contributions of each thruster for force and moments)
-  double *state_;           // (Pointer) State vector (U, V, W, P, Q, R)
-  double *stateDot_;        // (Pointer) Time derivative of state vector
+  double *accelState_;           // (Pointer) Acceleration state vector (U, V, W, P, Q, R)
+  double *accelStateDot_;        // (Pointer) Time derivative of acceleration state vector
   double *quaternion_;       // (Pointer) to quaternion for orientation
 
   static const double GRAVITY = 9.80665;
@@ -30,7 +30,7 @@ private:
 public:
   NominalThrustSolver(double Fg, double Fb, double density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3d> &CoB,
                       const Ref<const Matrix62d> &dragCoeffs, const Ref<const Matrix610d> &thrustCoeffs, 
-                      double *quaternion, double *state, double *stateDot)
+                      double *quaternion, double *accelState, double *accelStateDot)
   {
     Fg_ = Fg;
     Fb_ = Fb;
@@ -41,71 +41,68 @@ public:
     dragCoeffs_ = dragCoeffs;
     thrustCoeffs_ = thrustCoeffs;
     quaternion_ = quaternion;
-    state_ = state;
-    stateDot_ = stateDot;
+    accelState_ = accelState;
+    accelStateDot_ = accelStateDot;
   }
 
   template <typename T>
-  bool operator()(const T *const nominal_forces, T *residuals_ptr) const
+  bool operator()(const T *const nominalForces, T *residuals) const
   {
     // NOTE: MUST have extra space in nested <> to compile: "<<...> >(...)"
     //                                                             ^
 
-    // Map private variables to Eigen objects with Jet type
-    Eigen::Map<const Eigen::Matrix<T, 6, 2> > dragCoeffs(dragCoeffs_);
-    Eigen::Map<const Eigen::Matrix<T, 6, 10> > thrustCoeffs(thrustCoeffs_);
-    Eigen::Map<const Eigen::Matrix<T, 3, 3> > inertia(inertia_);
-    Eigen::Map<const Eigen::Matrix<T, 3, 1> > CoB(CoB_);
-    Eigen::Map<const Eigen::Matrix<T, 6, 1> > state(state_);
-    Eigen::Map<const Eigen::Matrix<T, 6, 1> > stateDot(stateDot_);
+    // Cast Eigen objects to Jet type
+    Eigen::Matrix<T, 6, 2> dragCoeffsT = dragCoeffs_.cast<T>();
+    Eigen::Matrix<T, 6, 10> thrustCoeffsT = thrustCoeffs_.cast<T>();
+    Eigen::Matrix<T, 3, 3> inertiaT = inertia_.cast<T>();
+    Eigen::Matrix<T, 3, 1> CoBT = CoB_.cast<T>();
+
+    // Cast accelState_ and accelStateDot_ to Jet type
+    Eigen::Matrix<T, 6, 1> accelStateT, accelStateDotT;
+    for (int i = 0; i < 6; i++)
+    {
+      accelStateT(i) = T(accelState_[i]);
+      accelStateDotT(i) = T(accelStateDot_[i]);
+    }
 
     // Map ceres parameters and residuals to Eigen object with Jet type
-    Eigen::Map<const Eigen::Matrix<T, 10, 1> > forces(nominal_forces);
-    Eigen::Map<Eigen::Matrix<T, 10, 1> > residuals(residuals_ptr);
+    Eigen::Map<const Eigen::Matrix<T, 10, 1> > nominalForcesT(nominalForces);
+    Eigen::Map<Eigen::Matrix<T, 10, 1> > residualsT(residuals);
 
     // Compute quaternion
     // Using Eigen::Quaternion: quaternion * vector = rotates vector by the described axis-angle
     // So: B-frame vector = quaternion.conjugate() * I-frame vector
     // So: I-frame vector = quaternion * B-frame vector
-    Eigen::Map<const Eigen::Matrix<T, 4, 1> > quat(quaternion_[0], quaternion_[1], quaternion_[2], quaternion_[3]);
-    /*Eigen::Matrix<T, 3, 3> Rquat;
-    Rquat(0, 0) = q(0) * q(0) + q(1) * q(1) - q(2) * q(2) - q(3) * q(3);
-    Rquat(1, 1) = q(0) * q(0) - q(1) * q(1) + q(2) * q(2) - q(3) * q(3);
-    Rquat(2, 2) = q(0) * q(0) - q(1) * q(1) - q(2) * q(2) + q(3) * q(3);
-    Rquat(0, 1) = 2 * q(1) * q(2) + 2 * q(0) * q(3);
-    Rquat(1, 0) = 2 * q(1) * q(2) - 2 * q(0) * q(3);
-    Rquat(0, 2) = 2 * q(1) * q(3) - 2 * q(0) * q(2);
-    Rquat(2, 0) = 2 * q(1) * q(3) + 2 * q(0) * q(2);
-    Rquat(1, 2) = 2 * q(2) * q(3) + 2 * q(0) * q(1);
-    Rquat(2, 1) = 2 * q(2) * q(3) - 2 * q(0) * q(1);*/
+    Eigen::Quaterniond quat(quaternion_[0], quaternion_[1], quaternion_[2], quaternion_[3]);
+    Eigen::Quaternion<T> quatT = quat.cast<T>();
 
     // Translational Equations
-    Eigen::Matrix<T, 3, 1> weightAccel, transDrag;
-    weightAccel.setZero();
-    transDrag.setZero();
-    weightAccel(2) = T((Fg_ - Fb_) / mass_);
+    Eigen::Matrix<T, 3, 1> weightAccelT, transDragT;
+    weightAccelT.setZero();
+    transDragT.setZero();
+    weightAccelT(2) = T((Fg_ - Fb_) / mass_);
 
-    transDrag(0) = (dragCoeffs(0, 0) * state(0) + T(0.5 * AUVMathLib::sign(state(0)) * density_) * dragCoeffs(0, 1) * state(0) * state(0)) / T(mass_);
-    transDrag(1) = (dragCoeffs(1, 0) * state(1) + T(0.5 * AUVMathLib::sign(state(1)) * density_) * dragCoeffs(1, 1) * state(1) * state(1)) / T(mass_);
-    transDrag(2) = (dragCoeffs(2, 0) * state(2) + T(0.5 * AUVMathLib::sign(state(2)) * density_) * dragCoeffs(2, 1) * state(2) * state(2)) / T(mass_);
-    residuals.template head<3>() = (stateDot.template head<3>()) - 
-                                  ((quat.conjugate() * weightAccel) - transDrag - 
-                                  (state.template tail<3>()).cross(state.template head<3>()) + 
-                                  (thrustCoeffs.template block<3,10>(0,0)) * forces);
+    transDragT(0) = (dragCoeffsT(0, 0) * accelStateT(0) + T(0.5 * AUVMathLib::sign(accelState_[0]) * density_) * dragCoeffsT(0, 1) * accelStateT(0) * accelStateT(0)) / T(mass_);
+    transDragT(1) = (dragCoeffsT(1, 0) * accelStateT(1) + T(0.5 * AUVMathLib::sign(accelState_[1]) * density_) * dragCoeffsT(1, 1) * accelStateT(1) * accelStateT(1)) / T(mass_);
+    transDragT(2) = (dragCoeffsT(2, 0) * accelStateT(2) + T(0.5 * AUVMathLib::sign(accelState_[2]) * density_) * dragCoeffsT(2, 1) * accelStateT(2) * accelStateT(2)) / T(mass_);
+    residualsT.template head<3>() = (accelStateDotT.template head<3>()) - 
+                                  ((quatT.conjugate() * weightAccelT) - transDragT - 
+                                  (accelStateT.template tail<3>()).cross(accelStateT.template head<3>()) + 
+                                  (thrustCoeffsT.template block<3,10>(0,0)) / T(mass_) * nominalForcesT);
 
     // Rotational Equations
-    Eigen::Matrix<T, 3, 1> forceBuoyancy, rotDrag;
-    forceBuoyancy.setZero();
-    rotDrag.setZero();
-    forceBuoyancy(2) = T(-Fb_);
+    Eigen::Matrix<T, 3, 1> forceBuoyancyT, rotDragT;
+    forceBuoyancyT.setZero();
+    rotDragT.setZero();
+    forceBuoyancyT(2) = T(-Fb_);
 
-    rotDrag(0) = (dragCoeffs(3, 0) * state(3) + T(0.5 * AUVMathLib::sign(state(3)) * density_) * dragCoeffs(3, 1) * state(3) * state(3));
-    rotDrag(1) = (dragCoeffs(4, 0) * state(4) + T(0.5 * AUVMathLib::sign(state(4)) * density_) * dragCoeffs(4, 1) * state(4) * state(4));
-    rotDrag(2) = (dragCoeffs(5, 0) * state(5) + T(0.5 * AUVMathLib::sign(state(5)) * density_) * dragCoeffs(5, 1) * state(5) * state(5));
-    residuals.template tail<3>() = (stateDot.template tail<3>()) - 
-                                  (inertia.inverse() * (-rotDrag + CoB.cross(quat.conjugate() * forceBuoyancy) - 
-                                  (state.template tail<3>()).cross(inertia * (state.template tail<3>()))) +
-                                  (thrustCoeffs.template block<3,10>(3,0)) * forces);
+    rotDragT(0) = (dragCoeffsT(3, 0) * accelStateT(3) + T(0.5 * AUVMathLib::sign(accelState_[3]) * density_) * dragCoeffsT(3, 1) * accelStateT(3) * accelStateT(3));
+    rotDragT(1) = (dragCoeffsT(4, 0) * accelStateT(4) + T(0.5 * AUVMathLib::sign(accelState_[4]) * density_) * dragCoeffsT(4, 1) * accelStateT(4) * accelStateT(4));
+    rotDragT(2) = (dragCoeffsT(5, 0) * accelStateT(5) + T(0.5 * AUVMathLib::sign(accelState_[5]) * density_) * dragCoeffsT(5, 1) * accelStateT(5) * accelStateT(5));
+    residualsT.template tail<3>() = (accelStateDotT.template tail<3>()) - 
+                                  (inertiaT.inverse() * (-rotDragT + CoBT.cross(quatT.conjugate() * forceBuoyancyT) - 
+                                  (accelStateT.template tail<3>()).cross(inertiaT * (accelStateT.template tail<3>())) +
+                                  (thrustCoeffsT.template block<3,10>(3,0)) * nominalForcesT));
     return true;
   }
 };

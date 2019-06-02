@@ -18,6 +18,14 @@ AUVModel::AUVModel(double mass, double volume, double fluid_density, const Ref<c
 
     AUVModel::setThrustCoeffs();
     AUVModel::setLinearizedInputMatrix();
+
+    for (int i = 0; i < 10; i++)
+        nominalForces[i] = 0;
+
+    nominalThrustProblem.AddResidualBlock(new ceres::AutoDiffCostFunction<NominalThrustSolver, 6, 10>(new NominalThrustSolver(Fg_, Fb_, 
+                            density_, inertia_, CoB_, dragCoeffs_, thrustCoeffs_, quaternion_, accelState_, accelStateDot_)), NULL, nominalForces);
+    nominalThrustOptions.max_num_iterations = 100;
+    nominalThrustOptions.linear_solver_type = ceres::DENSE_QR;
 }
 
 // Set the thruster coefficients. Each column corresponds to a single thruster.
