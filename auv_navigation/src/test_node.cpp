@@ -194,20 +194,24 @@ TestNode::TestNode() : nh("~")
     cout << "Mapped quaternion2 from array: " << quat2.w() << endl << quat2.vec() << endl;
     cout << "Quaternion2 * Vector3d: " << quat2 * vec1 << endl;
 
-    double w, x, y, z;
-    nh.getParam("w", w);
-    nh.getParam("x", x);
-    nh.getParam("y", y);
-    nh.getParam("z", z);
-    Eigen::Quaterniond quat3(w,x,y,z);
-    Vector3d vWorld;
+    float w1, x1, y1, z1, w2, x2, y2, z2;
+    nh.getParam("w1", w1);
+    nh.getParam("x1", x1);
+    nh.getParam("y1", y1);
+    nh.getParam("z1", z1);
+    nh.getParam("w2", w2);
+    nh.getParam("x2", x2);
+    nh.getParam("y2", y2);
+    nh.getParam("z2", z2);
+    Eigen::Quaternionf quat3(w1,x1,y1,z1);
+    Vector3f vWorld;
     vWorld << 0.707, 0.707, 0;
-    cout << "Eigen directly, Body roll 90 deg, rotated vector: " << quat3 * vWorld << endl;
-    cout << "Eigen toRotMat, Body roll 90 deg, rotated vector: " << quat3.toRotationMatrix() * vWorld << endl;
+    cout << "Eigen directly, Body roll 90 deg, rotated vector: " << endl << quat3 * vWorld << endl;
+    cout << "Eigen toRotMat, Body roll 90 deg, rotated vector: " << endl << quat3.toRotationMatrix() * vWorld << endl;
 
-    Eigen::Matrix3d Rquat;
-    Eigen::Matrix<double, 4, 1> q;
-    q << w, x, y, z;
+    Eigen::Matrix3f Rquat;
+    Eigen::Matrix<float, 4, 1> q;
+    q << w1, x1, y1, z1;
     Rquat(0, 0) = q(0) * q(0) + q(1) * q(1) - q(2) * q(2) - q(3) * q(3);
     Rquat(1, 1) = q(0) * q(0) - q(1) * q(1) + q(2) * q(2) - q(3) * q(3);
     Rquat(2, 2) = q(0) * q(0) - q(1) * q(1) - q(2) * q(2) + q(3) * q(3);
@@ -217,7 +221,32 @@ TestNode::TestNode() : nh("~")
     Rquat(2, 0) = 2 * q(1) * q(3) + 2 * q(0) * q(2);
     Rquat(1, 2) = 2 * q(2) * q(3) + 2 * q(0) * q(1);
     Rquat(2, 1) = 2 * q(2) * q(3) - 2 * q(0) * q(1);
-    cout << "Mine, Body roll 90 deg, rotated vector: " << Rquat * vWorld << endl;
+    cout << "Mine, Body roll 90 deg, rotated vector: " << endl << Rquat * vWorld << endl;
+    // Using Eigen::Quaternion: quaternion * vector = rotates vector by the axis-angle specified, expressed in original frame
+    // So: B-frame vector = quaternion.conjugate() * I-frame vector
+    // So: I-frame vector = quaternion * B-frame vector
+    // The correct format:
+    // I-frame --(q)--> B-frame ==> Rquat (rotation matrix)
+    // B-frame vector = q * v * q^(-1) = Rquat * I-frame vector
+    // I-frame vector = q^(-1) * v * q = Rquat^T * B-frame vector
+
+    // Quaternion * Quaternion
+    Eigen::Quaternionf q1(w1,x1,y1,z1);
+    Eigen::Quaternionf q2(w2,x2,y2,z2);
+    Eigen::Quaternionf qdiffI = q2 * (q1.conjugate());
+    cout << "Eigen: q2 * (q1.conj) = " << endl << qdiffI.w() << endl << qdiffI.vec() << endl;
+    Eigen::Quaternionf q1q2 = q1 * q2;
+    cout << "Eigen: q1 * q2 = " << endl << q1q2.w() << endl << q1q2.vec() << endl;
+
+    Vector4f q1V, q2V;
+    q1V << w1, x1, y1, z1;
+    q2V << w2, x2, y2, z2;
+    Vector4f qFV = multiplyQuaternions(q2V, q1V);
+    cout << "Mine: q1 * q2 = " << endl << qFV << endl;
+    // Quaternion Compositions: q = q1 * q2
+    // The correct format: I-frame --(q2)--> Frame 2 --(q1)--> B-frame (quaternions are left multiplied)
+    // Eigen does local frame composition, as in q2 is applied FROM q1
+
 }
 
 void TestNode::copy(const Ref<const MatrixXf> &m)
@@ -225,11 +254,20 @@ void TestNode::copy(const Ref<const MatrixXf> &m)
     mat = m;
 }
 
-template <typename T>
-int TestNode::sign(T x){
-    if (x > 0)
-        return 1;
-    else 
-        return -1;
+// Multiplies quaternions wrt the WORLD frame
+Vector4f TestNode::multiplyQuaternions(Vector4f q1, Vector4f q2)
+{
+    return (TestNode::quaternionMatrix(q1) * q2);
 }
+
+Matrix4f TestNode::quaternionMatrix(Vector4f q)
+{
+    Matrix4f Q, diag;
+    Q.setZero(), diag.setIdentity();
+    diag = diag * q(0);
+    Q.block<3,3>(1,1) = -AUVMathLib::skewSym(q.tail<3>());
+    Q.block<1,3>(0,1) = -q.tail<3>().transpose();
+    Q.block<3,1>(1,0) = q.tail<3>();
+    return (Q + diag);
 }
+} // namespace AUV_GNC

@@ -1,6 +1,6 @@
 #include "auv_guidance/segment_planner.hpp"
 
-namespace AUV_GNC
+namespace AUVGuidance
 {
 /**
  * @param startPos Starting position
@@ -145,7 +145,7 @@ Vector2f SegmentPlanner::computeState(float t)
             state(0) = 0;
             state(1) = cruiseSpeed_;
         }
-        else if (t > tEnd_) 
+        else if (t > tEnd_)
         {
             state(0) = distance_;
             state(1) = cruiseSpeed_;
@@ -189,4 +189,4 @@ Vector2f SegmentPlanner::computeState(float t)
     }
     return state;
 }
-}
+} // namespace AUVGuidance

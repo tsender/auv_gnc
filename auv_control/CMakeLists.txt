@@ -7,7 +7,6 @@ project(auv_control)
 
 find_package(catkin REQUIRED COMPONENTS
   auv_navigation
-  auv_guidance
 )
 
 find_package(Eigen3 REQUIRED)

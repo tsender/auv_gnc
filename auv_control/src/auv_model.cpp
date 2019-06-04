@@ -29,7 +29,7 @@ AUVModel::AUVModel(double mass, double volume, double fluid_density, const Ref<c
 }
 
 // Set the thruster coefficients. Each column corresponds to a single thruster.
-// Rows 1,2,3: force contribution in the X, Y, and Z axes, respectively
+// Rows 1,2,3: force contribution in the X, Y, and Z axes, respectively (range from 0-1)
 // Rows 4,5,6: effective moment arms about the X, Y, and Z axes, respectively
 void AUVModel::setThrustCoeffs()
 {

@@ -14,6 +14,8 @@ using namespace std;
 using CppAD::AD;
 typedef Matrix< AD<double> , Dynamic, Dynamic > ADMatrixXd;
 typedef Matrix< AD<double> , Dynamic, 1 > ADVectorXd;
+typedef Matrix<float, 4, 1> Vector4f;
+typedef Matrix<float, 4, 4> Matrix4f;
 
 namespace AUV_GNC
 {
@@ -28,8 +30,8 @@ class TestNode
 
     TestNode();
     void copy(const Ref<const MatrixXf>& m);
-    template <typename T>
-    int sign(T x);
+    Vector4f multiplyQuaternions(Vector4f q1, Vector4f q2);
+    Matrix4f quaternionMatrix(Vector4f q);
 };
 }
 

@@ -1,9 +1,13 @@
 
 <launch>
   <node pkg="auv_navigation" type="test_node" name="test_node" output="screen">
-    <param name="w" value="0.683" />
-    <param name="x" value="0.183" />
-    <param name="y" value="-0.183" />
-    <param name="z" value="-0.683" />
+    <param name="w1" value="0.924" />
+    <param name="x1" value="0.0" />
+    <param name="y1" value="0.383" />
+    <param name="z1" value="0.0" />
+    <param name="w2" value="0.924" />
+    <param name="x2" value="0.0" />
+    <param name="y2" value="0.0" />
+    <param name="z2" value="0.383" />
   </node>
 </launch>
