@@ -23,6 +23,7 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}_lib
     src/segment_planner.cpp
     src/waypoint_trajectory.cpp
+    src/waypoint.cpp
     #src/trajectory_line.cpp
     #src/trajectory_arc.cpp
     #src/trajectory_euler_rotation.cpp

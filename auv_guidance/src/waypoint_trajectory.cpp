@@ -2,19 +2,31 @@
 
 namespace AUVGuidance
 {
-WaypointTrajectory::WaypointTrajectory(const Ref<const Vector7d> startPose, const Ref<const Vector7d> endPose, bool moreThan2,
-                     double transSpeed, double transAccel, double rotSpeed, double rotAccel)
+WaypointTrajectory::WaypointTrajectory(Waypoint *start, Waypoint *end)
 {
-
+    waypoints_.clear();
+    waypoints_.push_back(start);
+    waypoints_.push_back(end);
+    travelTime_ = 0;
+    WaypointTrajectory::initNextTrajectory();
 }
 
-void WaypointTrajectory::mapTrajectory()
+void WaypointTrajectory::addWaypoint(Waypoint *waypoint)
 {
-
+    waypoints_.push_back(waypoint);
 }
 
-Vector12d computeState(double time)
+void WaypointTrajectory::initNextTrajectory()
 {
-    
+    if (waypoints_.size() > 0)
+    {
+        lastWaypoint_ = waypoints_.at(0);
+        waypoints_.erase(waypoints_.begin()); // Erase first element
+    }
+}
+
+Vector12d WaypointTrajectory::computeState(double time)
+{
+
 }
 } // namespace AUVGuidance
