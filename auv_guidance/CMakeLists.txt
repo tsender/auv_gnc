@@ -7,6 +7,7 @@ project(auv_guidance)
 
 find_package(catkin REQUIRED COMPONENTS
   auv_navigation
+  auv_control
 )
 
 find_package(Eigen3 REQUIRED)
@@ -18,11 +19,11 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
 )
-include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR})
 
 add_library(${PROJECT_NAME}_lib
     src/segment_planner.cpp
-    src/waypoint_trajectory.cpp
+    src/basic_trajectory.cpp
     src/waypoint.cpp
     #src/trajectory_line.cpp
     #src/trajectory_arc.cpp
@@ -30,7 +31,7 @@ add_library(${PROJECT_NAME}_lib
     #src/parallel_trajectory.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES})
 
 install(DIRECTORY include/${PROJECT_NAME}/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

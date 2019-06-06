@@ -8,7 +8,7 @@
 
 using namespace Eigen;
 
-namespace AUV_GNC
+namespace AUVControl
 {
 typedef Matrix<double, 6, 1> Vector6d;
 typedef Matrix<double, 6, 2> Matrix62d;
@@ -107,6 +107,6 @@ public:
   }
 };
 
-} // namespace AUV_GNC
+} // namespace AUVControl
 
 #endif

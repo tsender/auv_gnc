@@ -7,8 +7,6 @@
 
 using namespace Eigen;
 
-namespace AUV_GNC
-{
 // Useful math tools
 namespace AUVMathLib
 {
@@ -33,6 +31,5 @@ Vector3f getConstrainedAttitude(const Ref<const Vector3f> attitude);
 Vector3f eulerDot2PQR(const Ref<const Vector3f> attitude, const Ref<const Vector3f> eulerDot);
 Vector3f pqr2EulerDot(const Ref<const Vector3f> attitude, const Ref<const Vector3f> pqr);
 } // namespace AUVMathLib
-} // namespace AUV_GNC
 
 #endif

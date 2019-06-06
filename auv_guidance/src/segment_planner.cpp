@@ -6,7 +6,7 @@ namespace AUVGuidance
  * @param startPos Starting position
  * @param nominalSpeed Desired cruise speed
  */
-SegmentPlanner::SegmentPlanner(float distance, float nominalSpeed, float accel, int seq)
+SegmentPlanner::SegmentPlanner(double distance, double nominalSpeed, double accel, int seq)
 {
     distance_ = distance;
     if (nominalSpeed <= 0) // TODO: May need to be strictly less than 0, will see later
@@ -62,8 +62,8 @@ void SegmentPlanner::initMotionPlanner()
     }
     else // Will be accelerating for certain portions of travel
     {
-        float accelDuration = cruiseSpeed_ / acceleration_;           // Assuming accelerating from rest
-        float accelDist = 0.5 * pow(cruiseSpeed_, 2) / acceleration_; // Or 0.5*acceleration*t^2
+        double accelDuration = cruiseSpeed_ / acceleration_;           // Assuming accelerating from rest
+        double accelDist = 0.5 * pow(cruiseSpeed_, 2) / acceleration_; // Or 0.5*acceleration*t^2
 
         if (accelSeq_ == SegmentPlanner::SEQ_START)
         {
@@ -120,7 +120,7 @@ void SegmentPlanner::initMotionPlanner()
     }
 }
 
-float SegmentPlanner::getTravelTime()
+double SegmentPlanner::getTravelTime()
 {
     return tEnd_;
 }
@@ -128,9 +128,9 @@ float SegmentPlanner::getTravelTime()
 /**
  * @param t Current time for state to be computed (state = [position, speed])
  **/
-Vector2f SegmentPlanner::computeState(float t)
+Vector2d SegmentPlanner::computeState(double t)
 {
-    Vector2f state; // [position; speed]
+    Vector2d state; // [position; speed]
     state.setZero();
 
     if (!accelerate_) // Constant Speed
@@ -155,7 +155,7 @@ Vector2f SegmentPlanner::computeState(float t)
     {
         if (t >= 0 && t <= tEnd_) // Valid time instance
         {
-            float time1 = 0, time2 = 0, time3 = 0;
+            double time1 = 0, time2 = 0, time3 = 0;
 
             // time1 in [t, t1] range - accelarate from rest to cruiseSpeed
             time1 = (t <= t1_) ? t : t1_;

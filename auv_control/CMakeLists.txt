@@ -19,13 +19,13 @@ find_package(Ceres REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
 )
-include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} ${CERES_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME}_lib 
     src/auv_model.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${Eigen3_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} ${CERES_LIBRARIES})
 
 install(DIRECTORY include/${PROJECT_NAME}/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

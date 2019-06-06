@@ -14,16 +14,21 @@ class Waypoint
     Vector3d position_;
     Quaterniond quaternion_;
     double translationSpeed_;
+    double translationAccel_;
     double rotationSpeed_;
+    double rotationAccel_;
 
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    Waypoint(const Ref<const Vector3d> &position, const Quaterniond &quaternion, double translationSpeed, double rotationSpeed);
-    Quaterniond getQuaternion();
-    Vector3d getPosition();
-    double getTranslationSpeed();
-    double getRotationSpeed();
+    Waypoint(const Ref<const Vector3d> &position, const Quaterniond &quaternion, double translationSpeed, double translationAccel,
+            double rotationSpeed, double rotationAccel);
+    Quaterniond quaternion();
+    Vector3d position();
+    double translationSpeed();
+    double translationAccel();
+    double rotationSpeed();
+    double rotationAccel();
 };
 } // namespace AUVGuidance
 

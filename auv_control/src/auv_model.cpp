@@ -1,6 +1,6 @@
 #include "auv_control/auv_model.hpp"
 
-namespace AUV_GNC
+namespace AUVControl
 {
 AUVModel::AUVModel(double mass, double volume, double fluid_density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3d> &CoB,
                    const Ref<const Matrix62d> &dragCoeffs, const Ref<const Matrix5Xd> &thrusters)
@@ -217,4 +217,4 @@ Matrix12Xd AUVModel::getLinearizedInputMatrix()
 {
     return B_;
 }
-} // namespace AUV_GNC
+} // namespace AUVControl

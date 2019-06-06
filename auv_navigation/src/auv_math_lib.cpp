@@ -1,7 +1,5 @@
 #include "auv_navigation/auv_math_lib.hpp"
 
-namespace AUV_GNC
-{
 namespace AUVMathLib
 {
 // Return rotation matrix about a single axis
@@ -200,4 +198,3 @@ Vector3f pqr2EulerDot(const Ref<const Vector3f> attitude, const Ref<const Vector
 }
 
 } // namespace AUVMathLib
-} // namespace AUV_GNC

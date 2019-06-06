@@ -17,10 +17,9 @@ find_package(Eigen3)
 
 catkin_package(
   INCLUDE_DIRS include
-  #LIBRARIES ${PROJECT_NAME}_lib
   CATKIN_DEPENDS roscpp
 )
-include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
 
 add_executable(test_node src/test_node.cpp src/auv_math_lib.cpp)
 target_link_libraries(test_node ${catkin_LIBRARIES})
@@ -32,7 +31,7 @@ add_library(${PROJECT_NAME}_lib
     src/ekf_translation.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES})
 
 install(DIRECTORY include/${PROJECT_NAME}/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

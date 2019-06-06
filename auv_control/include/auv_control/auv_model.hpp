@@ -32,7 +32,7 @@ struct ScalarBinaryOpTraits<X, CppAD::AD<X>, BinOp>
 };
 } // namespace Eigen
 
-namespace AUV_GNC
+namespace AUVControl
 {
 typedef Matrix<double, 12, 12> Matrix12d;
 typedef Matrix<double, 12, Dynamic> Matrix12Xd;
@@ -107,6 +107,6 @@ public:
   void setLinearizedInputMatrix();
   Matrix12Xd getLinearizedInputMatrix();
 };
-} // namespace AUV_GNC
+} // namespace AUVControl
 
 #endif
