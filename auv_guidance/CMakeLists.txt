@@ -22,13 +22,10 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR})
 
 add_library(${PROJECT_NAME}_lib
-    src/segment_planner.cpp
     src/basic_trajectory.cpp
+    src/minimum_jerk_trajectory.cpp
+    src/segment_planner.cpp
     src/waypoint.cpp
-    #src/trajectory_line.cpp
-    #src/trajectory_arc.cpp
-    #src/trajectory_euler_rotation.cpp
-    #src/parallel_trajectory.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES})

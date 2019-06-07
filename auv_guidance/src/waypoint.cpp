@@ -2,15 +2,29 @@
 
 namespace AUVGuidance
 {
-Waypoint::Waypoint(const Ref<const Vector3d> &position, const Quaterniond &quaternion, double translationSpeed, double translationAccel,
-                    double rotationSpeed, double rotationAccel)
+Waypoint::Waypoint(const Ref<const Vector3d> &x, const Ref<const Vector3d> &y, const Ref<const Vector3d> &z,
+            const Quaterniond &quaternion, const Ref<const Vector3d> &angVel)
 {
-    position_ = position;
+    x_ = x;
+    y_ = y;
+    z_ = z;
     quaternion_ = quaternion;
-    translationSpeed_ = translationSpeed;
-    translationAccel_ = translationAccel;
-    rotationSpeed_ = rotationSpeed;
-    rotationAccel_ = rotationAccel;
+    angVel_ = angVel;
+}
+
+Vector3d Waypoint::xVec()
+{
+    return x_;
+}
+
+Vector3d Waypoint::yVec()
+{
+    return y_;
+}
+
+Vector3d Waypoint::zVec()
+{
+    return z_;
 }
 
 Quaterniond Waypoint::quaternion()
@@ -18,28 +32,8 @@ Quaterniond Waypoint::quaternion()
     return quaternion_;
 }
 
-Vector3d Waypoint::position()
+Vector3d Waypoint::angVelVec()
 {
-    return position_;
-}
-
-double Waypoint::translationSpeed()
-{
-    return translationSpeed_;
-}
-
-double Waypoint::translationAccel()
-{
-    return translationAccel_;
-}
-
-double Waypoint::rotationSpeed()
-{
-    return rotationSpeed_;
-}
-
-double Waypoint::rotationAccel()
-{
-    return rotationAccel_;
+    return angVel_;
 }
 } // namespace AUVGuidance

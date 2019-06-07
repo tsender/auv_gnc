@@ -1,7 +1,7 @@
 #ifndef AUV_TRAJECTORY
 #define TRAJECTORY
 
-#include "auv_guidance/trajectory_generator_abstract.hpp"
+#include "auv_guidance/abstract_trajectory.hpp"
 #include "auv_guidance/segment_planner.hpp"
 #include "eigen3/Eigen/Dense"
 #include "math.h"
