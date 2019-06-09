@@ -32,6 +32,7 @@ private:
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  
   EKFTranslation(const Ref<const Matrix3i> &sensorMaskIn, const Ref<const MatrixXf> &RposIn, const Ref<const MatrixXf> &RvelIn,
            const Ref<const MatrixXf> &RaccelIn, const Ref<const Matrix9f> &Qin);
   void init(const Ref<const VectorXf> &Xo);

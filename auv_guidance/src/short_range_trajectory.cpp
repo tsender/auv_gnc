@@ -9,8 +9,8 @@ namespace AUVGuidance
  */
 ShortRangeTrajectory::ShortRangeTrajectory(Waypoint *start, Waypoint *end, double travelDuration)
 {
-    start_ = start;
-    end_ = end;
+    wStart_ = start;
+    wEnd_ = end;
     travelDuration_ = travelDuration;
 
     qDiff_.w() = 1;
@@ -32,8 +32,8 @@ ShortRangeTrajectory::ShortRangeTrajectory(Waypoint *start, Waypoint *end, doubl
  */
 void ShortRangeTrajectory::initTrajectory()
 {
-    qStart_ = start_->quaternion().normalized();
-    qEnd_ = end_->quaternion().normalized();
+    qStart_ = wStart_->quaternion().normalized();
+    qEnd_ = wEnd_->quaternion().normalized();
     qDiff_ = qStart_.conjugate() * qEnd_; // Error quaternion wrt B-frame (q2 * q1.conjugate is opposite)
     
     Vector4d angleAxis = AUVMathLib::quaternion2AngleAxis(qDiff_);
@@ -44,9 +44,9 @@ void ShortRangeTrajectory::initTrajectory()
     angleStart.setZero(), angleEnd.setZero();
     angleEnd(1) = angularDistance_;
 
-    mjtX_ = new MinJerkTrajectory(start_->xI(), end_->xI(), travelDuration_);
-    mjtY_ = new MinJerkTrajectory(start_->yI(), end_->yI(), travelDuration_);
-    mjtZ_ = new MinJerkTrajectory(start_->zI(), end_->zI(), travelDuration_);
+    mjtX_ = new MinJerkTrajectory(wStart_->xI(), wEnd_->xI(), travelDuration_);
+    mjtY_ = new MinJerkTrajectory(wStart_->yI(), wEnd_->yI(), travelDuration_);
+    mjtZ_ = new MinJerkTrajectory(wStart_->zI(), wEnd_->zI(), travelDuration_);
     mjtAtt_ = new MinJerkTrajectory(angleStart, angleEnd, travelDuration_);
 }
 
@@ -124,9 +124,9 @@ Vector6d ShortRangeTrajectory::computeAccel(double time)
     accel.setZero();
 
     Vector3d inertialTransAccel = Vector3d::Zero();
-    inertialTransAccel(0) = xState_(0);
-    inertialTransAccel(1) = yState_(0);
-    inertialTransAccel(2) = zState_(0);
+    inertialTransAccel(0) = xState_(2);
+    inertialTransAccel(1) = yState_(2);
+    inertialTransAccel(2) = zState_(2);
     inertialTransAccel = qSlerp_.conjugate() * inertialTransAccel;
 
     Vector3d pqrDot = Vector3d::Zero();

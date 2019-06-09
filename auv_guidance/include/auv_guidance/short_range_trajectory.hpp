@@ -14,12 +14,11 @@ using namespace Eigen;
 
 namespace AUVGuidance
 {
-typedef Matrix<double, 6, 1> Vector6d;
 class ShortRangeTrajectory : public Trajectory
 {
 private:
   MinJerkTrajectory *mjtX_, *mjtY_, *mjtZ_, *mjtAtt_;
-  Waypoint *start_, *end_;
+  Waypoint *wStart_, *wEnd_;
   Quaterniond qStart_, qEnd_, qDiff_, qSlerp_;
   double travelDuration_, angularDistance_;
 
