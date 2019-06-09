@@ -7,6 +7,7 @@ using namespace Eigen;
 namespace AUVGuidance
 {
 typedef Matrix<double, 12, 1> Vector12d;
+
 class Trajectory
 {
 public:

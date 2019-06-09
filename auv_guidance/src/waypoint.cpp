@@ -2,29 +2,29 @@
 
 namespace AUVGuidance
 {
-Waypoint::Waypoint(const Ref<const Vector3d> &x, const Ref<const Vector3d> &y, const Ref<const Vector3d> &z,
-            const Quaterniond &quaternion, const Ref<const Vector3d> &angVel)
+Waypoint::Waypoint(const Ref<const Vector3d> &xI, const Ref<const Vector3d> &yI, const Ref<const Vector3d> &zI,
+            const Quaterniond &quaternion, const Ref<const Vector3d> &angVelB)
 {
-    x_ = x;
-    y_ = y;
-    z_ = z;
+    xI_ = xI;
+    yI_ = yI;
+    zI_ = zI;
     quaternion_ = quaternion;
-    angVel_ = angVel;
+    angVelB_ = angVelB;
 }
 
-Vector3d Waypoint::xVec()
+Vector3d Waypoint::xI()
 {
-    return x_;
+    return xI_;
 }
 
-Vector3d Waypoint::yVec()
+Vector3d Waypoint::yI()
 {
-    return y_;
+    return yI_;
 }
 
-Vector3d Waypoint::zVec()
+Vector3d Waypoint::zI()
 {
-    return z_;
+    return zI_;
 }
 
 Quaterniond Waypoint::quaternion()
@@ -32,8 +32,8 @@ Quaterniond Waypoint::quaternion()
     return quaternion_;
 }
 
-Vector3d Waypoint::angVelVec()
+Vector3d Waypoint::angVelB()
 {
-    return angVel_;
+    return angVelB_;
 }
 } // namespace AUVGuidance

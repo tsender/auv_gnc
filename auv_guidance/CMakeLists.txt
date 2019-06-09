@@ -22,9 +22,10 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR})
 
 add_library(${PROJECT_NAME}_lib
-    src/basic_trajectory.cpp
-    src/minimum_jerk_trajectory.cpp
-    src/segment_planner.cpp
+    src/min_jerk_trajectory.cpp
+    #src/segment_planner.cpp
+    src/short_range_trajectory.cpp
+    src/long_range_trajectory.cpp
     src/waypoint.cpp
 )
 

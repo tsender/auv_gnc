@@ -30,6 +30,10 @@ Vector3f getConstrainedAttitude(const Ref<const Vector3f> attitude);
 
 Vector3f eulerDot2PQR(const Ref<const Vector3f> attitude, const Ref<const Vector3f> eulerDot);
 Vector3f pqr2EulerDot(const Ref<const Vector3f> attitude, const Ref<const Vector3f> pqr);
+
+Vector4d quaternion2AngleAxis(const Quaterniond &quaternion);
+Quaterniond toQuaternion(double yaw, double pitch, double roll);
+Vector3d toEulerAngle(const Quaterniond &quaternion);
 } // namespace AUVMathLib
 
 #endif

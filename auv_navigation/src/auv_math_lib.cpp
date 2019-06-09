@@ -197,4 +197,62 @@ Vector3f pqr2EulerDot(const Ref<const Vector3f> attitude, const Ref<const Vector
     return eulerDot;
 }
 
+Vector4d quaternion2AngleAxis(const Quaterniond &quaternion)
+{
+    Vector4d angleAxis;
+    angleAxis.setZero();
+    Quaterniond q = quaternion.normalized();
+    double i = 1 - q.w() * q.w();
+
+    angleAxis(0) = 2 * acos(q.w()); // Angle [rad]
+    angleAxis(1) = q.x() / sqrt(i); // Axis, x-component
+    angleAxis(2) = q.y() / sqrt(i); // Axis, y-component
+    angleAxis(3) = q.z() / sqrt(i); // Axis, z-component
+
+    return angleAxis;
+}
+
+Quaterniond toQuaternion(double yaw, double pitch, double roll)
+{
+    // Abbreviations for the various angular functions
+    double cy = cos(yaw * 0.5);
+    double sy = sin(yaw * 0.5);
+    double cp = cos(pitch * 0.5);
+    double sp = sin(pitch * 0.5);
+    double cr = cos(roll * 0.5);
+    double sr = sin(roll * 0.5);
+
+    Quaterniond q;
+    q.w() = cy * cp * cr + sy * sp * sr;
+    q.x() = cy * cp * sr - sy * sp * cr;
+    q.y() = sy * cp * sr + cy * sp * cr;
+    q.z() = sy * cp * cr - cy * sp * sr;
+    return q.normalized();
+}
+
+Vector3d toEulerAngle(const Quaterniond &quaternion)
+{
+	Vector3d rpy = Vector3d::Zero();
+    Quaterniond q = quaternion.normalized();
+
+    // roll (x-axis rotation)
+	double sinr_cosp = +2.0 * (q.w() * q.x() + q.y() * q.z());
+	double cosr_cosp = +1.0 - 2.0 * (q.x() * q.x() + q.y() * q.y());
+	rpy(0) = atan2(sinr_cosp, cosr_cosp);
+
+	// pitch (y-axis rotation)
+	double sinp = +2.0 * (q.w() * q.y() - q.z() * q.x());
+	if (fabs(sinp) >= 1)
+		rpy(1) = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+	else
+		rpy(1) = asin(sinp);
+
+	// yaw (z-axis rotation)
+	double siny_cosp = +2.0 * (q.w() * q.z() + q.x() * q.y());
+	double cosy_cosp = +1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z());  
+	rpy(2) = atan2(siny_cosp, cosy_cosp);
+
+    return rpy;
+}
+
 } // namespace AUVMathLib

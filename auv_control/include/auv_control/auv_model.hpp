@@ -72,7 +72,7 @@ private:
   ceres::Solver::Options nominalThrustOptions;
   ceres::Solver::Summary nominalThrustSummary;
   double nominalForces[10];
-  double quaternion_[4], accelState_[6], accelStateDot_[6];
+  double quaternion_[4], uvw_[3], pqr_[3], inertialTransAccel_[3], pqrDot_[3];
 
 public:
   // Calling this macro will fix alignment issues on members that are fixed-size Eigen objects

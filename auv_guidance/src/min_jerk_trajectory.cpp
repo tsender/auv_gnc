@@ -1,4 +1,4 @@
-#include "auv_guidance/minimum_jerk_trajectory.hpp"
+#include "auv_guidance/min_jerk_trajectory.hpp"
 
 namespace AUVGuidance
 {
@@ -7,24 +7,23 @@ namespace AUVGuidance
  * @param end Final conditions of position, velocity, and acceleration
  * @param duration Duration for which trajectory will occur
  */
-MinimumJerkTrajectory::MinimumJerkTrajectory(const Ref<const Vector3d> &start, const Ref<const Vector3d> &end, double duration)
+MinJerkTrajectory::MinJerkTrajectory(const Ref<const Vector3d> &start, const Ref<const Vector3d> &end, double duration)
 {
     x0_ = start(0), v0_ = start(1), a0_ = start(2);
     xf_ = end(0), vf_ = end(1), af_ = end(2);
     t0_ = 0;
     tf_ = duration;
+    dt = tf_ - t0_;
+    dt2 = dt * dt;
     c0_ = 0, c1_ = 0, c2_ = 0, c3_ = 0, c4_ = 0, c5_ = 0;
-    MinimumJerkTrajectory::computeCoeffs();
+    MinJerkTrajectory::computeCoeffs();
 }
 
 /**
  * Compute the needed coefficients for the min jerk trajectory
  */
-void MinimumJerkTrajectory::computeCoeffs()
+void MinJerkTrajectory::computeCoeffs()
 {
-    dt = tf_ - t0_;
-    dt2 = dt * dt;
-
     c0_ = x0_;
     c1_ = v0_ * dt;
     c2_ = 0.5 * a0_ * dt2;
@@ -37,7 +36,7 @@ void MinimumJerkTrajectory::computeCoeffs()
  * @param time Time instance for which to compute the state of teh trajectory
  * Compute the state of the trajectory at specified time
  */
-Vector3d MinimumJerkTrajectory::computeState(double time)
+Vector3d MinJerkTrajectory::computeState(double time)
 {
     Vector3d state = Vector3d::Zero();
     

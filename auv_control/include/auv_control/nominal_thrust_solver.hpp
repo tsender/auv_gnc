@@ -16,33 +16,37 @@ typedef Matrix<double, 6, 10> Matrix610d;
 class NominalThrustSolver
 {
 private:
-  double mass_, Fg_, Fb_, density_;
-  Matrix3d inertia_;
-  Vector3d CoB_;
-  Matrix62d dragCoeffs_;
-  Matrix610d thrustCoeffs_; // Thrust coefficients (effective contributions of each thruster for force and moments)
-  double *accelState_;           // (Pointer) Acceleration state vector (U, V, W, P, Q, R)
-  double *accelStateDot_;        // (Pointer) Time derivative of acceleration state vector
-  double *quaternion_;       // (Pointer) to quaternion for orientation
+  double mass_, density_, Fg_, Fb_;
+  Matrix3d inertia_;           // Inertia matrix expressed in B-frame
+  Vector3d CoB_;               // Center of buoyancy relative to center of mass
+  Matrix62d dragCoeffs_;       // 1st and 2nd order drag coefficients for translational and rotational motion
+  Matrix610d thrustCoeffs_;    // Thrust coefficients (effective contributions of each thruster for force and moment)
+  double *quaternion_;         // (Pointer) to quaternion for orientation
+  double *uvw_;                // (Pointer) Inertial translational velocity expressed in B-frame (U, V, W)
+  double *pqr_;                // (Pointer) Angular velocity expressed in B-frame (P, Q, R)
+  double *inertialTransAccel_; // (Pointer) Inertial translational acceleration expressed in B-frame
+  double *pqrDot_;             // (Pointer) Time derivative of angular velocity measured in B-frame
 
   static const double GRAVITY = 9.80665;
 
 public:
-  NominalThrustSolver(double Fg, double Fb, double density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3d> &CoB,
-                      const Ref<const Matrix62d> &dragCoeffs, const Ref<const Matrix610d> &thrustCoeffs, 
-                      double *quaternion, double *accelState, double *accelStateDot)
+  NominalThrustSolver(double mass, double volume, double density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3d> &CoB,
+                      const Ref<const Matrix62d> &dragCoeffs, const Ref<const Matrix610d> &thrustCoeffs,
+                      double *quaternion, double *uvw, double *pqr, double *inertialTransAccel, double *pqrDot)
   {
-    Fg_ = Fg;
-    Fb_ = Fb;
-    mass_ = Fg_ / NominalThrustSolver::GRAVITY;
+    mass_ = mass;
     density_ = density;
+    Fg_ = mass_ * NominalThrustSolver::GRAVITY;
+    Fb_ = volume * density_ * NominalThrustSolver::GRAVITY;
     inertia_ = inertia;
     CoB_ = CoB;
     dragCoeffs_ = dragCoeffs;
     thrustCoeffs_ = thrustCoeffs;
     quaternion_ = quaternion;
-    accelState_ = accelState;
-    accelStateDot_ = accelStateDot;
+    uvw_ = uvw;
+    pqr_ = pqr;
+    inertialTransAccel_ = inertialTransAccel;
+    pqrDot_ = pqrDot;
   }
 
   template <typename T>
@@ -57,12 +61,14 @@ public:
     Eigen::Matrix<T, 3, 3> inertiaT = inertia_.cast<T>();
     Eigen::Matrix<T, 3, 1> CoBT = CoB_.cast<T>();
 
-    // Cast accelState_ and accelStateDot_ to Jet type
-    Eigen::Matrix<T, 6, 1> accelStateT, accelStateDotT;
-    for (int i = 0; i < 6; i++)
+    // Cast arrays to Jet type
+    Eigen::Matrix<T, 3, 1> uvwT, pqrT, pqrDotT, inertialTransAccelT, inertialRotAccelT;
+    for (int i = 0; i < 3; i++)
     {
-      accelStateT(i) = T(accelState_[i]);
-      accelStateDotT(i) = T(accelStateDot_[i]);
+      uvwT(i) = T(uvw_[i]);
+      pqrT(i) = T(pqr_[i]);
+      inertialTransAccelT(i) = T(inertialTransAccel_[i]);
+      pqrDotT(i) = T(pqrDot_[i]);
     }
 
     // Map ceres parameters and residuals to Eigen object with Jet type
@@ -82,13 +88,12 @@ public:
     transDragT.setZero();
     weightAccelT(2) = T((Fg_ - Fb_) / mass_);
 
-    transDragT(0) = (dragCoeffsT(0, 0) * accelStateT(0) + T(0.5 * AUVMathLib::sign(accelState_[0]) * density_) * dragCoeffsT(0, 1) * accelStateT(0) * accelStateT(0)) / T(mass_);
-    transDragT(1) = (dragCoeffsT(1, 0) * accelStateT(1) + T(0.5 * AUVMathLib::sign(accelState_[1]) * density_) * dragCoeffsT(1, 1) * accelStateT(1) * accelStateT(1)) / T(mass_);
-    transDragT(2) = (dragCoeffsT(2, 0) * accelStateT(2) + T(0.5 * AUVMathLib::sign(accelState_[2]) * density_) * dragCoeffsT(2, 1) * accelStateT(2) * accelStateT(2)) / T(mass_);
-    residualsT.template head<3>() = (accelStateDotT.template head<3>()) - 
-                                  ((quatT.conjugate() * weightAccelT) - transDragT - 
-                                  (accelStateT.template tail<3>()).cross(accelStateT.template head<3>()) + 
-                                  (thrustCoeffsT.template block<3,10>(0,0)) / T(mass_) * nominalForcesT);
+    transDragT(0) = (dragCoeffsT(0, 0) * uvwT(0) + T(0.5 * AUVMathLib::sign(uvw_[0]) * density_) * dragCoeffsT(0, 1) * uvwT(0) * uvwT(0)) / T(mass_);
+    transDragT(1) = (dragCoeffsT(1, 0) * uvwT(1) + T(0.5 * AUVMathLib::sign(uvw_[1]) * density_) * dragCoeffsT(1, 1) * uvwT(1) * uvwT(1)) / T(mass_);
+    transDragT(2) = (dragCoeffsT(2, 0) * uvwT(2) + T(0.5 * AUVMathLib::sign(uvw_[2]) * density_) * dragCoeffsT(2, 1) * uvwT(2) * uvwT(2)) / T(mass_);
+    
+    residualsT.template head<3>() = inertialTransAccelT - (quatT.conjugate() * weightAccelT - transDragT +
+                                                           (thrustCoeffsT.template block<3, 10>(0, 0)) / T(mass_) * nominalForcesT);
 
     // Rotational Equations
     Eigen::Matrix<T, 3, 1> forceBuoyancyT, rotDragT;
@@ -96,13 +101,13 @@ public:
     rotDragT.setZero();
     forceBuoyancyT(2) = T(-Fb_);
 
-    rotDragT(0) = (dragCoeffsT(3, 0) * accelStateT(3) + T(0.5 * AUVMathLib::sign(accelState_[3]) * density_) * dragCoeffsT(3, 1) * accelStateT(3) * accelStateT(3));
-    rotDragT(1) = (dragCoeffsT(4, 0) * accelStateT(4) + T(0.5 * AUVMathLib::sign(accelState_[4]) * density_) * dragCoeffsT(4, 1) * accelStateT(4) * accelStateT(4));
-    rotDragT(2) = (dragCoeffsT(5, 0) * accelStateT(5) + T(0.5 * AUVMathLib::sign(accelState_[5]) * density_) * dragCoeffsT(5, 1) * accelStateT(5) * accelStateT(5));
-    residualsT.template tail<3>() = (accelStateDotT.template tail<3>()) - 
-                                  (inertiaT.inverse() * (-rotDragT + CoBT.cross(quatT.conjugate() * forceBuoyancyT) - 
-                                  (accelStateT.template tail<3>()).cross(inertiaT * (accelStateT.template tail<3>())) +
-                                  (thrustCoeffsT.template block<3,10>(3,0)) * nominalForcesT));
+    rotDragT(0) = (dragCoeffsT(3, 0) * pqrT(0) + T(0.5 * AUVMathLib::sign(pqr_[0]) * density_) * dragCoeffsT(3, 1) * pqrT(0) * pqrT(0));
+    rotDragT(1) = (dragCoeffsT(4, 0) * pqrT(1) + T(0.5 * AUVMathLib::sign(pqr_[1]) * density_) * dragCoeffsT(4, 1) * pqrT(1) * pqrT(1));
+    rotDragT(2) = (dragCoeffsT(5, 0) * pqrT(2) + T(0.5 * AUVMathLib::sign(pqr_[2]) * density_) * dragCoeffsT(5, 1) * pqrT(2) * pqrT(2));
+    
+    inertialRotAccelT = inertiaT * pqrDotT + pqrT.cross(inertiaT * pqrT);
+    residualsT.template tail<3>() = inertialRotAccelT - (CoBT.cross(quatT.conjugate() * forceBuoyancyT) - rotDragT +
+                                                         (thrustCoeffsT.template block<3, 10>(3, 0)) * nominalForcesT);
     return true;
   }
 };

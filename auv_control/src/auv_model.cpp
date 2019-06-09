@@ -22,8 +22,8 @@ AUVModel::AUVModel(double mass, double volume, double fluid_density, const Ref<c
     for (int i = 0; i < 10; i++)
         nominalForces[i] = 0;
 
-    nominalThrustProblem.AddResidualBlock(new ceres::AutoDiffCostFunction<NominalThrustSolver, 6, 10>(new NominalThrustSolver(Fg_, Fb_, 
-                            density_, inertia_, CoB_, dragCoeffs_, thrustCoeffs_, quaternion_, accelState_, accelStateDot_)), NULL, nominalForces);
+    nominalThrustProblem.AddResidualBlock(new ceres::AutoDiffCostFunction<NominalThrustSolver, 6, 10>(new NominalThrustSolver(mass_, volume_, density_, 
+                            inertia_, CoB_, dragCoeffs_, thrustCoeffs_, quaternion_, uvw_, pqr_, inertialTransAccel_, pqrDot_)), NULL, nominalForces);
     nominalThrustOptions.max_num_iterations = 100;
     nominalThrustOptions.linear_solver_type = ceres::DENSE_QR;
 }
