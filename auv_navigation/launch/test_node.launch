@@ -9,5 +9,12 @@
     <param name="x2" value="0.0" />
     <param name="y2" value="0.0" />
     <param name="z2" value="0.383" />
+
+    <param name="x0" value="1" />
+    <param name="v0" value="0.2" />
+    <param name="a0" value="0.08" />
+    <param name="xf" value="1.5" />
+    <param name="vf" value="0.5" />
+    <param name="af" value="0" />
   </node>
 </launch>

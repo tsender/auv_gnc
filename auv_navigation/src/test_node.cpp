@@ -1,16 +1,17 @@
 #include "auv_navigation/test_node.hpp"
 
-namespace Eigen {
-template<typename X, typename BinOp>
-struct ScalarBinaryOpTraits<CppAD::AD<X>,X,BinOp>
+namespace Eigen
 {
-  typedef CppAD::AD<X> ReturnType;
+template <typename X, typename BinOp>
+struct ScalarBinaryOpTraits<CppAD::AD<X>, X, BinOp>
+{
+    typedef CppAD::AD<X> ReturnType;
 };
 
-template<typename X, typename BinOp>
-struct ScalarBinaryOpTraits<X,CppAD::AD<X>,BinOp>
+template <typename X, typename BinOp>
+struct ScalarBinaryOpTraits<X, CppAD::AD<X>, BinOp>
 {
-  typedef CppAD::AD<X> ReturnType;
+    typedef CppAD::AD<X> ReturnType;
 };
 } // namespace Eigen
 
@@ -93,7 +94,7 @@ TestNode::TestNode() : nh("~")
     Vector3f v3 = v1.array() * v2.array();
     cout << "v1: " << endl << v1 << endl;
     cout << "v2: " << endl << v2 << endl;
-    cout << "v1 dot v2 = " << endl << v3 << endl; */
+    cout << "v1 dot v2 = " << endl << v3 << endl;
 
     Matrix3f skew;
     Vector3f pqr;
@@ -101,7 +102,7 @@ TestNode::TestNode() : nh("~")
     skew = AUVMathLib::skewSym(pqr);
     cout << "skew 123: " << endl << skew << endl;
 
-    /*cout << "v1: " << endl << v1 << endl;
+    cout << "v1: " << endl << v1 << endl;
     v1 = v1.array().abs();
     cout << "abs of v1: " << endl << v1 << endl;
 
@@ -180,18 +181,20 @@ TestNode::TestNode() : nh("~")
     test = test1.cwiseProduct(test2);
     cout << "test: " << test << endl;*/
 
-    double array[4] = {2,0,1,-3};
+    double array[4] = {2, 0, 1, -3};
     double *aPtr = array;
     Eigen::Map<const Eigen::Matrix<double, 4, 1> > arrayEigen(aPtr);
     cout << "Mapped array pointer: " << arrayEigen << endl;
 
     //Eigen::Map<const Eigen::Quaternion<double> > quat2(aPtr);
     Eigen::Quaterniond quat1(aPtr);
-    Eigen::Quaterniond quat2(2,0,1,-3);
+    Eigen::Quaterniond quat2(2, 0, 1, -3);
     Vector3d vec1;
     vec1 << 1, 2, 3;
-    cout << "Mapped quaternion from array pointer: " << quat1.w() << endl << quat1.vec() << endl;
-    cout << "Mapped quaternion2 from array: " << quat2.w() << endl << quat2.vec() << endl;
+    cout << "Mapped quaternion from array pointer: " << quat1.w() << endl
+         << quat1.vec() << endl;
+    cout << "Mapped quaternion2 from array: " << quat2.w() << endl
+         << quat2.vec() << endl;
     cout << "Quaternion2 * Vector3d: " << quat2 * vec1 << endl;
 
     float w1, x1, y1, z1, w2, x2, y2, z2;
@@ -203,11 +206,13 @@ TestNode::TestNode() : nh("~")
     nh.getParam("x2", x2);
     nh.getParam("y2", y2);
     nh.getParam("z2", z2);
-    Eigen::Quaternionf quat3(w1,x1,y1,z1);
+    Eigen::Quaternionf quat3(w1, x1, y1, z1);
     Vector3f vWorld;
     vWorld << 0.707, 0.707, 0;
-    cout << "Eigen directly, Body roll 90 deg, rotated vector: " << endl << quat3 * vWorld << endl;
-    cout << "Eigen toRotMat, Body roll 90 deg, rotated vector: " << endl << quat3.toRotationMatrix() * vWorld << endl;
+    cout << "Eigen directly, Body roll 90 deg, rotated vector: " << endl
+         << quat3 * vWorld << endl;
+    cout << "Eigen toRotMat, Body roll 90 deg, rotated vector: " << endl
+         << quat3.toRotationMatrix() * vWorld << endl;
 
     Eigen::Matrix3f Rquat;
     Eigen::Matrix<float, 4, 1> q;
@@ -221,7 +226,8 @@ TestNode::TestNode() : nh("~")
     Rquat(2, 0) = 2 * q(1) * q(3) + 2 * q(0) * q(2);
     Rquat(1, 2) = 2 * q(2) * q(3) + 2 * q(0) * q(1);
     Rquat(2, 1) = 2 * q(2) * q(3) - 2 * q(0) * q(1);
-    cout << "Mine, Body roll 90 deg, rotated vector: " << endl << Rquat * vWorld << endl;
+    cout << "Mine, Body roll 90 deg, rotated vector: " << endl
+         << Rquat * vWorld << endl;
     // Using Eigen::Quaternion: quaternion * vector = rotates vector by the axis-angle specified, expressed in original frame
     // So: B-frame vector = quaternion.conjugate() * I-frame vector
     // So: I-frame vector = quaternion * B-frame vector
@@ -231,22 +237,26 @@ TestNode::TestNode() : nh("~")
     // I-frame vector = q^(-1) * v * q = Rquat^T * B-frame vector
 
     // Quaternion * Quaternion
-    Eigen::Quaternionf q1(w1,x1,y1,z1);
-    Eigen::Quaternionf q2(w2,x2,y2,z2);
+    Eigen::Quaternionf q1(w1, x1, y1, z1);
+    Eigen::Quaternionf q2(w2, x2, y2, z2);
     Eigen::Quaternionf qdiffI = q2 * (q1.conjugate());
-    cout << "Eigen: q2 * (q1.conj) = " << endl << qdiffI.w() << endl << qdiffI.vec() << endl;
+    cout << "Eigen: q2 * (q1.conj) = " << endl
+         << qdiffI.w() << endl
+         << qdiffI.vec() << endl;
     Eigen::Quaternionf q1q2 = q1 * q2;
-    cout << "Eigen: q1 * q2 = " << endl << q1q2.w() << endl << q1q2.vec() << endl;
+    cout << "Eigen: q1 * q2 = " << endl
+         << q1q2.w() << endl
+         << q1q2.vec() << endl;
 
     Vector4f q1V, q2V;
     q1V << w1, x1, y1, z1;
     q2V << w2, x2, y2, z2;
     Vector4f qFV = multiplyQuaternions(q2V, q1V);
-    cout << "Mine: q1 * q2 = " << endl << qFV << endl;
+    cout << "Mine: q1 * q2 = " << endl
+         << qFV << endl;
     // Quaternion Compositions: q = q1 * q2
     // The correct format: I-frame --(q2)--> Frame 2 --(q1)--> B-frame (quaternions are left multiplied)
     // Eigen does local frame composition, as in q2 is applied FROM q1
-
 }
 
 void TestNode::copy(const Ref<const MatrixXf> &m)
@@ -265,9 +275,9 @@ Matrix4f TestNode::quaternionMatrix(Vector4f q)
     Matrix4f Q, diag;
     Q.setZero(), diag.setIdentity();
     diag = diag * q(0);
-    Q.block<3,3>(1,1) = -AUVMathLib::skewSym(q.tail<3>());
-    Q.block<1,3>(0,1) = -q.tail<3>().transpose();
-    Q.block<3,1>(1,0) = q.tail<3>();
+    Q.block<3, 3>(1, 1) = -AUVMathLib::skewSym(q.tail<3>());
+    Q.block<1, 3>(0, 1) = -q.tail<3>().transpose();
+    Q.block<3, 1>(1, 0) = q.tail<3>();
     return (Q + diag);
 }
 } // namespace AUV_GNC
