@@ -24,9 +24,11 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} ${CERES
 
 add_library(${PROJECT_NAME}_lib
     src/min_jerk_trajectory.cpp
-    src/min_jerk_velocity.cpp
+    src/monotonic_trajectory_base.cpp
+    src/monotonic_trajectory.cpp
     src/short_range_trajectory.cpp
     src/long_range_trajectory.cpp
+    src/tgen_limits.cpp
     src/waypoint.cpp
 )
 

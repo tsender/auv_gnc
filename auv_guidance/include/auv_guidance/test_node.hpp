@@ -1,7 +1,7 @@
 #ifndef TEST_NODE
 #define TEST_NODE
 
-#include "auv_guidance/min_jerk_time_solver.hpp"
+#include "auv_guidance/monotonic_velocity_time_solver.hpp"
 #include "ros/ros.h"
 #include "eigen3/Eigen/Dense"
 #include "math.h"
