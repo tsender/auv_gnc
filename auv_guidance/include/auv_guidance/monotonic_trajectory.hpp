@@ -28,6 +28,7 @@ public:
   MonotonicTrajectory(const Ref<const Vector4d> &start, const Ref<const Vector4d> &end, double maxAccel);
   double getTime();
   Vector3d computeState(double time);
+  double getMiddleVelocity();
 };
 } // namespace AUVGuidance
 

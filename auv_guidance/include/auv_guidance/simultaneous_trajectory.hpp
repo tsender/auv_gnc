@@ -1,11 +1,12 @@
-#ifndef SHORT_RANGE_TRAJECTORY
-#define SHORT_RANGE_TRAJECTORY
+#ifndef SIMULTANEOUS_TRAJECTORY
+#define SIMULTANEOUS_TRAJECTORY
 
 #include "auv_guidance/abstract_trajectory.hpp"
 #include "auv_guidance/waypoint.hpp"
 #include "auv_guidance/min_jerk_trajectory.hpp"
 #include "auv_control/auv_model.hpp"
 #include "auv_navigation/auv_math_lib.hpp"
+
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"
 #include "math.h"
@@ -14,7 +15,8 @@ using namespace Eigen;
 
 namespace AUVGuidance
 {
-class ShortRangeTrajectory : public Trajectory
+// Must have zero angular velocity at end
+class SimultaneousTrajectory : public Trajectory
 {
 private:
   MinJerkTrajectory *mjtX_, *mjtY_, *mjtZ_, *mjtAtt_;
@@ -28,7 +30,7 @@ private:
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  ShortRangeTrajectory(Waypoint *start, Waypoint *end, double travelDuration);
+  SimultaneousTrajectory(Waypoint *start, Waypoint *end, double travelDuration);
   void initTrajectory();
   Vector12d computeState(double time);
   Vector6d computeAccel(double time);

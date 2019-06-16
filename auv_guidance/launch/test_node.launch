@@ -1,11 +1,11 @@
 
 <launch>
   <node pkg="auv_guidance" type="test_node" name="test_node" output="screen">
-    <param name="x0" value="0.1" />
-    <param name="v0" value="0.0" />
+    <param name="x0" value="1" />
+    <param name="v0" value="0.7" />
     <param name="a0" value="0." />
     <param name="j0" value=".4" />
-    <param name="xf" value="4" />
+    <param name="xf" value="2.09" />
     <param name="vf" value="0." />
     <param name="af" value="0" />
     <param name="jf" value=".4" />

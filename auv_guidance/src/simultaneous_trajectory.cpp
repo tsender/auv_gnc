@@ -1,4 +1,4 @@
-#include "auv_guidance/short_range_trajectory.hpp"
+#include "auv_guidance/simultaneous_trajectory.hpp"
 
 namespace AUVGuidance
 {
@@ -7,7 +7,7 @@ namespace AUVGuidance
  * @param end Ending waypoint
  * @param travelDuration Desired travel duration [s]
  */
-ShortRangeTrajectory::ShortRangeTrajectory(Waypoint *start, Waypoint *end, double travelDuration)
+SimultaneousTrajectory::SimultaneousTrajectory(Waypoint *start, Waypoint *end, double travelDuration)
 {
     wStart_ = start;
     wEnd_ = end;
@@ -24,25 +24,27 @@ ShortRangeTrajectory::ShortRangeTrajectory(Waypoint *start, Waypoint *end, doubl
     angleState_.setZero();
     rotationAxis_.setZero();
 
-    ShortRangeTrajectory::initTrajectory();
+    SimultaneousTrajectory::initTrajectory();
 }
 
 /**
  * Initialize the min jerk trajectories
  */
-void ShortRangeTrajectory::initTrajectory()
+void SimultaneousTrajectory::initTrajectory()
 {
     qStart_ = wStart_->quaternion().normalized();
     qEnd_ = wEnd_->quaternion().normalized();
-    qDiff_ = qStart_.conjugate() * qEnd_; // Error quaternion wrt B-frame (q2 * q1.conjugate is opposite)
+    qDiff_ = qStart_.conjugate() * qEnd_; // Error quaternion wrt B-frame (q2 * q1.conjugate is wrt I-frame)
     
     Vector4d angleAxis = AUVMathLib::quaternion2AngleAxis(qDiff_);
     angularDistance_ = angleAxis(0);
+    double angVel = wStart_->angVelB().squaredNorm();
     rotationAxis_ = angleAxis.tail<3>(); // Get axis relative to Body-frame
 
-    Vector3d angleStart, angleEnd;
-    angleStart.setZero(), angleEnd.setZero();
-    angleEnd(1) = angularDistance_;
+    Vector3d angleStart = Vector3d::Zero(); 
+    Vector3d angleEnd = Vector3d::Zero();
+    angleStart(1) = angVel;
+    angleEnd(0) = angularDistance_;
 
     mjtX_ = new MinJerkTrajectory(wStart_->xI(), wEnd_->xI(), travelDuration_);
     mjtY_ = new MinJerkTrajectory(wStart_->yI(), wEnd_->yI(), travelDuration_);
@@ -54,7 +56,7 @@ void ShortRangeTrajectory::initTrajectory()
  * @param time Time to compute the state at
  * Computes the trajectory state at the specified time
  */
-Vector12d ShortRangeTrajectory::computeState(double time)
+Vector12d SimultaneousTrajectory::computeState(double time)
 {
     Vector12d state;
     state.setZero();
@@ -118,7 +120,7 @@ Vector12d ShortRangeTrajectory::computeState(double time)
  * Compute inertial translational acceleration and time-derivative of angular veocity, 
  * both expressed in B-frame, at specified time
  */
-Vector6d ShortRangeTrajectory::computeAccel(double time)
+Vector6d SimultaneousTrajectory::computeAccel(double time)
 {
     Vector6d accel;
     accel.setZero();
@@ -132,7 +134,7 @@ Vector6d ShortRangeTrajectory::computeAccel(double time)
     Vector3d pqrDot = Vector3d::Zero();
     pqrDot = rotationAxis_ * angleState_(1);
 
-    accel << inertialTransAccel, pqrDot;
+    accel << inertialTransAccel, pqrDot; // Both expressed in B-frame
     return accel;
 }
 } // namespace AUVGuidance

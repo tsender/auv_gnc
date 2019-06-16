@@ -23,6 +23,9 @@ class Waypoint
     Vector3d xI();
     Vector3d yI();
     Vector3d zI();
+    Vector3d posI();
+    Vector3d velI();
+    Vector3d accelI();
     Quaterniond quaternion();
     Vector3d angVelB();
 };

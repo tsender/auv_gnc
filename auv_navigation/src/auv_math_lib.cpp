@@ -208,8 +208,22 @@ Vector4d quaternion2AngleAxis(const Quaterniond &quaternion)
     angleAxis(1) = q.x() / sqrt(i); // Axis, x-component
     angleAxis(2) = q.y() / sqrt(i); // Axis, y-component
     angleAxis(3) = q.z() / sqrt(i); // Axis, z-component
+    angleAxis.tail<3>().normalize();
 
     return angleAxis;
+}
+
+Quaterniond angleAxis2Quaternion(const Ref<const Vector4d> &angleAxis)
+{
+    Quaterniond q;
+    double angle = angleAxis(0);
+    Vector3d axis = angleAxis.tail<3>().normalized();
+    q.w() = cos(angle/2.0);
+    q.x() = axis(0) * sin(angle/2.0);
+    q.y() = axis(1) * sin(angle/2.0);
+    q.z() = axis(2) * sin(angle/2.0);
+    
+    return q.normalized();
 }
 
 Quaterniond toQuaternion(double yaw, double pitch, double roll)

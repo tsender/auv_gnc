@@ -93,8 +93,8 @@ Vector3d MonotonicTrajectory::computeState(double time)
     else if (time >= totalTime_)
     {
         state(0) = end_(0); // Pos
-        state(1) = end_(0); // Vel
-        state(2) = end_(0); // Accel
+        state(1) = end_(1); // Vel
+        state(2) = end_(2); // Accel
         return state;
     }
 
@@ -109,5 +109,12 @@ Vector3d MonotonicTrajectory::computeState(double time)
         state = mtbList_.back()->computeState(time - time1);
         return state;
     }
+}
+
+double MonotonicTrajectory::getMiddleVelocity()
+{
+    double tMid = mtbList_.back() / 2;
+    
+
 }
 } // namespace AUVGuidance

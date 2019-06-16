@@ -40,7 +40,7 @@ TestNode::TestNode() : nh("~")
     end(3) = jf;
 
     double minTime_ = 0;
-    problemMinJerkTime_.AddResidualBlock(new ceres::AutoDiffCostFunction<MonotonicVelocityTimeSolver, 1, 1>(new MonotonicVelocityTimeSolver(start, end)), NULL, &minTime_);
+    problemMinJerkTime_.AddResidualBlock(new ceres::AutoDiffCostFunction<MonotonicTrajectoryTimeSolver, 1, 1>(new MonotonicTrajectoryTimeSolver(start, end)), NULL, &minTime_);
     problemMinJerkTime_.SetParameterLowerBound(&minTime_, 0, 0.0);
     optionsMinJerkTime_.max_num_iterations = 100;
     optionsMinJerkTime_.linear_solver_type = ceres::DENSE_QR;

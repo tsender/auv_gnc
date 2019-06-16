@@ -27,6 +27,27 @@ Vector3d Waypoint::zI()
     return zI_;
 }
 
+Vector3d Waypoint::posI()
+{
+    Vector3d pos = Vector3d::Zero();
+    pos << xI_(0), yI_(0), zI_(0);
+    return pos;
+}
+
+Vector3d Waypoint::velI()
+{
+    Vector3d vel = Vector3d::Zero();
+    vel << xI_(1), yI_(1), zI_(1);
+    return vel;
+}
+
+Vector3d Waypoint::accelI()
+{
+    Vector3d accel = Vector3d::Zero();
+    accel << xI_(2), yI_(2), zI_(2);
+    return accel;
+}
+
 Quaterniond Waypoint::quaternion()
 {
     return quaternion_;
