@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(auv_control)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 
 find_package(catkin REQUIRED COMPONENTS
@@ -11,21 +11,39 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Eigen3 REQUIRED)
 find_package(Ceres REQUIRED)
+find_package(ct_optcon REQUIRED)
+#find_package(ct_core REQUIRED)
 
 ###########
 ## Build ##
 ###########
 
 catkin_package(
-  INCLUDE_DIRS include
+  INCLUDE_DIRS 
+    include 
+    ${EIGEN3_INCLUDE_DIR} 
+    ${CERES_INCLUDE_DIRS}
+    #${ct_optcon_INCLUDE_DIRS}
+  LIBRARIES ${PROJECT_NAME}_lib 
 )
-include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} ${CERES_INCLUDE_DIRS})
+
+include_directories(
+  include 
+  ${catkin_INCLUDE_DIRS} 
+  ${EIGEN3_INCLUDE_DIR} 
+  ${CERES_INCLUDE_DIRS}
+  ${ct_optcon_INCLUDE_DIRS}
+)
 
 add_library(${PROJECT_NAME}_lib 
     src/auv_model.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_lib 
+  ${catkin_LIBRARIES} 
+  ${EIGEN3_LIBRARIES} 
+  ${CERES_LIBRARIES}
+)
 
 install(DIRECTORY include/${PROJECT_NAME}/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

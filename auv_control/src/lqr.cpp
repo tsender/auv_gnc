@@ -2,15 +2,15 @@
 
 namespace AUV_GNC
 {
-AUVGNC::AUVGNC()
+LQR::LQR()
 {
-    //#include <ct/optcon/optcon.h>
+    
     //ct::optcon::LQR<state_dim, control_dim> lqrSolver;
     // use size_t for state_dim and control_dim
     //lqrSolver.compute(Q, R, A, B, K);
 }
 
-void AUVTrajectory::setWaypointTrajectory()
+void LQR::computeGain()
 {
 }
 

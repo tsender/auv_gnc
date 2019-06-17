@@ -52,6 +52,7 @@
   <build_depend>eigen</build_depend>
   <build_depend>libceres-dev</build_depend>
   <build_depend>auv_navigation</build_depend>
+  <depend>ct_optcon</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

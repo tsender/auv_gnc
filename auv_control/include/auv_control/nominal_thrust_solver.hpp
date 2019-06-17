@@ -12,7 +12,7 @@ namespace AUVControl
 {
 typedef Matrix<double, 6, 1> Vector6d;
 typedef Matrix<double, 6, 2> Matrix62d;
-typedef Matrix<double, 6, 10> Matrix610d;
+typedef Matrix<double, 6, 8> Matrix68d;
 class NominalThrustSolver
 {
 private:
@@ -20,18 +20,18 @@ private:
   Matrix3d inertia_;           // Inertia matrix expressed in B-frame
   Vector3d CoB_;               // Center of buoyancy relative to center of mass
   Matrix62d dragCoeffs_;       // 1st and 2nd order drag coefficients for translational and rotational motion
-  Matrix610d thrustCoeffs_;    // Thrust coefficients (effective contributions of each thruster for force and moment)
+  Matrix68d thrustCoeffs_;    // Thrust coefficients (effective contributions of each thruster for force and moment)
   double *quaternion_;         // (Pointer) to quaternion for orientation
   double *uvw_;                // (Pointer) Inertial translational velocity expressed in B-frame (U, V, W)
   double *pqr_;                // (Pointer) Angular velocity expressed in B-frame (P, Q, R)
   double *inertialTransAccel_; // (Pointer) Inertial translational acceleration expressed in B-frame
   double *pqrDot_;             // (Pointer) Time derivative of angular velocity measured in B-frame
 
-  static const double GRAVITY = 9.80665;
+  static constexpr double GRAVITY = 9.80665;
 
 public:
   NominalThrustSolver(double mass, double volume, double density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3d> &CoB,
-                      const Ref<const Matrix62d> &dragCoeffs, const Ref<const Matrix610d> &thrustCoeffs,
+                      const Ref<const Matrix62d> &dragCoeffs, const Ref<const Matrix68d> &thrustCoeffs,
                       double *quaternion, double *uvw, double *pqr, double *inertialTransAccel, double *pqrDot)
   {
     mass_ = mass;
@@ -57,7 +57,7 @@ public:
 
     // Cast Eigen objects to Jet type
     Eigen::Matrix<T, 6, 2> dragCoeffsT = dragCoeffs_.cast<T>();
-    Eigen::Matrix<T, 6, 10> thrustCoeffsT = thrustCoeffs_.cast<T>();
+    Eigen::Matrix<T, 6, 8> thrustCoeffsT = thrustCoeffs_.cast<T>();
     Eigen::Matrix<T, 3, 3> inertiaT = inertia_.cast<T>();
     Eigen::Matrix<T, 3, 1> CoBT = CoB_.cast<T>();
 
@@ -72,8 +72,8 @@ public:
     }
 
     // Map ceres parameters and residuals to Eigen object with Jet type
-    Eigen::Map<const Eigen::Matrix<T, 10, 1> > nominalForcesT(nominalForces);
-    Eigen::Map<Eigen::Matrix<T, 10, 1> > residualsT(residuals);
+    Eigen::Map<const Eigen::Matrix<T, 8, 1> > nominalForcesT(nominalForces);
+    Eigen::Map<Eigen::Matrix<T, 8, 1> > residualsT(residuals);
 
     // Compute quaternion
     // Using Eigen::Quaternion: quaternion * vector = rotates vector by the described axis-angle
@@ -92,8 +92,8 @@ public:
     transDragT(1) = (dragCoeffsT(1, 0) * uvwT(1) + T(0.5 * AUVMathLib::sign(uvw_[1]) * density_) * dragCoeffsT(1, 1) * uvwT(1) * uvwT(1)) / T(mass_);
     transDragT(2) = (dragCoeffsT(2, 0) * uvwT(2) + T(0.5 * AUVMathLib::sign(uvw_[2]) * density_) * dragCoeffsT(2, 1) * uvwT(2) * uvwT(2)) / T(mass_);
     
-    residualsT.template head<3>() = inertialTransAccelT - (quatT.conjugate() * weightAccelT - transDragT +
-                                                           (thrustCoeffsT.template block<3, 10>(0, 0)) / T(mass_) * nominalForcesT);
+    residualsT.template head<3>() = (T(mass_) * inertialTransAccelT) - (quatT.conjugate() * weightAccelT - transDragT +
+                                                           (thrustCoeffsT.template block<3, 8>(0, 0)) * nominalForcesT) ;
 
     // Rotational Equations
     Eigen::Matrix<T, 3, 1> forceBuoyancyT, rotDragT;
@@ -107,7 +107,7 @@ public:
     
     inertialRotAccelT = inertiaT * pqrDotT + pqrT.cross(inertiaT * pqrT);
     residualsT.template tail<3>() = inertialRotAccelT - (CoBT.cross(quatT.conjugate() * forceBuoyancyT) - rotDragT +
-                                                         (thrustCoeffsT.template block<3, 10>(3, 0)) * nominalForcesT);
+                                                         (thrustCoeffsT.template block<3, 8>(3, 0)) * nominalForcesT);
     return true;
   }
 };

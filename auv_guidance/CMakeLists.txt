@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(auv_guidance)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 
 find_package(catkin REQUIRED COMPONENTS
@@ -18,7 +18,11 @@ find_package(Eigen3 REQUIRED)
 ###########
 
 catkin_package(
-  INCLUDE_DIRS include
+  INCLUDE_DIRS 
+    include 
+    ${EIGEN3_INCLUDE_DIR} 
+    ${CERES_INCLUDE_DIRS}
+  LIBRARIES ${PROJECT_NAME}_lib 
 )
 include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} ${CERES_INCLUDE_DIRS})
 
