@@ -26,18 +26,20 @@ add_executable(test_node src/test_node.cpp src/auv_math_lib.cpp)
 target_link_libraries(test_node ${catkin_LIBRARIES})
 add_dependencies(test_node ${catkin_EXPORTED_TARGETS})
 
-add_library(${PROJECT_NAME}_lib 
-    src/auv_math_lib.cpp
-    src/kalman_filter.cpp
-    src/ekf_translation.cpp
+add_library(${PROJECT_NAME} SHARED
+  src/auv_math_lib.cpp
+  src/kalman_filter.cpp
+  src/ekf_translation.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} ${CERES_LIBRARIES})
 
-install(DIRECTORY include/${PROJECT_NAME}/
-        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+install(DIRECTORY include/
+        DESTINATION include/auv_gnc
 )
 
-install(TARGETS ${PROJECT_NAME}_lib
-        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+install(TARGETS ${PROJECT_NAME}    
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
