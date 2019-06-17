@@ -11,14 +11,14 @@ namespace AUVGuidance
 class Waypoint
 {
   private:
-    Vector3d xI_, yI_, zI_; // Position, velocity, and acceleration wrt to Inertial-frame for each axis
-    Quaterniond quaternion_; // Attitude wrt Inertial-frame
-    Vector3d angVelB_; // Angular velocity about Body-frame axis
+    Vector3d posI_, velI_, accelI_; // Inertial Position, velocity, and acceleration expressed in I-frame
+    Quaterniond quaternion_; // Attitude wrt I-frame
+    Vector3d angVelB_; // Angular velocity about B-frame axis
 
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    Waypoint(const Ref<const Vector3d> &xI, const Ref<const Vector3d> &yI, const Ref<const Vector3d> &zI,
+    Waypoint(const Ref<const Vector3d> &posI, const Ref<const Vector3d> &velI, const Ref<const Vector3d> &accelI,
             const Quaterniond &quaternion, const Ref<const Vector3d> &angVelB);
     Vector3d xI();
     Vector3d yI();

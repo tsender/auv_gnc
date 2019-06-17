@@ -4,7 +4,9 @@
 #include "auv_guidance/abstract_trajectory.hpp"
 #include "auv_guidance/waypoint.hpp"
 #include "auv_guidance/min_jerk_time_solver.hpp"
+#include "auv_guidance/min_jerk_trajectory.hpp"
 #include "auv_guidance/simultaneous_trajectory.hpp"
+#include "auv_guidance/long_trajectory.hpp"
 #include "auv_guidance/tgen_limits.hpp"
 #include "auv_control/auv_model.hpp"
 #include "auv_navigation/auv_math_lib.hpp"
@@ -22,25 +24,27 @@ class BasicTrajectory : public Trajectory
 {
 private:
   TGenLimits *tGenLimits_;
-  SimultaneousTrajectory *stRest_;
-  //MonotonicTrajectory *mtXY_, *mtZ_, *mtAtt_;
-  Waypoint *wStart_, *wRest_, *wEnd_;
-  Quaterniond qStart_, qRest_, qEnd_, qDiff_, qSlerp_;
-  double travelDuration_, angularDistance_;
-  double timeRest_;
+  SimultaneousTrajectory *stStop_, *stPrimary_;
+  LongTrajectory *ltPrimary_;
+  MinJerkTrajectory *mjtHelper_;
+  Waypoint *wStart_, *wStop_, *wEnd_;
+  Quaterniond qStop_, qEnd_;
 
-  Vector3d xState_, yState_, zState_, angleState_;
-  Vector3d rotationAxis_; // Axis for rotation wrt B-frame
+  Vector3d unitVec_, deltaVec_, maxVelocityVec_;
+  double totalDuration_, stopDuration_, simultaneousDuration_, longDuration_;
+  double distance_, initialMaxVelocity_, maxVelocity_;
 
-  bool init_, longTrajectory_;
+  bool longTrajectory_, simultaneousTrajectory_, exceedsMaxSpeed_;
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  BasicTrajectory(TGenLimits *tGenLimits);
-  void setWaypoints(Waypoint *wStart, Waypoint *wEnd);
-  void prepSlowDown();
-  void processNewWaypoint();
+  BasicTrajectory(Waypoint *wStart, Waypoint *wEnd, TGenLimits *tGenLimits);
+  void setStopTrajectory();
+  void computeMaxVelocity();
+  void computeSimultaneousTime();
+  void setPrimaryTrajectory();
+  double getTime();
   Vector12d computeState(double time);
   Vector6d computeAccel(double time);
 };

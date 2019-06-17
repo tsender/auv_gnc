@@ -20,6 +20,7 @@ public:
   MinJerkTrajectory(const Ref<const Vector3d> &start, const Ref<const Vector3d> &end, double duration);
   void computeCoeffs();
   Vector3d computeState(double time);
+  double getMiddleVelocity();
 };
 } // namespace AUVGuidance
 

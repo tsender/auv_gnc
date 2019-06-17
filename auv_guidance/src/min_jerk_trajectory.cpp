@@ -33,7 +33,7 @@ void MinJerkTrajectory::computeCoeffs()
 }
 
 /**
- * @param time Time instance for which to compute the state of teh trajectory
+ * @param time Time instance for which to compute the state of the trajectory
  * Compute the state of the trajectory at specified time
  */
 Vector3d MinJerkTrajectory::computeState(double time)
@@ -65,4 +65,11 @@ Vector3d MinJerkTrajectory::computeState(double time)
     state(1) = (c1_ + 2.0 * c2_ * tau + 3.0 * c3_ * tau2 + 4.0 * c4_ * tau3 + 5.0 * c5_ * tau4) / dt;
     state(2) = (2.0 * c2_ + 6.0 * c3_ * tau + 12.0 * c4_ * tau2 + 20.0 * c5_ * tau3) / dt2;
 }
+
+double MinJerkTrajectory::getMiddleVelocity()
+{
+    Vector3d state =  MinJerkTrajectory::computeState((tf_ - t0_) / 2.0);
+    return state(1);
+}
+
 } // namespace AUVGuidance

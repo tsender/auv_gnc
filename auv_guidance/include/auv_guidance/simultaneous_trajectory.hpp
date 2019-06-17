@@ -15,14 +15,14 @@ using namespace Eigen;
 
 namespace AUVGuidance
 {
-// Must have zero angular velocity at end
+// Must translate along a single (arbitrary) direction
 class SimultaneousTrajectory : public Trajectory
 {
 private:
   MinJerkTrajectory *mjtX_, *mjtY_, *mjtZ_, *mjtAtt_;
   Waypoint *wStart_, *wEnd_;
   Quaterniond qStart_, qEnd_, qDiff_, qSlerp_;
-  double travelDuration_, angularDistance_;
+  double totalDuration_, angularDistance_;
 
   Vector3d xState_, yState_, zState_, angleState_;
   Vector3d rotationAxis_; // Axis for rotation wrt B-frame
@@ -30,8 +30,9 @@ private:
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  SimultaneousTrajectory(Waypoint *start, Waypoint *end, double travelDuration);
+  SimultaneousTrajectory(Waypoint *start, Waypoint *end, double duration);
   void initTrajectory();
+  double getTime();
   Vector12d computeState(double time);
   Vector6d computeAccel(double time);
 };

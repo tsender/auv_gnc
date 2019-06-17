@@ -7,11 +7,11 @@ namespace AUVGuidance
  * @param end Ending waypoint
  * @param travelDuration Desired travel duration [s]
  */
-SimultaneousTrajectory::SimultaneousTrajectory(Waypoint *start, Waypoint *end, double travelDuration)
+SimultaneousTrajectory::SimultaneousTrajectory(Waypoint *start, Waypoint *end, double duration)
 {
     wStart_ = start;
     wEnd_ = end;
-    travelDuration_ = travelDuration;
+    totalDuration_ = duration;
 
     qDiff_.w() = 1;
     qDiff_.x() = 0;
@@ -46,10 +46,15 @@ void SimultaneousTrajectory::initTrajectory()
     angleStart(1) = angVel;
     angleEnd(0) = angularDistance_;
 
-    mjtX_ = new MinJerkTrajectory(wStart_->xI(), wEnd_->xI(), travelDuration_);
-    mjtY_ = new MinJerkTrajectory(wStart_->yI(), wEnd_->yI(), travelDuration_);
-    mjtZ_ = new MinJerkTrajectory(wStart_->zI(), wEnd_->zI(), travelDuration_);
-    mjtAtt_ = new MinJerkTrajectory(angleStart, angleEnd, travelDuration_);
+    mjtX_ = new MinJerkTrajectory(wStart_->xI(), wEnd_->xI(), totalDuration_);
+    mjtY_ = new MinJerkTrajectory(wStart_->yI(), wEnd_->yI(), totalDuration_);
+    mjtZ_ = new MinJerkTrajectory(wStart_->zI(), wEnd_->zI(), totalDuration_);
+    mjtAtt_ = new MinJerkTrajectory(angleStart, angleEnd, totalDuration_);
+}
+
+double SimultaneousTrajectory::getTime()
+{
+    return totalDuration_;
 }
 
 /**
@@ -85,9 +90,9 @@ Vector12d SimultaneousTrajectory::computeState(double time)
     Vector3d pqr = Vector3d::Zero();
     Vector4d q = Vector4d::Zero();
 
-    if (time >= 0 && time <= travelDuration_)
+    if (time >= 0 && time <= totalDuration_)
     {
-        double frac = time / travelDuration_;
+        double frac = time / totalDuration_;
         qSlerp_ = qStart_.slerp(frac, qEnd_); // Attitude wrt I-frame
         qSlerp_ = qSlerp_.normalized();
     }
@@ -95,7 +100,7 @@ Vector12d SimultaneousTrajectory::computeState(double time)
     {
         qSlerp_ = qStart_;
     }
-    else if (time > travelDuration_)
+    else if (time > totalDuration_)
     {
         qSlerp_ = qEnd_;
     }

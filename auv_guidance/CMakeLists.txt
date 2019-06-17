@@ -27,11 +27,10 @@ add_library(${PROJECT_NAME}_lib
     src/min_jerk_time_solver.cpp
     src/basic_trajectory.cpp
     src/simultaneous_trajectory.cpp
-    #src/monotonic_trajectory.cpp
-    #src/short_range_trajectory.cpp
-    #src/long_range_trajectory.cpp
+    src/long_trajectory.cpp
     src/tgen_limits.cpp
     src/waypoint.cpp
+    #src/monotonic_trajectory.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} ${CERES_LIBRARIES})

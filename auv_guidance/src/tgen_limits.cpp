@@ -25,6 +25,7 @@ TGenLimits::TGenLimits(double maxXYVelocity, double maxXYAccel, double maxZVeloc
     {
         maxPathInclination_ = 90.0;
     }
+    maxPathInclination_ *= M_PI / 180.0; // Convert to radians
 
     maxXYDistance_ = maxXYDistance;
     maxZDistance_ = maxZDistance;

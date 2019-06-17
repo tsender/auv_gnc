@@ -2,50 +2,50 @@
 
 namespace AUVGuidance
 {
-Waypoint::Waypoint(const Ref<const Vector3d> &xI, const Ref<const Vector3d> &yI, const Ref<const Vector3d> &zI,
+Waypoint::Waypoint(const Ref<const Vector3d> &posI, const Ref<const Vector3d> &velI, const Ref<const Vector3d> &accelI,
             const Quaterniond &quaternion, const Ref<const Vector3d> &angVelB)
 {
-    xI_ = xI;
-    yI_ = yI;
-    zI_ = zI;
-    quaternion_ = quaternion;
+    posI_ = posI;
+    velI_ = velI;
+    accelI_ = accelI;
+    quaternion_ = quaternion.normalized();
     angVelB_ = angVelB;
 }
 
 Vector3d Waypoint::xI()
 {
-    return xI_;
+    Vector3d xI = Vector3d::Zero();
+    xI << posI_(0), velI_(0), accelI_(0);
+    return xI;
 }
 
 Vector3d Waypoint::yI()
 {
-    return yI_;
+    Vector3d yI = Vector3d::Zero();
+    yI << posI_(1), velI_(1), accelI_(1);
+    return yI;
 }
 
 Vector3d Waypoint::zI()
 {
-    return zI_;
+    Vector3d zI = Vector3d::Zero();
+    zI << posI_(2), velI_(2), accelI_(2);
+    return zI;
 }
 
 Vector3d Waypoint::posI()
 {
-    Vector3d pos = Vector3d::Zero();
-    pos << xI_(0), yI_(0), zI_(0);
-    return pos;
+    return posI_;
 }
 
 Vector3d Waypoint::velI()
 {
-    Vector3d vel = Vector3d::Zero();
-    vel << xI_(1), yI_(1), zI_(1);
-    return vel;
+    return velI_;
 }
 
 Vector3d Waypoint::accelI()
 {
-    Vector3d accel = Vector3d::Zero();
-    accel << xI_(2), yI_(2), zI_(2);
-    return accel;
+    return accelI_;
 }
 
 Quaterniond Waypoint::quaternion()
