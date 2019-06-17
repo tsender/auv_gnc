@@ -1,10 +1,10 @@
 #include "auv_navigation/ekf_translation.hpp"
 
-namespace AUV_GNC
+namespace AUVNavigation
 {
 // NOTE: pos sensors are Inertial-FRAME, and vel and accel sensors are Body-FRAME
-EKFTranslation::EKFTranslation(const Ref<const Matrix3i> &fullMsmtMaskIn, const Ref<const MatrixXf> &RposIn, const Ref<const MatrixXf> &RvelIn,
-                               const Ref<const MatrixXf> &RaccelIn, const Ref<const Matrix9f> &Qin)
+EKFTranslation::EKFTranslation(const Eigen::Ref<const Eigen::Matrix3i> &fullMsmtMaskIn, const Eigen::Ref<const Eigen::MatrixXf> &RposIn, const Eigen::Ref<const Eigen::MatrixXf> &RvelIn,
+                               const Eigen::Ref<const Eigen::MatrixXf> &RaccelIn, const Eigen::Ref<const Matrix9f> &Qin)
 {
     n_ = 9;
     init_ = false;
@@ -20,16 +20,16 @@ EKFTranslation::EKFTranslation(const Ref<const Matrix3i> &fullMsmtMaskIn, const 
     A.setIdentity();
 
     int m = fullMsmtMask_.sum();
-    MatrixXf H(m, n_);
+    Eigen::MatrixXf H(m, n_);
     H.setZero();
 
-    MatrixXf R(m, m);
+    Eigen::MatrixXf R(m, m);
     R.setIdentity();
 
     ekf_ = new KalmanFilter(A, H, Q_, R);
 }
 
-void EKFTranslation::init(const Ref<const VectorXf> &Xo)
+void EKFTranslation::init(const Eigen::Ref<const Eigen::VectorXf> &Xo)
 {
     // Verify Parameter Dimensions
     int Xorows = Xo.rows();
@@ -49,7 +49,7 @@ void EKFTranslation::init(const Ref<const VectorXf> &Xo)
 // attitude = Euler Angles in the order of (roll, pitch, yaw) [rad]
 // sensorMask = indicates if the sensor (pos, vel, and/or accel) has new data
 // Z = the actual sensor data, same format as Zmask
-VectorXf EKFTranslation::update(float dt, const Ref<const Vector3f> &attitude, const Ref<const Vector3i> &sensorMask, const Ref<const Matrix3f> &Zmat)
+Eigen::VectorXf EKFTranslation::update(float dt, const Eigen::Ref<const Eigen::Vector3f> &attitude, const Eigen::Ref<const Eigen::Vector3i> &sensorMask, const Eigen::Ref<const Eigen::Matrix3f> &Zmat)
 {
     // Check for initialization of KF
     // If not, default is to leave Xhat as the zero vector
@@ -61,12 +61,12 @@ VectorXf EKFTranslation::update(float dt, const Ref<const Vector3f> &attitude, c
     Matrix9f A;
     A.setIdentity();
 
-    Vector3f dtVector;
+    Eigen::Vector3f dtVector;
     dtVector << dt, dt, dt;
-    Matrix3f dtMat = dtVector.asDiagonal(); // Diagonal matrix of dt
+    Eigen::Matrix3f dtMat = dtVector.asDiagonal(); // Diagonal matrix of dt
 
     // Rotation matrix from B-frame to I-frame
-    Matrix3f Rotb2i = AUVMathLib::getEulerRotationMat(attitude).transpose();
+    Eigen::Matrix3f Rotb2i = AUVMathLib::getEulerRotationMat(attitude).transpose();
 
     // Constant Acceleration model:
     // x = x_prev + dt*v + (0.5*dt^2)*a
@@ -78,12 +78,12 @@ VectorXf EKFTranslation::update(float dt, const Ref<const Vector3f> &attitude, c
 
     // Get mask for which data fields are present
     // diag(sensorMask) acts as a filter on fullmsmtMask to provide the dataMask
-    Matrix3i dataMask = fullMsmtMask_ * sensorMask.asDiagonal();
+    Eigen::Matrix3i dataMask = fullMsmtMask_ * sensorMask.asDiagonal();
     int m = dataMask.sum(); // Number of msmts in this iteration
 
     // Create H (observation/measurement matrix) and Z (measurement vector)
-    MatrixXf H(m, n_);
-    VectorXf Z(m, 1);
+    Eigen::MatrixXf H(m, n_);
+    Eigen::VectorXf Z(m, 1);
     H.setZero();
     Z.setZero();
     int i = 0;
@@ -102,7 +102,7 @@ VectorXf EKFTranslation::update(float dt, const Ref<const Vector3f> &attitude, c
     }
 
     // Create R (measurement noise covariance matrix) with help from dataMask
-    MatrixXf R(m, m);
+    Eigen::MatrixXf R(m, m);
     R.setZero();
     int p = dataMask.col(0).sum();
     int v = dataMask.col(1).sum();
@@ -121,4 +121,4 @@ VectorXf EKFTranslation::update(float dt, const Ref<const Vector3f> &attitude, c
     Xhat_ = ekf_->updateEKF(A, H, R, Xpredict, Z);
     return Xhat_;
 }
-} // namespace AUV_GNC
+} // namespace AUVNavigation

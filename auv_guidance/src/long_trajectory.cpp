@@ -59,7 +59,7 @@ void LongTrajectory::initTrajectory()
     { // Trajectory pitch is ok
         travelHeading = atan2(dy, dx);
         qCruise_ = AUVMathLib::toQuaternion(travelHeading, 0.0, 0.0); // yaw, pitch, roll --> quaternion
-        Quaterniond qDiff = qStart_.conjugate() * qCruise_;
+        Eigen::Quaterniond qDiff = qStart_.conjugate() * qCruise_;
         rotationDuration1_ = LongTrajectory::computeRotationTime(qDiff);
     }
     else
@@ -86,7 +86,7 @@ void LongTrajectory::initWaypoints()
 
     // Init waypoints
     // Pre/Post translate waypoints are at rest
-    Vector3d zero3d = Vector3d::Zero();
+    Eigen::Vector3d zero3d = Eigen::Vector3d::Zero();
     wCruiseStart_ = new Waypoint(cruiseStartPos_, cruiseVel_, zero3d, qCruise_, zero3d);
     wCruiseEnd_ = new Waypoint(cruiseEndPos_, cruiseVel_, zero3d, qCruise_, zero3d);
     wPreTranslate_ = new Waypoint(wStart_->posI(), zero3d, zero3d, qCruise_, zero3d);
@@ -122,7 +122,7 @@ void LongTrajectory::initSimultaneousTrajectories()
     totalDuration_ += accelDuration_;
     stTimes_.push_back(totalDuration_);
 
-    Quaterniond qDiff = qCruise_.conjugate() * qEnd_;
+    Eigen::Quaterniond qDiff = qCruise_.conjugate() * qEnd_;
     rotationDuration2_ = LongTrajectory::computeRotationTime(qDiff);
 
     stPostRotation_ = new SimultaneousTrajectory(wPostTranslate_, wEnd_, rotationDuration2_);
@@ -135,12 +135,12 @@ void LongTrajectory::initSimultaneousTrajectories()
  * @param qDiff Difference quaternion wrt B-frame (qDiff = q1.conjugate * q2)
  * Compute rotation duration given difference quaternion and TGenLimits
  */
-double LongTrajectory::computeRotationTime(Quaterniond qDiff)
+double LongTrajectory::computeRotationTime(Eigen::Quaterniond qDiff)
 {
     double angularDistance = AUVMathLib::quaternion2AngleAxis(qDiff)(0);
 
-    Vector4d rotStart = Vector4d::Zero();
-    Vector4d rotEnd = Vector4d::Zero();
+    Eigen::Vector4d rotStart = Eigen::Vector4d::Zero();
+    Eigen::Vector4d rotEnd = Eigen::Vector4d::Zero();
     rotStart << 0, 0, 0, tGenLimits_->rotJerk(angularDistance);
     rotEnd << angularDistance, 0, 0, tGenLimits_->rotJerk(angularDistance);
 

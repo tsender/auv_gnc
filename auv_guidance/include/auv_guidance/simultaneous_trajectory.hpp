@@ -11,8 +11,6 @@
 #include "eigen3/Eigen/Core"
 #include "math.h"
 
-using namespace Eigen;
-
 namespace AUVGuidance
 {
 // Must translate along a single (arbitrary) direction
@@ -21,11 +19,11 @@ class SimultaneousTrajectory : public Trajectory
 private:
   MinJerkTrajectory *mjtX_, *mjtY_, *mjtZ_, *mjtAtt_;
   Waypoint *wStart_, *wEnd_;
-  Quaterniond qStart_, qEnd_, qDiff_, qSlerp_;
+  Eigen::Quaterniond qStart_, qEnd_, qDiff_, qSlerp_;
   double totalDuration_, angularDistance_;
 
-  Vector3d xState_, yState_, zState_, angleState_;
-  Vector3d rotationAxis_; // Axis for rotation wrt B-frame
+  Eigen::Vector3d xState_, yState_, zState_, angleState_;
+  Eigen::Vector3d rotationAxis_; // Axis for rotation wrt B-frame
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

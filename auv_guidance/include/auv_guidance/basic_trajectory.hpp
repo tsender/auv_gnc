@@ -16,8 +16,6 @@
 #include "math.h"
 #include <algorithm>
 
-using namespace Eigen;
-
 namespace AUVGuidance
 {
 class BasicTrajectory : public Trajectory
@@ -28,9 +26,9 @@ private:
   LongTrajectory *ltPrimary_;
   MinJerkTrajectory *mjtHelper_;
   Waypoint *wStart_, *wStop_, *wEnd_;
-  Quaterniond qStop_, qEnd_;
+  Eigen::Quaterniond qStop_, qEnd_;
 
-  Vector3d unitVec_, deltaVec_, maxVelocityVec_;
+  Eigen::Vector3d unitVec_, deltaVec_, maxVelocityVec_;
   double totalDuration_, stopDuration_, simultaneousDuration_, longDuration_;
   double distance_, initialMaxVelocity_, maxVelocity_;
 

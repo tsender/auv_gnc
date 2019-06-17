@@ -1,9 +1,9 @@
 #include "auv_navigation/kalman_filter.hpp"
 
-namespace AUV_GNC
+namespace AUVNavigation
 {
-KalmanFilter::KalmanFilter(const Ref<const MatrixXf> &Ao, const Ref<const MatrixXf> &Ho,
-                           const Ref<const MatrixXf> &Qo, const Ref<const MatrixXf> &Ro)
+KalmanFilter::KalmanFilter(const Eigen::Ref<const Eigen::MatrixXf> &Ao, const Eigen::Ref<const Eigen::MatrixXf> &Ho,
+                           const Eigen::Ref<const Eigen::MatrixXf> &Qo, const Eigen::Ref<const Eigen::MatrixXf> &Ro)
 {
     // Verify Parameter Dimensions
     int Arows = Ao.rows(), Acols = Ao.cols(), Hrows = Ho.rows(), Hcols = Ho.cols();
@@ -52,12 +52,12 @@ KalmanFilter::KalmanFilter(const Ref<const MatrixXf> &Ao, const Ref<const Matrix
     K_.setZero();
     I_.resize(n_, n_);
     I_.setIdentity();
-    Xhat_.resize(n_,1);
+    Xhat_.resize(n_, 1);
     Xhat_.setZero();
     init_ = false;
 }
 
-void KalmanFilter::init(const Ref<const VectorXf> &Xo)
+void KalmanFilter::init(const Eigen::Ref<const Eigen::VectorXf> &Xo)
 {
     // Verify Parameter Dimensions
     int Xorows = Xo.rows();
@@ -73,7 +73,7 @@ void KalmanFilter::init(const Ref<const VectorXf> &Xo)
 }
 
 // Update Kalman Filter, assuming linear system
-VectorXf KalmanFilter::update(const Ref<const VectorXf> &Z)
+Eigen::VectorXf KalmanFilter::update(const Eigen::Ref<const Eigen::VectorXf> &Z)
 {
     // Check for initialization of KF
     // If not, default is to leave Xhat as the zero vector
@@ -101,8 +101,8 @@ VectorXf KalmanFilter::update(const Ref<const VectorXf> &Z)
 // To be called by an Extended Kalman Filter (EKF)
 // A and H matrices are Jacobians calculated by the EKF
 // R is a subset of the complete (original) R for the filter
-VectorXf KalmanFilter::updateEKF(const Ref<const MatrixXf> &Anew, const Ref<const MatrixXf> &Hnew, const Ref<const MatrixXf> &Rnew,
-                                const Ref<const VectorXf> &Xpredict, const Ref<const VectorXf> &Z)
+Eigen::VectorXf KalmanFilter::updateEKF(const Eigen::Ref<const Eigen::MatrixXf> &Anew, const Eigen::Ref<const Eigen::MatrixXf> &Hnew, const Eigen::Ref<const Eigen::MatrixXf> &Rnew,
+                                        const Eigen::Ref<const Eigen::VectorXf> &Xpredict, const Eigen::Ref<const Eigen::VectorXf> &Z)
 {
     // Verify Parameter Dimensions
     int Xrows = Xpredict.rows(), Zrows = Z.rows();
@@ -110,7 +110,7 @@ VectorXf KalmanFilter::updateEKF(const Ref<const MatrixXf> &Anew, const Ref<cons
 
     std::stringstream ss;
     bool throwError = false;
-    
+
     if ((Arows != n_) && (Acols != n_))
     {
         ss << "Dimension mismatch in call to KalmanFilter::GenericUpdate(...): Param 'Anew' of size(" << Arows << "," << Acols << ") does not match expected size(" << n_ << "," << n_ << ")" << std::endl;
@@ -158,13 +158,13 @@ VectorXf KalmanFilter::updateEKF(const Ref<const MatrixXf> &Anew, const Ref<cons
     return Xhat_;
 }
 
-VectorXf KalmanFilter::getXhat()
+Eigen::VectorXf KalmanFilter::getXhat()
 {
     return Xhat_;
 }
 
-MatrixXf KalmanFilter::getErrorCovariance()
+Eigen::MatrixXf KalmanFilter::getErrorCovariance()
 {
     return P_;
 }
-}
+} // namespace AUVNavigation

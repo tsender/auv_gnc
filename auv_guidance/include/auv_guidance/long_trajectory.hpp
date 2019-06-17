@@ -14,8 +14,6 @@
 #include "math.h"
 #include <vector>
 
-using namespace Eigen;
-
 namespace AUVGuidance
 {
 class LongTrajectory : public Trajectory
@@ -26,9 +24,9 @@ class LongTrajectory : public Trajectory
     std::vector<SimultaneousTrajectory*> stList_;
     std::vector<double> stTimes_;
     Waypoint *wStart_, *wEnd_, *wPreTranslate_, *wCruiseStart_, *wCruiseEnd_, *wPostTranslate_;
-    Quaterniond qStart_, qEnd_, qCruise_;
+    Eigen::Quaterniond qStart_, qEnd_, qCruise_;
     
-    Vector3d unitVec_, deltaVec_, cruiseStartPos_, cruiseEndPos_, cruiseVel_;
+    Eigen::Vector3d unitVec_, deltaVec_, cruiseStartPos_, cruiseEndPos_, cruiseVel_;
     double totalDuration_, rotationDuration1_, rotationDuration2_, accelDuration_, cruiseDuration_;
     double cruiseRatio_, cruiseSpeed_;
     bool newTravelHeading_;
@@ -40,7 +38,7 @@ class LongTrajectory : public Trajectory
     void initTrajectory();
     void initWaypoints();
     void initSimultaneousTrajectories();
-    double computeRotationTime(Quaterniond qDiff);
+    double computeRotationTime(Eigen::Quaterniond qDiff);
     double getTime();
     Vector12d computeState(double time);
     Vector6d computeAccel(double time);

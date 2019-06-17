@@ -5,8 +5,6 @@
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"
 
-using namespace Eigen;
-
 namespace AUVGuidance
 {
 class MonotonicTrajectoryTimeSolver
@@ -16,7 +14,7 @@ class MonotonicTrajectoryTimeSolver
     double xf_, vf_, af_, jf_; // Final state
 
   public:
-    MonotonicTrajectoryTimeSolver(const Ref<const Vector4d> &start, const Ref<const Vector4d> &end)
+    MonotonicTrajectoryTimeSolver(const Eigen::Ref<const Eigen::Vector4d> &start, const Eigen::Ref<const Eigen::Vector4d> &end)
     {
         x0_ = start(0);
         v0_ = start(1);

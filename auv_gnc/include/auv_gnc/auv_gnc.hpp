@@ -6,8 +6,6 @@
 #include "eigen3/Eigen/Dense"
 #include "math.h"
 
-using namespace Eigen;
-
 namespace AUV_GNC
 {
 

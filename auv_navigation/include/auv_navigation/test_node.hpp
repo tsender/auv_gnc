@@ -8,30 +8,27 @@
 #include <sstream>
 #include <cppad/cppad.hpp>
 
-using namespace Eigen;
 using namespace std;
 //using namespace CppAD;
 using CppAD::AD;
-typedef Matrix< AD<double> , Dynamic, Dynamic > ADMatrixXd;
-typedef Matrix< AD<double> , Dynamic, 1 > ADVectorXd;
-typedef Matrix<float, 4, 1> Vector4f;
-typedef Matrix<float, 4, 4> Matrix4f;
+typedef Eigen::Matrix< AD<double> , Eigen::Dynamic, Eigen::Dynamic > ADMatrixXd;
+typedef Eigen::Matrix< AD<double> , Eigen::Dynamic, 1 > ADVectorXd;
 
-namespace AUV_GNC
+namespace AUVNavigation
 {
 class TestNode
 {
   private:
   ros::NodeHandle nh;
-  Matrix3f mat;
+  Eigen::Matrix3f mat;
 
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     TestNode();
-    void copy(const Ref<const MatrixXf>& m);
-    Vector4f multiplyQuaternions(Vector4f q1, Vector4f q2);
-    Matrix4f quaternionMatrix(Vector4f q);
+    void copy(const Eigen::Ref<const Eigen::MatrixXf>& m);
+    Eigen::Vector4f multiplyQuaternions(Eigen::Vector4f q1, Eigen::Vector4f q2);
+    Eigen::Matrix4f quaternionMatrix(Eigen::Vector4f q);
 };
 }
 

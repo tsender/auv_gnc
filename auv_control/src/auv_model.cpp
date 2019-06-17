@@ -2,8 +2,8 @@
 
 namespace AUVControl
 {
-AUVModel::AUVModel(double mass, double volume, double fluid_density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3d> &CoB,
-                   const Ref<const Matrix62d> &dragCoeffs, const Ref<const Matrix58d> &thrusters)
+AUVModel::AUVModel(double mass, double volume, double fluid_density, const Eigen::Ref<const Eigen::Matrix3d> &inertia, const Eigen::Ref<const Eigen::Vector3d> &CoB,
+                   const Eigen::Ref<const Matrix62d> &dragCoeffs, const Eigen::Ref<const Matrix58d> &thrusters)
 {
     mass_ = mass;             // [kg]
     inertia_ = inertia;       // 3x3 inertia matrix
@@ -55,7 +55,7 @@ void AUVModel::setThrustCoeffs()
 // Get total thruster forces/moments as expressed in the B-frame
 // Parameters:
 //      thrusts = VectorXf of force exerted on vehicle by each thruster
-Vector6d AUVModel::getTotalThrustLoad(const Ref<const VectorXd> &thrusts)
+Vector6d AUVModel::getTotalThrustLoad(const Eigen::Ref<const Eigen::VectorXd> &thrusts)
 {
     Vector6d thrustLoad;
     thrustLoad.setZero();
@@ -94,7 +94,7 @@ Vector6d AUVModel::getWeightLoad(const Ref<const Vector3d> &attitude)
  * \param ref Reference state for a given time instance
  * \brief Compute the 12x12 Jacobian of the A-matrix
  */
-void AUVModel::setLinearizedSystemMatrix(const Ref<const Vector12d> &ref)
+void AUVModel::setLinearizedSystemMatrix(const Eigen::Ref<const Vector12d> &ref)
 {
     double q0 = sqrt(1.0 - pow(ref(q1_), 2) + pow(ref(q2_), 2) + pow(ref(q3_), 2)); // Get q0 from unit quaternion
 
@@ -127,7 +127,7 @@ void AUVModel::setLinearizedSystemMatrix(const Ref<const Vector12d> &ref)
     Xdot.head<3>() = ADquat * Xdot.segment<3>(U_);
 
     // 2. Time-derivatives of: U, V, W (expressed in B-frame)
-    Vector3d weight = Vector3d::Zero();
+    Eigen::Vector3d weight = Eigen::Vector3d::Zero();
     weight(2) = Fg_ - Fb_;
     ADVector3d transDrag; // Translation drag accel
     transDrag(0) = (dragCoeffs_(0, 0) * X[U_] + 0.5 * AUVMathLib::sign(ref(U_)) * density_ * dragCoeffs_(0, 1) * X[U_] * X[U_]);
@@ -138,12 +138,12 @@ void AUVModel::setLinearizedSystemMatrix(const Ref<const Vector12d> &ref)
     // Rotational States
     // 3. Time Derivatives of: q1, q2, q3 (remember, quaternion represents the B-frame orientation wrt to the I-frame)
     ADMatrix3d qoIdentity;
-    Matrix3d identity = Matrix3d::Identity();
+    Eigen::Matrix3d identity = Eigen::Matrix3d::Identity();
     qoIdentity = identity * q0;
     Xdot.segment<3>(q1_) = 0.5 * (qoIdentity * X.segment<3>(P_) + X.segment<3>(q1_).cross(X.segment<3>(P_)));
 
     // 4. Time Derivatives of: P, Q, R (expressed in B-frame)
-    Vector3d forceBuoyancy = Vector3d::Zero();
+    Eigen::Vector3d forceBuoyancy = Eigen::Vector3d::Zero();
     forceBuoyancy(2) = -Fb_;
     ADVector3d rotDrag; // Rotational drag accel
     rotDrag(0) = (dragCoeffs_(3, 0) * X[P_] + 0.5 * AUVMathLib::sign(ref(P_)) * density_ * dragCoeffs_(3, 1) * X[P_] * X[P_]);

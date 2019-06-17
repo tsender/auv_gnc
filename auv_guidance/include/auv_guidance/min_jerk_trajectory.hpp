@@ -4,8 +4,6 @@
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"
 
-using namespace Eigen;
-
 namespace AUVGuidance
 {
 class MinJerkTrajectory
@@ -17,9 +15,9 @@ private:
   double t0_, tf_;
 
 public:
-  MinJerkTrajectory(const Ref<const Vector3d> &start, const Ref<const Vector3d> &end, double duration);
+  MinJerkTrajectory(const Eigen::Ref<const Eigen::Vector3d> &start, const Eigen::Ref<const Eigen::Vector3d> &end, double duration);
   void computeCoeffs();
-  Vector3d computeState(double time);
+  Eigen::Vector3d computeState(double time);
   double getMiddleVelocity();
 };
 } // namespace AUVGuidance

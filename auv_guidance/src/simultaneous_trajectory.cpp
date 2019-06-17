@@ -36,13 +36,13 @@ void SimultaneousTrajectory::initTrajectory()
     qEnd_ = wEnd_->quaternion().normalized();
     qDiff_ = qStart_.conjugate() * qEnd_; // Error quaternion wrt B-frame (q2 * q1.conjugate is wrt I-frame)
     
-    Vector4d angleAxis = AUVMathLib::quaternion2AngleAxis(qDiff_);
+    Eigen::Vector4d angleAxis = AUVMathLib::quaternion2AngleAxis(qDiff_);
     angularDistance_ = angleAxis(0);
     double angVel = wStart_->angVelB().squaredNorm();
     rotationAxis_ = angleAxis.tail<3>(); // Get axis relative to Body-frame
 
-    Vector3d angleStart = Vector3d::Zero(); 
-    Vector3d angleEnd = Vector3d::Zero();
+    Eigen::Vector3d angleStart = Eigen::Vector3d::Zero(); 
+    Eigen::Vector3d angleEnd = Eigen::Vector3d::Zero();
     angleStart(1) = angVel;
     angleEnd(0) = angularDistance_;
 
@@ -72,9 +72,8 @@ Vector12d SimultaneousTrajectory::computeState(double time)
     angleState_ = mjtAtt_->computeState(time);
     
     // Translational Components
-    Vector3d xyz, uvw;
-    xyz.setZero();
-    uvw.setZero();
+    Eigen::Vector3d xyz = Eigen::Vector3d::Zero();
+    Eigen::Vector3d uvw = Eigen::Vector3d::Zero();
 
     // Inertial position expressed in I-frame
     xyz(0) = xState_(0);
@@ -87,8 +86,8 @@ Vector12d SimultaneousTrajectory::computeState(double time)
     uvw(2) = zState_(1); 
 
     // Rotational Components
-    Vector3d pqr = Vector3d::Zero();
-    Vector4d q = Vector4d::Zero();
+    Eigen::Vector3d pqr = Eigen::Vector3d::Zero();
+    Eigen::Vector4d q = Eigen::Vector4d::Zero();
 
     if (time >= 0 && time <= totalDuration_)
     {
@@ -130,13 +129,13 @@ Vector6d SimultaneousTrajectory::computeAccel(double time)
     Vector6d accel;
     accel.setZero();
 
-    Vector3d inertialTransAccel = Vector3d::Zero();
+    Eigen::Vector3d inertialTransAccel = Eigen::Vector3d::Zero();
     inertialTransAccel(0) = xState_(2);
     inertialTransAccel(1) = yState_(2);
     inertialTransAccel(2) = zState_(2);
     inertialTransAccel = qSlerp_.conjugate() * inertialTransAccel;
 
-    Vector3d pqrDot = Vector3d::Zero();
+    Eigen::Vector3d pqrDot = Eigen::Vector3d::Zero();
     pqrDot = rotationAxis_ * angleState_(1);
 
     accel << inertialTransAccel, pqrDot; // Both expressed in B-frame

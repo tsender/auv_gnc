@@ -5,36 +5,34 @@
 #include "eigen3/Eigen/Core"
 #include <sstream>
 
-using namespace Eigen;
-
-namespace AUV_GNC
+namespace AUVNavigation
 {
 // Basic Kalman Filter
 // If not initialized manually, then it will auto-initialize (set Xhat prediction to zero-vector).
 class KalmanFilter
 {
-  private:
-    float m_, n_;    // m = # measurements, n = # states
-    VectorXf Xhat_; // State Vector
-    MatrixXf A_;    // State-transition Matrix
-    MatrixXf H_;    // Observation/Measurement Matrix
-    MatrixXf K_;    // Kalman Gain
-    MatrixXf P_;    // Error Covariance Matrix
-    MatrixXf Q_;    // Process Noise Covariance Matrix
-    MatrixXf R_;    // Measurement Noise Covariance Matrix
-    MatrixXf I_;    // Identity Matrix
-    bool init_;
+private:
+  float m_, n_;          // m = # measurements, n = # states
+  Eigen::VectorXf Xhat_; // State Vector
+  Eigen::MatrixXf A_;    // State-transition Matrix
+  Eigen::MatrixXf H_;    // Observation/Measurement Matrix
+  Eigen::MatrixXf K_;    // Kalman Gain
+  Eigen::MatrixXf P_;    // Error Covariance Matrix
+  Eigen::MatrixXf Q_;    // Process Noise Covariance Matrix
+  Eigen::MatrixXf R_;    // Measurement Noise Covariance Matrix
+  Eigen::MatrixXf I_;    // Identity Matrix
+  bool init_;
 
-  public:
-    KalmanFilter(const Ref<const MatrixXf> &Ao, const Ref<const MatrixXf> &Ho,
-                 const Ref<const MatrixXf> &Qo, const Ref<const MatrixXf> &Ro);
-    void init(const Ref<const VectorXf> &Xo);
-    VectorXf update(const Ref<const VectorXf> &Z);
-    VectorXf updateEKF(const Ref<const MatrixXf> &Anew, const Ref<const MatrixXf> &Hnew, const Ref<const MatrixXf> &Rnew,
-                       const Ref<const VectorXf> &Xpredict, const Ref<const VectorXf> &Z);
-    VectorXf getXhat();
-    MatrixXf getErrorCovariance();
+public:
+  KalmanFilter(const Eigen::Ref<const Eigen::MatrixXf> &Ao, const Eigen::Ref<const Eigen::MatrixXf> &Ho,
+               const Eigen::Ref<const Eigen::MatrixXf> &Qo, const Eigen::Ref<const Eigen::MatrixXf> &Ro);
+  void init(const Eigen::Ref<const Eigen::VectorXf> &Xo);
+  Eigen::VectorXf update(const Eigen::Ref<const Eigen::VectorXf> &Z);
+  Eigen::VectorXf updateEKF(const Eigen::Ref<const Eigen::MatrixXf> &Anew, const Eigen::Ref<const Eigen::MatrixXf> &Hnew, const Eigen::Ref<const Eigen::MatrixXf> &Rnew,
+                            const Eigen::Ref<const Eigen::VectorXf> &Xpredict, const Eigen::Ref<const Eigen::VectorXf> &Z);
+  Eigen::VectorXf getXhat();
+  Eigen::MatrixXf getErrorCovariance();
 };
-}
+} // namespace AUVNavigation
 
 #endif

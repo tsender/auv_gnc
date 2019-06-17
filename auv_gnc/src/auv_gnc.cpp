@@ -14,7 +14,7 @@ void AUVTrajectory::setWaypointTrajectory()
 {
 }
 
-Vector12d computeState(double time)
+Eigen::Vector12d computeState(double time)
 {
 }
 } // namespace AUVGuidance

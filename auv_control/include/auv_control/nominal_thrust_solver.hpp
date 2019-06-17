@@ -6,19 +6,17 @@
 #include "eigen3/Eigen/Core"
 #include "auv_navigation/auv_math_lib.hpp"
 
-using namespace Eigen;
-
 namespace AUVControl
 {
-typedef Matrix<double, 6, 1> Vector6d;
-typedef Matrix<double, 6, 2> Matrix62d;
-typedef Matrix<double, 6, 8> Matrix68d;
+typedef Eigen::Matrix<double, 6, 1> Vector6d;
+typedef Eigen::Matrix<double, 6, 2> Matrix62d;
+typedef Eigen::Matrix<double, 6, 8> Matrix68d;
 class NominalThrustSolver
 {
 private:
   double mass_, density_, Fg_, Fb_;
-  Matrix3d inertia_;           // Inertia matrix expressed in B-frame
-  Vector3d CoB_;               // Center of buoyancy relative to center of mass
+  Eigen::Matrix3d inertia_;           // Inertia matrix expressed in B-frame
+  Eigen::Vector3d CoB_;               // Center of buoyancy relative to center of mass
   Matrix62d dragCoeffs_;       // 1st and 2nd order drag coefficients for translational and rotational motion
   Matrix68d thrustCoeffs_;    // Thrust coefficients (effective contributions of each thruster for force and moment)
   double *quaternion_;         // (Pointer) to quaternion for orientation
@@ -30,8 +28,8 @@ private:
   static constexpr double GRAVITY = 9.80665;
 
 public:
-  NominalThrustSolver(double mass, double volume, double density, const Ref<const Matrix3d> &inertia, const Ref<const Vector3d> &CoB,
-                      const Ref<const Matrix62d> &dragCoeffs, const Ref<const Matrix68d> &thrustCoeffs,
+  NominalThrustSolver(double mass, double volume, double density, const Eigen::Ref<const Eigen::Matrix3d> &inertia, const Eigen::Ref<const Eigen::Vector3d> &CoB,
+                      const Eigen::Ref<const Matrix62d> &dragCoeffs, const Eigen::Ref<const Matrix68d> &thrustCoeffs,
                       double *quaternion, double *uvw, double *pqr, double *inertialTransAccel, double *pqrDot)
   {
     mass_ = mass;

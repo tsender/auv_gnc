@@ -4,10 +4,10 @@ namespace AUVMathLib
 {
 // Return rotation matrix about a single axis
 // Angle is in [rad]
-Matrix3f getRotationMat(int axis, float angle)
+Eigen::Matrix3f getRotationMat(int axis, float angle)
 {
-    Matrix3f R = Matrix3f::Zero();
-    RowVector3f row1, row2, row3;
+    Eigen::Matrix3f R = Eigen::Matrix3f::Zero();
+    Eigen::RowVector3f row1, row2, row3;
 
     if (axis == 1) // X Axis
     {
@@ -42,9 +42,9 @@ Matrix3f getRotationMat(int axis, float angle)
 // Ex. Vb = R * Vw, Vb = vector in B-frame coordinates, Vw = vector in world-frame coordinates
 // Parameters:
 //      attitude = Eigen::Vector3f of roll, pitch, and yaw [rad] (in this order)
-Matrix3f getEulerRotationMat(const Ref<const Vector3f> &attitude)
+Eigen::Matrix3f getEulerRotationMat(const Eigen::Ref<const Eigen::Vector3f> &attitude)
 {
-    Matrix3f R = Matrix3f::Identity();
+    Eigen::Matrix3f R = Eigen::Matrix3f::Identity();
 
     int axis = 1;
     for (int i = 0; i < 3; i++)
@@ -57,9 +57,9 @@ Matrix3f getEulerRotationMat(const Ref<const Vector3f> &attitude)
 // Parameters:
 //   velBF = vel expressed in body-frame
 //   angVelBF = ang. vel expressed in the body-frame
-MatrixXf sign(const Ref<const MatrixXf> &mat)
+Eigen::MatrixXf sign(const Eigen::Ref<const Eigen::MatrixXf> &mat)
 {
-    MatrixXf signMat(mat.rows(), mat.cols());
+    Eigen::MatrixXf signMat(mat.rows(), mat.cols());
     signMat.setZero();
 
     for (int i = 0; i < mat.rows(); i++)
@@ -102,10 +102,10 @@ int sign(int x)
     return 0;
 }
 
-Matrix3f skewSym(const Ref<const Vector3f> &v)
+Eigen::Matrix3f skewSym(const Eigen::Ref<const Eigen::Vector3f> &v)
 {
-    Matrix3f skew = Matrix3f::Zero();
-    RowVector3f row1, row2, row3;
+    Eigen::Matrix3f skew = Eigen::Matrix3f::Zero();
+    Eigen::RowVector3f row1, row2, row3;
 
     row1 << 0, -v(2), v(1);
     row2 << v(2), 0, -v(0);
@@ -146,9 +146,9 @@ float pitchMap(float x)
 
 // Constrains roll/yaw to [-180,+180] deg and pitch to [-90,+90] deg
 // Attitude in (roll, pitch, yaw) [rad]
-Vector3f getConstrainedAttitude(const Ref<const Vector3f> attitude)
+Eigen::Vector3f getConstrainedAttitude(const Eigen::Ref<const Eigen::Vector3f> attitude)
 {
-    Vector3f constrainedAttitude = Vector3f::Zero();
+    Eigen::Vector3f constrainedAttitude = Eigen::Vector3f::Zero();
     constrainedAttitude(0) = AUVMathLib::rollYawMap(attitude(0));
     constrainedAttitude(1) = AUVMathLib::pitchMap(attitude(1));
     constrainedAttitude(2) = AUVMathLib::rollYawMap(attitude(2));
@@ -158,50 +158,50 @@ Vector3f getConstrainedAttitude(const Ref<const Vector3f> attitude)
 // Compute body-rates (PQR) from Euler angle rates (rollDot, pitchDot, yawDot) [same unit as input]
 // Attitude in (roll, pitch, yaw) [rad]
 // eulerDot in [rad/s]
-Vector3f eulerDot2PQR(const Ref<const Vector3f> attitude, const Ref<const Vector3f> eulerDot)
+Eigen::Vector3f eulerDot2PQR(const Eigen::Ref<const Eigen::Vector3f> attitude, const Eigen::Ref<const Eigen::Vector3f> eulerDot)
 {
     float phi = attitude(0);
     float theta = attitude(1);
     float psi = attitude(2);
 
-    Matrix3f mat = Matrix3f::Zero();
-    RowVector3f row1, row2, row3;
+    Eigen::Matrix3f mat = Eigen::Matrix3f::Zero();
+    Eigen::RowVector3f row1, row2, row3;
 
     row1 << 1, 0, -sin(theta);
     row2 << 0 , cos(phi), sin(phi) * cos(theta);
     row3 << 0, -sin(phi), cos(phi) * cos(theta);
 
     mat << row1, row2, row3;
-    Vector3f pqr = mat * eulerDot;
+    Eigen::Vector3f pqr = mat * eulerDot;
     return pqr;
 }
 
 // Compute Euler angle rates (rollDot, pitchDot, yawDot) from body-rates (PQR) [same unit as input]
 // Attitude in [rad]
 // pqr in [rad/s]
-Vector3f pqr2EulerDot(const Ref<const Vector3f> attitude, const Ref<const Vector3f> pqr)
+Eigen::Vector3f pqr2EulerDot(const Eigen::Ref<const Eigen::Vector3f> attitude, const Eigen::Ref<const Eigen::Vector3f> pqr)
 {
     float phi = attitude(0);
     float theta = attitude(1);
     float psi = attitude(2);
 
-    Matrix3f mat = Matrix3f::Zero();
-    RowVector3f row1, row2, row3;
+    Eigen::Matrix3f mat = Eigen::Matrix3f::Zero();
+    Eigen::RowVector3f row1, row2, row3;
 
     row1 << 1, sin(phi) * tan(theta), cos(phi) * tan(theta);
     row2 << 0 , cos(phi), -sin(phi);
     row3 << 0 , sin(phi) / cos(theta), cos(phi) / cos(theta);
 
     mat << row1, row2, row3;
-    Vector3f eulerDot = mat * pqr;
+    Eigen::Vector3f eulerDot = mat * pqr;
     return eulerDot;
 }
 
-Vector4d quaternion2AngleAxis(const Quaterniond &quaternion)
+Eigen::Vector4d quaternion2AngleAxis(const Eigen::Quaterniond &quaternion)
 {
-    Vector4d angleAxis;
+    Eigen::Vector4d angleAxis;
     angleAxis.setZero();
-    Quaterniond q = quaternion.normalized();
+    Eigen::Quaterniond q = quaternion.normalized();
     double i = 1 - q.w() * q.w();
 
     angleAxis(0) = 2 * acos(q.w()); // Angle [rad]
@@ -213,11 +213,11 @@ Vector4d quaternion2AngleAxis(const Quaterniond &quaternion)
     return angleAxis;
 }
 
-Quaterniond angleAxis2Quaternion(const Ref<const Vector4d> &angleAxis)
+Eigen::Quaterniond angleAxis2Quaternion(const Eigen::Ref<const Eigen::Vector4d> &angleAxis)
 {
-    Quaterniond q;
+    Eigen::Quaterniond q;
     double angle = angleAxis(0);
-    Vector3d axis = angleAxis.tail<3>().normalized();
+    Eigen::Vector3d axis = angleAxis.tail<3>().normalized();
     q.w() = cos(angle/2.0);
     q.x() = axis(0) * sin(angle/2.0);
     q.y() = axis(1) * sin(angle/2.0);
@@ -226,7 +226,7 @@ Quaterniond angleAxis2Quaternion(const Ref<const Vector4d> &angleAxis)
     return q.normalized();
 }
 
-Quaterniond toQuaternion(double yaw, double pitch, double roll)
+Eigen::Quaterniond toQuaternion(double yaw, double pitch, double roll)
 {
     // Abbreviations for the various angular functions
     double cy = cos(yaw * 0.5);
@@ -236,7 +236,7 @@ Quaterniond toQuaternion(double yaw, double pitch, double roll)
     double cr = cos(roll * 0.5);
     double sr = sin(roll * 0.5);
 
-    Quaterniond q;
+    Eigen::Quaterniond q;
     q.w() = cy * cp * cr + sy * sp * sr;
     q.x() = cy * cp * sr - sy * sp * cr;
     q.y() = sy * cp * sr + cy * sp * cr;
@@ -244,10 +244,10 @@ Quaterniond toQuaternion(double yaw, double pitch, double roll)
     return q.normalized();
 }
 
-Vector3d toEulerAngle(const Quaterniond &quaternion)
+Eigen::Vector3d toEulerAngle(const Eigen::Quaterniond &quaternion)
 {
-	Vector3d rpy = Vector3d::Zero();
-    Quaterniond q = quaternion.normalized();
+	Eigen::Vector3d rpy = Eigen::Vector3d::Zero();
+    Eigen::Quaterniond q = quaternion.normalized();
 
     // roll (x-axis rotation)
 	double sinr_cosp = +2.0 * (q.w() * q.x() + q.y() * q.z());

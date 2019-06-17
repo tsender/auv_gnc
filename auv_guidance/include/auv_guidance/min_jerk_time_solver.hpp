@@ -6,8 +6,6 @@
 #include "auv_guidance/monotonic_trajectory_time_solver.hpp"
 #include "auv_guidance/min_jerk_trajectory.hpp"
 
-using namespace Eigen;
-
 namespace AUVGuidance
 {
 // Solve for optimal time between two points given initial/final velocity, accel, and jerk
@@ -23,7 +21,7 @@ private:
   MinJerkTrajectory *mjt_;
 
 public:
-  MinJerkTimeSolver(const Ref<const Vector4d> &start, const Ref<const Vector4d> &end);
+  MinJerkTimeSolver(const Eigen::Ref<const Eigen::Vector4d> &start, const Eigen::Ref<const Eigen::Vector4d> &end);
   double getTime();
   double getMiddleVelocity();
 };

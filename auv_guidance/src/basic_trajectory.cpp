@@ -41,26 +41,28 @@ void BasicTrajectory::setStopTrajectory()
     double velXYZ = wStart_->velI().squaredNorm();
     double accelXYZ = wStart_->accelI().squaredNorm();
     double distance = (2.0 / 3.0) * (velXYZ * velXYZ) / tGenLimits_->maxXYAccel();
-    Vector3d restDeltaVec = wStart_->velI().normalized() * distance;
-    Vector3d stopPos = wStart_->posI() + restDeltaVec;
+    Eigen::Vector3d restDeltaVec = wStart_->velI().normalized() * distance;
+    Eigen::Vector3d stopPos = wStart_->posI() + restDeltaVec;
 
     // Get stop quaternion
-    Vector4d angleAxis = Vector4d::Zero();
+    Eigen::Vector4d angleAxis = Eigen::Vector4d::Zero();
     angleAxis.tail<3>() = wStart_->angVelB().normalized();
+
     double angVel = wStart_->angVelB().squaredNorm(); // Magnitude
     double angularDistance = (2.0 / 3.0) * (angVel * angVel) / tGenLimits_->maxRotAccel();
     angleAxis(0) = angularDistance;
-    Quaterniond qRotate = AUVMathLib::angleAxis2Quaternion(angleAxis); // Relative to B-frame
+
+    Eigen::Quaterniond qRotate = AUVMathLib::angleAxis2Quaternion(angleAxis); // Relative to B-frame
     qStop_ = wStart_->quaternion() * qRotate;
 
-    Vector3d zero3d = Vector3d::Zero();
+    Eigen::Vector3d zero3d = Eigen::Vector3d::Zero();
     wStop_ = new Waypoint(stopPos, zero3d, zero3d, qStop_, zero3d);
 
     // Find travel time for translation and rotation, take the larger one
-    Vector4d transStart = Vector4d::Zero();
-    Vector4d transEnd = Vector4d::Zero();
-    Vector4d rotStart = Vector4d::Zero();
-    Vector4d rotEnd = Vector4d::Zero();
+    Eigen::Vector4d transStart = Eigen::Vector4d::Zero();
+    Eigen::Vector4d transEnd = Eigen::Vector4d::Zero();
+    Eigen::Vector4d rotStart = Eigen::Vector4d::Zero();
+    Eigen::Vector4d rotEnd = Eigen::Vector4d::Zero();
 
     transStart << 0, velXYZ, accelXYZ, tGenLimits_->xyzJerk(distance);
     transEnd << distance, 0, 0, tGenLimits_->xyzJerk(distance);
@@ -96,8 +98,8 @@ void BasicTrajectory::computeMaxVelocity()
     BasicTrajectory::computeSimultaneousTime();
 
     // Find max translational velocity
-    Vector3d transStart = Vector3d::Zero();
-    Vector3d transEnd = Vector3d::Zero();
+    Eigen::Vector3d transStart = Eigen::Vector3d::Zero();
+    Eigen::Vector3d transEnd = Eigen::Vector3d::Zero();
     transEnd(0) = distance_;
     mjtHelper_ = new MinJerkTrajectory(transStart, transEnd, simultaneousDuration_);
 
@@ -109,18 +111,18 @@ void BasicTrajectory::computeMaxVelocity()
 void BasicTrajectory::computeSimultaneousTime()
 {
     // Translation
-    Vector4d transStart = Vector4d::Zero();
-    Vector4d transEnd = Vector4d::Zero();
+    Eigen::Vector4d transStart = Eigen::Vector4d::Zero();
+    Eigen::Vector4d transEnd = Eigen::Vector4d::Zero();
     transStart << 0, 0, 0, tGenLimits_->xyzJerk(distance_);
     transEnd << distance_, 0, 0, tGenLimits_->xyzJerk(distance_);
 
     // Rotation
     qEnd_ = wEnd_->quaternion();
-    Quaterniond qDiff = qStop_.conjugate() * qEnd_; // Error quaternion wrt B-frame (q2 * q1.conjugate is wrt I-frame)
+    Eigen::Quaterniond qDiff = qStop_.conjugate() * qEnd_; // Error quaternion wrt B-frame (q2 * q1.conjugate is wrt I-frame)
     double angularDistance = AUVMathLib::quaternion2AngleAxis(qDiff)(0);
 
-    Vector4d rotStart = Vector4d::Zero();
-    Vector4d rotEnd = Vector4d::Zero();
+    Eigen::Vector4d rotStart = Eigen::Vector4d::Zero();
+    Eigen::Vector4d rotEnd = Eigen::Vector4d::Zero();
     rotStart << 0, 0, 0, tGenLimits_->rotJerk(angularDistance);
     rotEnd << angularDistance, 0, 0, tGenLimits_->rotJerk(angularDistance);
 

@@ -7,7 +7,7 @@ namespace AUVGuidance
  * @param end Final conditions of position, velocity, and acceleration
  * @param duration Duration for which trajectory will occur
  */
-MinJerkTimeSolver::MinJerkTimeSolver(const Ref<const Vector4d> &start, const Ref<const Vector4d> &end)
+MinJerkTimeSolver::MinJerkTimeSolver(const Eigen::Ref<const Eigen::Vector4d> &start, const Eigen::Ref<const Eigen::Vector4d> &end)
 {
     minTime_ = 0;
     problemMTTS_.AddResidualBlock(new ceres::AutoDiffCostFunction<MonotonicTrajectoryTimeSolver, 1, 1>(new MonotonicTrajectoryTimeSolver(start, end)), NULL, &minTime_);
@@ -30,7 +30,7 @@ double MinJerkTimeSolver::getTime()
 
 double MinJerkTimeSolver::getMiddleVelocity()
 {
-    Vector3d state =  mjt_->computeState(minTime_ / 2.0);
+    Eigen::Vector3d state =  mjt_->computeState(minTime_ / 2.0);
     return state(1);
 }
 } // namespace AUVGuidance

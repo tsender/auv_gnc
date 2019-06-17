@@ -28,8 +28,8 @@ TestNode::TestNode() : nh("~")
     nh.getParam("af", af);
     nh.getParam("jf", jf);
 
-    Vector4d start = Vector4d::Zero();
-    Vector4d end = Vector4d::Zero();
+    Eigen::Vector4d start = Eigen::Vector4d::Zero();
+    Eigen::Vector4d end = Eigen::Vector4d::Zero();
     start(0) = x0;
     start(1) = v0;
     start(2) = a0;

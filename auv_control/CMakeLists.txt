@@ -5,11 +5,11 @@ project(auv_control)
 add_compile_options(-std=c++11)
 
 
-# find_package(catkin REQUIRED COMPONENTS
-#   auv_navigation
-# )
+find_package(catkin REQUIRED COMPONENTS
+  auv_navigation
+)
 
-find_package(auv_navigation REQUIRED)
+# find_package(auv_navigation REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(ct_optcon REQUIRED)
@@ -18,19 +18,19 @@ find_package(ct_optcon REQUIRED)
 ## Build ##
 ###########
 
-# catkin_package(
-#   INCLUDE_DIRS 
-#     include 
-#     ${EIGEN3_INCLUDE_DIR} 
-#     ${CERES_INCLUDE_DIRS}
-#     #${ct_optcon_INCLUDE_DIRS}
-#   LIBRARIES ${PROJECT_NAME}_lib 
-# )
+catkin_package(
+  INCLUDE_DIRS 
+    include 
+    ${EIGEN3_INCLUDE_DIR} 
+    ${CERES_INCLUDE_DIRS}
+    ${ct_optcon_INCLUDE_DIRS}
+  LIBRARIES ${PROJECT_NAME}
+  # DEPENDS ct_optcon
+)
 
-include_directories(
-  include 
-  # ${catkin_INCLUDE_DIRS} 
-  ${auv_navigation_INCLUDE_DIRS}
+include_directories(include 
+  ${catkin_INCLUDE_DIRS} 
+  # ${auv_navigation_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR} 
   ${CERES_INCLUDE_DIRS}
   ${ct_optcon_INCLUDE_DIRS}
@@ -41,14 +41,14 @@ add_library(${PROJECT_NAME} SHARED
 )
 
 target_link_libraries(${PROJECT_NAME}
-  ${auv_navigation_LIBRARIES}
-  # ${catkin_LIBRARIES} 
+  # auv_navigation
+  ${catkin_LIBRARIES} 
   ${EIGEN3_LIBRARIES} 
   ${CERES_LIBRARIES}
 )
 
-install(DIRECTORY include
-        DESTINATION include/auv_gnc
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
 install(TARGETS ${PROJECT_NAME}

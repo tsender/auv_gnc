@@ -18,13 +18,13 @@ struct ScalarBinaryOpTraits<X, CppAD::AD<X>, BinOp>
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "pose_edkf");
-    AUV_GNC::TestNode testNode;
+    AUVNavigation::TestNode testNode;
     ros::spin();
 }
 
-namespace AUV_GNC
+namespace AUVNavigation
 {
-void GetRotationYPR2Body(Ref<MatrixXf> R, float yaw, float pitch, float roll)
+void GetRotationYPR2Body(Eigen::Ref<Eigen::MatrixXf> R, float yaw, float pitch, float roll)
 {
     //Matrix3f R = Matrix3f::Zero();
     float s_phi = sin(roll);
@@ -183,13 +183,13 @@ TestNode::TestNode() : nh("~")
 
     double array[4] = {2, 0, 1, -3};
     double *aPtr = array;
-    Eigen::Map<const Eigen::Matrix<double, 4, 1> > arrayEigen(aPtr);
+    Eigen::Map<const Eigen::Matrix<double, 4, 1>> arrayEigen(aPtr);
     cout << "Mapped array pointer: " << arrayEigen << endl;
 
     //Eigen::Map<const Eigen::Quaternion<double> > quat2(aPtr);
     Eigen::Quaterniond quat1(aPtr);
     Eigen::Quaterniond quat2(2, 0, 1, -3);
-    Vector3d vec1;
+    Eigen::Vector3d vec1;
     vec1 << 1, 2, 3;
     cout << "Mapped quaternion from array pointer: " << quat1.w() << endl
          << quat1.vec() << endl;
@@ -207,7 +207,7 @@ TestNode::TestNode() : nh("~")
     nh.getParam("y2", y2);
     nh.getParam("z2", z2);
     Eigen::Quaternionf quat3(w1, x1, y1, z1);
-    Vector3f vWorld;
+    Eigen::Vector3f vWorld;
     vWorld << 0.707, 0.707, 0;
     cout << "Eigen directly, Body roll 90 deg, rotated vector: " << endl
          << quat3 * vWorld << endl;
@@ -248,10 +248,10 @@ TestNode::TestNode() : nh("~")
          << q1q2.w() << endl
          << q1q2.vec() << endl;
 
-    Vector4f q1V, q2V;
+    Eigen::Vector4f q1V, q2V;
     q1V << w1, x1, y1, z1;
     q2V << w2, x2, y2, z2;
-    Vector4f qFV = multiplyQuaternions(q2V, q1V);
+    Eigen::Vector4f qFV = multiplyQuaternions(q2V, q1V);
     cout << "Mine: q1 * q2 = " << endl
          << qFV << endl;
     // Quaternion Compositions: q = q1 * q2
@@ -259,20 +259,20 @@ TestNode::TestNode() : nh("~")
     // Eigen does local frame composition, as in q2 is applied FROM q1
 }
 
-void TestNode::copy(const Ref<const MatrixXf> &m)
+void TestNode::copy(const Eigen::Ref<const Eigen::MatrixXf> &m)
 {
     mat = m;
 }
 
 // Multiplies quaternions wrt the WORLD frame
-Vector4f TestNode::multiplyQuaternions(Vector4f q1, Vector4f q2)
+Eigen::Vector4f TestNode::multiplyQuaternions(Eigen::Vector4f q1, Eigen::Vector4f q2)
 {
     return (TestNode::quaternionMatrix(q1) * q2);
 }
 
-Matrix4f TestNode::quaternionMatrix(Vector4f q)
+Eigen::Matrix4f TestNode::quaternionMatrix(Eigen::Vector4f q)
 {
-    Matrix4f Q, diag;
+    Eigen::Matrix4f Q, diag;
     Q.setZero(), diag.setIdentity();
     diag = diag * q(0);
     Q.block<3, 3>(1, 1) = -AUVMathLib::skewSym(q.tail<3>());
@@ -280,4 +280,4 @@ Matrix4f TestNode::quaternionMatrix(Vector4f q)
     Q.block<3, 1>(1, 0) = q.tail<3>();
     return (Q + diag);
 }
-} // namespace AUV_GNC
+} // namespace AUVNavigation

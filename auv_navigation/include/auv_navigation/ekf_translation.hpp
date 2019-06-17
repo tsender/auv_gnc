@@ -7,13 +7,11 @@
 #include "math.h"
 #include <sstream>
 
-using namespace Eigen;
-
-namespace AUV_GNC
+namespace AUVNavigation
 {
-typedef Matrix<int, 1, Dynamic> RowXi;
-typedef Matrix<float, 9, 1> Vector9f;
-typedef Matrix<float, 9, 9> Matrix9f;
+//typedef Eigen::Matrix<int, 1, Dynamic> RowXi;
+typedef Eigen::Matrix<float, 9, 1> Vector9f;
+typedef Eigen::Matrix<float, 9, 9> Matrix9f;
 
 // Translational Extended Kalman Filter
 // This class is designed to estimate a vehicle's position as expressed in the I-frame,
@@ -24,8 +22,8 @@ class EKFTranslation
 private:
   KalmanFilter *ekf_;
   Vector9f Xhat_;
-  Matrix3i fullMsmtMask_;
-  Matrix3f Rpos_, Rvel_, Raccel_;
+  Eigen::Matrix3i fullMsmtMask_;
+  Eigen::Matrix3f Rpos_, Rvel_, Raccel_;
   Matrix9f Q_;
   bool init_;
   int n_; // Size of A matrix (nxn = 9x9)
@@ -33,10 +31,10 @@ private:
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   
-  EKFTranslation(const Ref<const Matrix3i> &sensorMaskIn, const Ref<const MatrixXf> &RposIn, const Ref<const MatrixXf> &RvelIn,
-           const Ref<const MatrixXf> &RaccelIn, const Ref<const Matrix9f> &Qin);
-  void init(const Ref<const VectorXf> &Xo);
-  VectorXf update(float dt, const Ref<const Vector3f> &attitude, const Ref<const Vector3i> &sensorMask, const Ref<const Matrix3f> &Zmat);
+  EKFTranslation(const Eigen::Ref<const Eigen::Matrix3i> &sensorMaskIn, const Eigen::Ref<const Eigen::MatrixXf> &RposIn, const Eigen::Ref<const Eigen::MatrixXf> &RvelIn,
+           const Eigen::Ref<const Eigen::MatrixXf> &RaccelIn, const Eigen::Ref<const Matrix9f> &Qin);
+  void init(const Eigen::Ref<const Eigen::VectorXf> &Xo);
+  Eigen::VectorXf update(float dt, const Eigen::Ref<const Eigen::Vector3f> &attitude, const Eigen::Ref<const Eigen::Vector3i> &sensorMask, const Eigen::Ref<const Eigen::Matrix3f> &Zmat);
 };
 }
 

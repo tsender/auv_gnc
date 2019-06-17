@@ -7,7 +7,6 @@
 #include "math.h"
 #include <sstream>
 
-using namespace Eigen;
 using namespace std;
 
 namespace AUVGuidance
@@ -16,7 +15,7 @@ class TestNode
 {
   private:
   ros::NodeHandle nh;
-  Matrix3f mat;
+  Eigen::Matrix3f mat;
 
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW

@@ -7,7 +7,7 @@ namespace AUVGuidance
  * @param end Final conditions of position, velocity, and acceleration
  * @param duration Duration for which trajectory will occur
  */
-MinJerkTrajectory::MinJerkTrajectory(const Ref<const Vector3d> &start, const Ref<const Vector3d> &end, double duration)
+MinJerkTrajectory::MinJerkTrajectory(const Eigen::Ref<const Eigen::Vector3d> &start, const Eigen::Ref<const Eigen::Vector3d> &end, double duration)
 {
     x0_ = start(0), v0_ = start(1), a0_ = start(2);
     xf_ = end(0), vf_ = end(1), af_ = end(2);
@@ -36,9 +36,9 @@ void MinJerkTrajectory::computeCoeffs()
  * @param time Time instance for which to compute the state of the trajectory
  * Compute the state of the trajectory at specified time
  */
-Vector3d MinJerkTrajectory::computeState(double time)
+Eigen::Vector3d MinJerkTrajectory::computeState(double time)
 {
-    Vector3d state = Vector3d::Zero();
+    Eigen::Vector3d state = Eigen::Vector3d::Zero();
     
     if (time <= t0_)
     {
@@ -68,7 +68,7 @@ Vector3d MinJerkTrajectory::computeState(double time)
 
 double MinJerkTrajectory::getMiddleVelocity()
 {
-    Vector3d state =  MinJerkTrajectory::computeState((tf_ - t0_) / 2.0);
+    Eigen::Vector3d state =  MinJerkTrajectory::computeState((tf_ - t0_) / 2.0);
     return state(1);
 }
 
