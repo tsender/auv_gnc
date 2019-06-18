@@ -112,10 +112,10 @@ Vector12d SimultaneousTrajectory::computeState(double time)
     q(2) = qSlerp_.y();
     q(3) = qSlerp_.z();
 
-    state.segment<3>(AUVControl::AUVModel::xI_) = xyz;
-    state.segment<3>(AUVControl::AUVModel::U_) = uvw;
-    state.segment<3>(AUVControl::AUVModel::q1_) = q.tail<3>();
-    state.segment<3>(AUVControl::AUVModel::P_) = pqr;
+    state.segment<3>(AUVControl::AUVModel::STATE_XI) = xyz;
+    state.segment<3>(AUVControl::AUVModel::STATE_U) = uvw;
+    state.segment<3>(AUVControl::AUVModel::STATE_Q1) = q.tail<3>();
+    state.segment<3>(AUVControl::AUVModel::STATE_P) = pqr;
     return state;
 }
 

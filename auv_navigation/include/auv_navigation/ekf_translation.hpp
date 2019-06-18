@@ -9,7 +9,6 @@
 
 namespace AUVNavigation
 {
-//typedef Eigen::Matrix<int, 1, Dynamic> RowXi;
 typedef Eigen::Matrix<float, 9, 1> Vector9f;
 typedef Eigen::Matrix<float, 9, 9> Matrix9f;
 
@@ -17,6 +16,7 @@ typedef Eigen::Matrix<float, 9, 9> Matrix9f;
 // This class is designed to estimate a vehicle's position as expressed in the I-frame,
 // and the vehicle's linear velocity and acceleration as expressed in the B-frame.
 // Since the sensory input come from INERTIAL sensors, state predictions are ALSO inertial.
+// Assumptions: the velocity and acceleration sensor provide data in all three axis
 class EKFTranslation
 {
 private:
@@ -34,7 +34,7 @@ public:
   EKFTranslation(const Eigen::Ref<const Eigen::Matrix3i> &sensorMaskIn, const Eigen::Ref<const Eigen::MatrixXf> &RposIn, const Eigen::Ref<const Eigen::MatrixXf> &RvelIn,
            const Eigen::Ref<const Eigen::MatrixXf> &RaccelIn, const Eigen::Ref<const Matrix9f> &Qin);
   void init(const Eigen::Ref<const Eigen::VectorXf> &Xo);
-  Eigen::VectorXf update(float dt, const Eigen::Ref<const Eigen::Vector3f> &attitude, const Eigen::Ref<const Eigen::Vector3i> &sensorMask, const Eigen::Ref<const Eigen::Matrix3f> &Zmat);
+  Vector9f update(float dt, const Eigen::Ref<const Eigen::Vector3f> &attitude, const Eigen::Ref<const Eigen::Vector3i> &sensorMask, const Eigen::Ref<const Eigen::Matrix3f> &Zmat);
 };
 }
 

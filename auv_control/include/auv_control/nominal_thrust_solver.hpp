@@ -90,6 +90,8 @@ public:
     transDragT(1) = (dragCoeffsT(1, 0) * uvwT(1) + T(0.5 * AUVMathLib::sign(uvw_[1]) * density_) * dragCoeffsT(1, 1) * uvwT(1) * uvwT(1)) / T(mass_);
     transDragT(2) = (dragCoeffsT(2, 0) * uvwT(2) + T(0.5 * AUVMathLib::sign(uvw_[2]) * density_) * dragCoeffsT(2, 1) * uvwT(2) * uvwT(2)) / T(mass_);
     
+    // Net_F = ma OR 
+    // 0 = ma - Net_F
     residualsT.template head<3>() = (T(mass_) * inertialTransAccelT) - (quatT.conjugate() * weightAccelT - transDragT +
                                                            (thrustCoeffsT.template block<3, 8>(0, 0)) * nominalForcesT) ;
 
@@ -103,7 +105,10 @@ public:
     rotDragT(1) = (dragCoeffsT(4, 0) * pqrT(1) + T(0.5 * AUVMathLib::sign(pqr_[1]) * density_) * dragCoeffsT(4, 1) * pqrT(1) * pqrT(1));
     rotDragT(2) = (dragCoeffsT(5, 0) * pqrT(2) + T(0.5 * AUVMathLib::sign(pqr_[2]) * density_) * dragCoeffsT(5, 1) * pqrT(2) * pqrT(2));
     
-    inertialRotAccelT = inertiaT * pqrDotT + pqrT.cross(inertiaT * pqrT);
+    inertialRotAccelT = inertiaT * pqrDotT + pqrT.cross(inertiaT * pqrT); // Iw + w x Iw
+
+    // Net_Moment = Iw + w x Iw OR 
+    // 0 = Iw + w x Iw - Net_Moment
     residualsT.template tail<3>() = inertialRotAccelT - (CoBT.cross(quatT.conjugate() * forceBuoyancyT) - rotDragT +
                                                          (thrustCoeffsT.template block<3, 8>(3, 0)) * nominalForcesT);
     return true;

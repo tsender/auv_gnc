@@ -49,7 +49,7 @@ void EKFTranslation::init(const Eigen::Ref<const Eigen::VectorXf> &Xo)
 // attitude = Euler Angles in the order of (roll, pitch, yaw) [rad]
 // sensorMask = indicates if the sensor (pos, vel, and/or accel) has new data
 // Z = the actual sensor data, same format as Zmask
-Eigen::VectorXf EKFTranslation::update(float dt, const Eigen::Ref<const Eigen::Vector3f> &attitude, const Eigen::Ref<const Eigen::Vector3i> &sensorMask, const Eigen::Ref<const Eigen::Matrix3f> &Zmat)
+Vector9f EKFTranslation::update(float dt, const Eigen::Ref<const Eigen::Vector3f> &attitude, const Eigen::Ref<const Eigen::Vector3i> &sensorMask, const Eigen::Ref<const Eigen::Matrix3f> &Zmat)
 {
     // Check for initialization of KF
     // If not, default is to leave Xhat as the zero vector

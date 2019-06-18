@@ -257,6 +257,15 @@ TestNode::TestNode() : nh("~")
     // Quaternion Compositions: q = q1 * q2
     // The correct format: I-frame --(q2)--> Frame 2 --(q1)--> B-frame (quaternions are left multiplied)
     // Eigen does local frame composition, as in q2 is applied FROM q1
+
+    Eigen::VectorXf vecXf(3,1);
+    vecXf.setZero();
+    vecXf(0) = 2.5;
+    vecXf(1) = 100.3;
+    vecXf(2) = 69;
+    Eigen::Vector3f vec3f = vecXf;
+    cout << "VecXf: " << vecXf << endl;
+    cout << "Vec3f: " << vec3f << endl;
 }
 
 void TestNode::copy(const Eigen::Ref<const Eigen::MatrixXf> &m)
