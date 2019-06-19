@@ -1,6 +1,6 @@
 #include "auv_navigation/auv_math_lib.hpp"
 
-namespace AUVMathLib
+namespace auv_math_lib
 {
 // Return rotation matrix about a single axis
 // Angle is in [rad]
@@ -48,7 +48,7 @@ Eigen::Matrix3f getEulerRotationMat(const Eigen::Ref<const Eigen::Vector3f> &att
 
     int axis = 1;
     for (int i = 0; i < 3; i++)
-        R = R * AUVMathLib::getRotationMat(axis++, attitude(i)); // R1(phi) * R2(theta) * R3(psi)
+        R = R * auv_math_lib::getRotationMat(axis++, attitude(i)); // R1(phi) * R2(theta) * R3(psi)
 
     return R;
 }
@@ -133,7 +133,7 @@ float triangularWave(float x, float period, float max)
 // x is in [rad]
 float rollYawMap(float x)
 {
-    return AUVMathLib::sawtoothWave(x, 2*M_PI, M_PI);
+    return auv_math_lib::sawtoothWave(x, 2 * M_PI, M_PI);
 }
 
 // Returns value within the bounds of pitch values: [-90, +90] deg = [-pi/2, +pi/2] rad
@@ -141,7 +141,7 @@ float rollYawMap(float x)
 // x is in [rad]
 float pitchMap(float x)
 {
-    return AUVMathLib::triangularWave(x, 2*M_PI, M_PI/2);
+    return auv_math_lib::triangularWave(x, 2 * M_PI, M_PI / 2);
 }
 
 // Constrains roll/yaw to [-180,+180] deg and pitch to [-90,+90] deg
@@ -149,9 +149,9 @@ float pitchMap(float x)
 Eigen::Vector3f getConstrainedAttitude(const Eigen::Ref<const Eigen::Vector3f> attitude)
 {
     Eigen::Vector3f constrainedAttitude = Eigen::Vector3f::Zero();
-    constrainedAttitude(0) = AUVMathLib::rollYawMap(attitude(0));
-    constrainedAttitude(1) = AUVMathLib::pitchMap(attitude(1));
-    constrainedAttitude(2) = AUVMathLib::rollYawMap(attitude(2));
+    constrainedAttitude(0) = auv_math_lib::rollYawMap(attitude(0));
+    constrainedAttitude(1) = auv_math_lib::pitchMap(attitude(1));
+    constrainedAttitude(2) = auv_math_lib::rollYawMap(attitude(2));
     return constrainedAttitude;
 }
 
@@ -168,7 +168,7 @@ Eigen::Vector3f eulerDot2PQR(const Eigen::Ref<const Eigen::Vector3f> attitude, c
     Eigen::RowVector3f row1, row2, row3;
 
     row1 << 1, 0, -sin(theta);
-    row2 << 0 , cos(phi), sin(phi) * cos(theta);
+    row2 << 0, cos(phi), sin(phi) * cos(theta);
     row3 << 0, -sin(phi), cos(phi) * cos(theta);
 
     mat << row1, row2, row3;
@@ -189,8 +189,8 @@ Eigen::Vector3f pqr2EulerDot(const Eigen::Ref<const Eigen::Vector3f> attitude, c
     Eigen::RowVector3f row1, row2, row3;
 
     row1 << 1, sin(phi) * tan(theta), cos(phi) * tan(theta);
-    row2 << 0 , cos(phi), -sin(phi);
-    row3 << 0 , sin(phi) / cos(theta), cos(phi) / cos(theta);
+    row2 << 0, cos(phi), -sin(phi);
+    row3 << 0, sin(phi) / cos(theta), cos(phi) / cos(theta);
 
     mat << row1, row2, row3;
     Eigen::Vector3f eulerDot = mat * pqr;
@@ -218,11 +218,11 @@ Eigen::Quaterniond angleAxis2Quaternion(const Eigen::Ref<const Eigen::Vector4d> 
     Eigen::Quaterniond q;
     double angle = angleAxis(0);
     Eigen::Vector3d axis = angleAxis.tail<3>().normalized();
-    q.w() = cos(angle/2.0);
-    q.x() = axis(0) * sin(angle/2.0);
-    q.y() = axis(1) * sin(angle/2.0);
-    q.z() = axis(2) * sin(angle/2.0);
-    
+    q.w() = cos(angle / 2.0);
+    q.x() = axis(0) * sin(angle / 2.0);
+    q.y() = axis(1) * sin(angle / 2.0);
+    q.z() = axis(2) * sin(angle / 2.0);
+
     return q.normalized();
 }
 
@@ -246,27 +246,27 @@ Eigen::Quaterniond toQuaternion(double yaw, double pitch, double roll)
 
 Eigen::Vector3d toEulerAngle(const Eigen::Quaterniond &quaternion)
 {
-	Eigen::Vector3d rpy = Eigen::Vector3d::Zero();
+    Eigen::Vector3d rpy = Eigen::Vector3d::Zero();
     Eigen::Quaterniond q = quaternion.normalized();
 
     // roll (x-axis rotation)
-	double sinr_cosp = +2.0 * (q.w() * q.x() + q.y() * q.z());
-	double cosr_cosp = +1.0 - 2.0 * (q.x() * q.x() + q.y() * q.y());
-	rpy(0) = atan2(sinr_cosp, cosr_cosp);
+    double sinr_cosp = +2.0 * (q.w() * q.x() + q.y() * q.z());
+    double cosr_cosp = +1.0 - 2.0 * (q.x() * q.x() + q.y() * q.y());
+    rpy(0) = atan2(sinr_cosp, cosr_cosp);
 
-	// pitch (y-axis rotation)
-	double sinp = +2.0 * (q.w() * q.y() - q.z() * q.x());
-	if (fabs(sinp) >= 1)
-		rpy(1) = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
-	else
-		rpy(1) = asin(sinp);
+    // pitch (y-axis rotation)
+    double sinp = +2.0 * (q.w() * q.y() - q.z() * q.x());
+    if (fabs(sinp) >= 1)
+        rpy(1) = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+    else
+        rpy(1) = asin(sinp);
 
-	// yaw (z-axis rotation)
-	double siny_cosp = +2.0 * (q.w() * q.z() + q.x() * q.y());
-	double cosy_cosp = +1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z());  
-	rpy(2) = atan2(siny_cosp, cosy_cosp);
+    // yaw (z-axis rotation)
+    double siny_cosp = +2.0 * (q.w() * q.z() + q.x() * q.y());
+    double cosy_cosp = +1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z());
+    rpy(2) = atan2(siny_cosp, cosy_cosp);
 
     return rpy;
 }
 
-} // namespace AUVMathLib
+} // namespace auv_math_lib

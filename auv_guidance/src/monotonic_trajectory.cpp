@@ -1,6 +1,6 @@
 #include "auv_guidance/monotonic_trajectory.hpp"
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 /**
  * @param start Initial conditions of position, velocity, acceleration, and jerk.
@@ -117,4 +117,4 @@ double MonotonicTrajectory::getMiddleVelocity()
     
 
 }
-} // namespace AUVGuidance
+} // namespace auv_guidance

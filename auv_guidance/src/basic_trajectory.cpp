@@ -1,6 +1,6 @@
 #include "auv_guidance/basic_trajectory.hpp"
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 /**
  * @param start Starting waypoint
@@ -52,7 +52,7 @@ void BasicTrajectory::setStopTrajectory()
     double angularDistance = (2.0 / 3.0) * (angVel * angVel) / tGenLimits_->maxRotAccel();
     angleAxis(0) = angularDistance;
 
-    Eigen::Quaterniond qRotate = AUVMathLib::angleAxis2Quaternion(angleAxis); // Relative to B-frame
+    Eigen::Quaterniond qRotate = auv_math_lib::angleAxis2Quaternion(angleAxis); // Relative to B-frame
     qStop_ = wStart_->quaternion() * qRotate;
 
     Eigen::Vector3d zero3d = Eigen::Vector3d::Zero();
@@ -119,7 +119,7 @@ void BasicTrajectory::computeSimultaneousTime()
     // Rotation
     qEnd_ = wEnd_->quaternion();
     Eigen::Quaterniond qDiff = qStop_.conjugate() * qEnd_; // Error quaternion wrt B-frame (q2 * q1.conjugate is wrt I-frame)
-    double angularDistance = AUVMathLib::quaternion2AngleAxis(qDiff)(0);
+    double angularDistance = auv_math_lib::quaternion2AngleAxis(qDiff)(0);
 
     Eigen::Vector4d rotStart = Eigen::Vector4d::Zero();
     Eigen::Vector4d rotEnd = Eigen::Vector4d::Zero();
@@ -234,4 +234,4 @@ Vector6d BasicTrajectory::computeAccel(double time)
         return ltPrimary_->computeAccel(time - stopDuration_);
     }
 }
-} // namespace AUVGuidance
+} // namespace auv_guidance

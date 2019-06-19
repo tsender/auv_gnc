@@ -36,7 +36,7 @@ add_dependencies(test_node ${catkin_EXPORTED_TARGETS})
 add_library(${PROJECT_NAME} SHARED
   src/auv_math_lib.cpp
   src/kalman_filter.cpp
-  src/ekf_translation.cpp
+  src/translation_ekf.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} 
@@ -44,6 +44,10 @@ target_link_libraries(${PROJECT_NAME}
   ${EIGEN3_LIBRARIES} 
   ${CERES_LIBRARIES}
 )
+
+#############
+## Install ##
+#############
 
 install(TARGETS test_node
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

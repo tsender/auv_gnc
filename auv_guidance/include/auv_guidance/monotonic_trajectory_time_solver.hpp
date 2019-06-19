@@ -5,7 +5,7 @@
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 class MonotonicTrajectoryTimeSolver
 {
@@ -45,6 +45,6 @@ class MonotonicTrajectoryTimeSolver
     }
 };
 
-} // namespace AUVGuidance
+} // namespace auv_guidance
 
 #endif

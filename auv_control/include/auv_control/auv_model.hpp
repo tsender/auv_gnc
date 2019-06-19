@@ -11,7 +11,7 @@
 #include <algorithm>
 
 //using namespace std;
-//namespace AUVMath =  AUV_GNC::AUVMathLib;
+//namespace AUVMath =  AUV_GNC::auv_math_lib;
 //using namespace AUVMath;
 //using CppAD::AD;
 
@@ -34,7 +34,7 @@ struct ScalarBinaryOpTraits<X, CppAD::AD<X>, BinOp>
 };
 } // namespace Eigen
 
-namespace AUVControl
+namespace auv_control
 {
 typedef Eigen::Matrix<double, 6, 2> Matrix62d;
 
@@ -129,6 +129,6 @@ public:
                             const Eigen::Ref<const Vector12d> &ref,
                             const Eigen::Ref<const Vector6d> &accel);
 };
-} // namespace AUVControl
+} // namespace auv_control
 
 #endif

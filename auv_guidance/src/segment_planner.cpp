@@ -1,6 +1,6 @@
 #include "auv_guidance/segment_planner.hpp"
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 /**
  * @param startPos Starting position
@@ -189,4 +189,4 @@ Vector2d SegmentPlanner::computeState(double t)
     }
     return state;
 }
-} // namespace AUVGuidance
+} // namespace auv_guidance

@@ -1,0 +1,7 @@
+<launch>
+  <arg name="config_file" default="$(find auv_gnc)/cfg/trans_ekf.yaml"/>
+
+  <node pkg="auv_gnc" type="trans_ekf" name="trans_ekf" output="screen">
+    <param name="config_file" value="$(arg config_file)" />
+  </node>
+</launch>

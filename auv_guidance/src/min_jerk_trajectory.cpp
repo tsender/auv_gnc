@@ -1,6 +1,6 @@
 #include "auv_guidance/min_jerk_trajectory.hpp"
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 /**
  * @param start Initial conditions of position, velocity, and acceleration.
@@ -72,4 +72,4 @@ double MinJerkTrajectory::getMiddleVelocity()
     return state(1);
 }
 
-} // namespace AUVGuidance
+} // namespace auv_guidance

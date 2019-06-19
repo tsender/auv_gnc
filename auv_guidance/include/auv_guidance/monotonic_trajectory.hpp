@@ -9,7 +9,7 @@
 
 using namespace Eigen;
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 // The monotonic trajectory time solver can fail if the signs on the velocity do not follow a general
 // convention. This class takes care of that problem.
@@ -30,6 +30,6 @@ public:
   Vector3d computeState(double time);
   double getMiddleVelocity();
 };
-} // namespace AUVGuidance
+} // namespace auv_guidance
 
 #endif

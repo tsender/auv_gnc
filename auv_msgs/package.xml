@@ -1,18 +1,17 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>auv_gnc</name>
+  <name>auv_msgs</name>
   <version>0.0.1</version>
-  <description>The auv_gnc package</description>
+  <description>The auv_msgs package</description>
 
   <maintainer email="tsender97@gmail.com">tsender</maintainer>
 
   <license>BSD</license>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>eigen</build_depend>
-  <build_depend>auv_navigation</build_depend>
-  <depend>roscpp</depend>
-  <exec_depend>auv_msgs</exec_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <exec_depend>message_runtime</exec_depend>
 
   <export>
   </export>

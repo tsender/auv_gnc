@@ -6,6 +6,7 @@ project(auv_gnc)
 
 
 find_package(catkin REQUIRED COMPONENTS
+  auv_navigation
   roscpp
 )
 
@@ -18,11 +19,25 @@ find_package(Eigen3)
 catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp
-  DEPENDS ${Eigen3_LIBRARIES} 
 )
 include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
 
-#add_executable(test_node src/test_node.cpp src/auv_math_lib.cpp)
-#target_link_libraries(test_node ${catkin_LIBRARIES})
-#add_dependencies(test_node ${catkin_EXPORTED_TARGETS})
+add_executable(trans_ekf src/trans_ekf_node.cpp src/trans_ekf.cpp)
+target_link_libraries(trans_ekf ${catkin_LIBRARIES} yaml-cpp)
+add_dependencies(trans_ekf ${catkin_EXPORTED_TARGETS})
 
+install(TARGETS trans_ekf
+        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY launch/
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+)
+
+install(DIRECTORY cfg/
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/cfg
+)
+
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)

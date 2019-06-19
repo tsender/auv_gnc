@@ -3,11 +3,11 @@
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "pose_edkf");
-    AUVGuidance::TestNode testNode;
+    auv_guidance::TestNode testNode;
     ros::spin();
 }
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 
 TestNode::TestNode() : nh("~")
@@ -47,4 +47,4 @@ TestNode::TestNode() : nh("~")
     ceres::Solve(optionsMinJerkTime_, &problemMinJerkTime_, &summaryMinJerkTime_);
     cout << "Min Jerk time: " << minTime_ << endl;
 }
-} // namespace AUVGuidance
+} // namespace auv_guidance

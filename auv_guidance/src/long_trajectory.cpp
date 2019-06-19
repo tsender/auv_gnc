@@ -1,6 +1,6 @@
 #include "auv_guidance/long_trajectory.hpp"
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 /**
  * @param start Starting waypoint
@@ -58,7 +58,7 @@ void LongTrajectory::initTrajectory()
     if (atan(fabs(dz) / xyDistance) < tGenLimits_->maxPathInclination())
     { // Trajectory pitch is ok
         travelHeading = atan2(dy, dx);
-        qCruise_ = AUVMathLib::toQuaternion(travelHeading, 0.0, 0.0); // yaw, pitch, roll --> quaternion
+        qCruise_ = auv_math_lib::toQuaternion(travelHeading, 0.0, 0.0); // yaw, pitch, roll --> quaternion
         Eigen::Quaterniond qDiff = qStart_.conjugate() * qCruise_;
         rotationDuration1_ = LongTrajectory::computeRotationTime(qDiff);
     }
@@ -137,7 +137,7 @@ void LongTrajectory::initSimultaneousTrajectories()
  */
 double LongTrajectory::computeRotationTime(Eigen::Quaterniond qDiff)
 {
-    double angularDistance = AUVMathLib::quaternion2AngleAxis(qDiff)(0);
+    double angularDistance = auv_math_lib::quaternion2AngleAxis(qDiff)(0);
 
     Eigen::Vector4d rotStart = Eigen::Vector4d::Zero();
     Eigen::Vector4d rotEnd = Eigen::Vector4d::Zero();
@@ -193,4 +193,4 @@ Vector6d LongTrajectory::computeAccel(double time)
         }
     }
 }
-} // namespace AUVGuidance
+} // namespace auv_guidance

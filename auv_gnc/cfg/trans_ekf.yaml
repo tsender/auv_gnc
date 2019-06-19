@@ -1,0 +1,7 @@
+ekf: {
+  position_sensing: [false, false, true], # Indicates if X,Y,Z axess have inertial position
+  R_pos: [0.0, 0.0, 0.05], # Measurement noise covariance for position sensor (value of zero will disable)
+  R_vel: [0.001, 0.001, 0.001], # Measurement noise covariance for velocity sensor
+  R_accel: [0.05, 0.05, 0.05], # Measurement noise covariance for accelerometer
+  Q_diag: [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05] # Process noise covariance for all 9 states
+}

@@ -6,7 +6,7 @@
 #include "math.h"
 
 // Useful math tools
-namespace AUVMathLib
+namespace auv_math_lib
 {
 Eigen::Matrix3f getRotationMat(int axis, float angle);
 
@@ -33,6 +33,6 @@ Eigen::Vector4d quaternion2AngleAxis(const Eigen::Quaterniond &quaternion);
 Eigen::Quaterniond angleAxis2Quaternion(const Eigen::Ref<const Eigen::Vector4d> &angleAxis);
 Eigen::Quaterniond toQuaternion(double yaw, double pitch, double roll);
 Eigen::Vector3d toEulerAngle(const Eigen::Quaterniond &quaternion);
-} // namespace AUVMathLib
+} // namespace auv_math_lib
 
 #endif

@@ -1,19 +1,25 @@
-#include "auv_navigation/ekf_translation.hpp"
+#include "auv_navigation/translation_ekf.hpp"
 
-namespace AUVNavigation
+namespace auv_navigation
 {
 // NOTE: pos sensors are Inertial-FRAME, and vel and accel sensors are Body-FRAME
-EKFTranslation::EKFTranslation(const Eigen::Ref<const Eigen::Matrix3i> &fullMsmtMaskIn, const Eigen::Ref<const Eigen::MatrixXf> &RposIn, const Eigen::Ref<const Eigen::MatrixXf> &RvelIn,
-                               const Eigen::Ref<const Eigen::MatrixXf> &RaccelIn, const Eigen::Ref<const Matrix9f> &Qin)
+TranslationEKF::TranslationEKF(const Eigen::Ref<const Eigen::Vector3i> &posMask,
+                               const Eigen::Ref<const Eigen::MatrixXf> &Rpos,
+                               const Eigen::Ref<const Eigen::Matrix3f> &Rvel,
+                               const Eigen::Ref<const Eigen::Matrix3f> &Raccel,
+                               const Eigen::Ref<const Matrix9f> &Q)
 {
     n_ = 9;
     init_ = false;
     Xhat_.setZero();
-    fullMsmtMask_ = fullMsmtMaskIn; // Mask of all measurements that the provided sensors measure
-    Rpos_ = RposIn;
-    Rvel_ = RvelIn;
-    Raccel_ = RaccelIn;
-    Q_ = Qin;
+    posMask_ = posMask;
+    fullMsmtMask_.setOnes(); // Mask of all measurements that the provided sensors measure
+    fullMsmtMask_.col(0) = posMask_;
+
+    Rpos_ = Rpos;
+    Rvel_ = Rvel;
+    Raccel_ = Raccel;
+    Q_ = Q;
 
     // Initialize the EKF using generic matrices, as they will be overridden with each update call
     Matrix9f A;
@@ -29,7 +35,7 @@ EKFTranslation::EKFTranslation(const Eigen::Ref<const Eigen::Matrix3i> &fullMsmt
     ekf_ = new KalmanFilter(A, H, Q_, R);
 }
 
-void EKFTranslation::init(const Eigen::Ref<const Eigen::VectorXf> &Xo)
+void TranslationEKF::init(const Eigen::Ref<const Eigen::VectorXf> &Xo)
 {
     // Verify Parameter Dimensions
     int Xorows = Xo.rows();
@@ -49,7 +55,8 @@ void EKFTranslation::init(const Eigen::Ref<const Eigen::VectorXf> &Xo)
 // attitude = Euler Angles in the order of (roll, pitch, yaw) [rad]
 // sensorMask = indicates if the sensor (pos, vel, and/or accel) has new data
 // Z = the actual sensor data, same format as Zmask
-Vector9f EKFTranslation::update(float dt, const Eigen::Ref<const Eigen::Vector3f> &attitude, const Eigen::Ref<const Eigen::Vector3i> &sensorMask, const Eigen::Ref<const Eigen::Matrix3f> &Zmat)
+Vector9f TranslationEKF::update(float dt, const Eigen::Ref<const Eigen::Vector3i> &sensorMask,
+                                const Eigen::Ref<const Eigen::Matrix3f> &Zmat)
 {
     // Check for initialization of KF
     // If not, default is to leave Xhat as the zero vector
@@ -64,16 +71,17 @@ Vector9f EKFTranslation::update(float dt, const Eigen::Ref<const Eigen::Vector3f
     Eigen::Vector3f dtVector;
     dtVector << dt, dt, dt;
     Eigen::Matrix3f dtMat = dtVector.asDiagonal(); // Diagonal matrix of dt
+    Eigen::Matrix3f dt2Mat = dtMat * dtMat;
 
     // Rotation matrix from B-frame to I-frame
-    Eigen::Matrix3f Rotb2i = AUVMathLib::getEulerRotationMat(attitude).transpose();
+    //Eigen::Matrix3f Rotb2i = auv_math_lib::getEulerRotationMat(attitude).transpose();
 
     // Constant Acceleration model:
     // x = x_prev + dt*v + (0.5*dt^2)*a
     // v = v_prev + dt*a
     // a = a_prev
-    A.block<3, 3>(0, 3) = dt * Rotb2i;
-    A.block<3, 3>(0, 6) = 0.5 * pow(dt, 2) * Rotb2i;
+    A.block<3, 3>(0, 3) = dtMat;  //dt * Rotb2i;
+    A.block<3, 3>(0, 6) = dt2Mat; //0.5 * pow(dt, 2) * Rotb2i;
     A.block<3, 3>(3, 6) = dtMat;
 
     // Get mask for which data fields are present
@@ -96,7 +104,8 @@ Vector9f EKFTranslation::update(float dt, const Eigen::Ref<const Eigen::Vector3f
             if (dataMask(j, k))
             {
                 H(i, (3 * k + j)) = 1;
-                Z(i++) = Zmat(j, k);
+                Z(i) = Zmat(j, k);
+                i++;
             }
         }
     }
@@ -121,4 +130,4 @@ Vector9f EKFTranslation::update(float dt, const Eigen::Ref<const Eigen::Vector3f
     Xhat_ = ekf_->updateEKF(A, H, R, Xpredict, Z);
     return Xhat_;
 }
-} // namespace AUVNavigation
+} // namespace auv_navigation

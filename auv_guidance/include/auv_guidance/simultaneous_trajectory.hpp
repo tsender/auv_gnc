@@ -11,7 +11,7 @@
 #include "eigen3/Eigen/Core"
 #include "math.h"
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 // Must translate along a single (arbitrary) direction
 class SimultaneousTrajectory : public Trajectory
@@ -34,6 +34,6 @@ public:
   Vector12d computeState(double time);
   Vector6d computeAccel(double time);
 };
-} // namespace AUVGuidance
+} // namespace auv_guidance
 
 #endif

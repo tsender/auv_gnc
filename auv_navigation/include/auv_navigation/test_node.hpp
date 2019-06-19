@@ -11,25 +11,25 @@
 using namespace std;
 //using namespace CppAD;
 using CppAD::AD;
-typedef Eigen::Matrix< AD<double> , Eigen::Dynamic, Eigen::Dynamic > ADMatrixXd;
-typedef Eigen::Matrix< AD<double> , Eigen::Dynamic, 1 > ADVectorXd;
+typedef Eigen::Matrix<AD<double>, Eigen::Dynamic, Eigen::Dynamic> ADMatrixXd;
+typedef Eigen::Matrix<AD<double>, Eigen::Dynamic, 1> ADVectorXd;
 
-namespace AUVNavigation
+namespace auv_navigation
 {
 class TestNode
 {
-  private:
+private:
   ros::NodeHandle nh;
   Eigen::Matrix3f mat;
 
-  public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    TestNode();
-    void copy(const Eigen::Ref<const Eigen::MatrixXf>& m);
-    Eigen::Vector4f multiplyQuaternions(Eigen::Vector4f q1, Eigen::Vector4f q2);
-    Eigen::Matrix4f quaternionMatrix(Eigen::Vector4f q);
+  TestNode();
+  void copy(const Eigen::Ref<const Eigen::MatrixXf> &m);
+  Eigen::Vector4f multiplyQuaternions(Eigen::Vector4f q1, Eigen::Vector4f q2);
+  Eigen::Matrix4f quaternionMatrix(Eigen::Vector4f q);
 };
-}
+} // namespace auv_navigation
 
 #endif

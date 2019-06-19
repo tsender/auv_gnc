@@ -3,7 +3,7 @@
 
 #include "math.h"
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 class TGenLimits
 {
@@ -36,6 +36,6 @@ class TGenLimits
     double maxXYDistance();
     double maxZDistance();
 };
-} // namespace AUVGuidance
+} // namespace auv_guidance
 
 #endif

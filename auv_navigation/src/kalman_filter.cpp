@@ -1,6 +1,6 @@
 #include "auv_navigation/kalman_filter.hpp"
 
-namespace AUVNavigation
+namespace auv_navigation
 {
 KalmanFilter::KalmanFilter(const Eigen::Ref<const Eigen::MatrixXf> &Ao, const Eigen::Ref<const Eigen::MatrixXf> &Ho,
                            const Eigen::Ref<const Eigen::MatrixXf> &Qo, const Eigen::Ref<const Eigen::MatrixXf> &Ro)
@@ -167,4 +167,4 @@ Eigen::MatrixXf KalmanFilter::getErrorCovariance()
 {
     return P_;
 }
-} // namespace AUVNavigation
+} // namespace auv_navigation

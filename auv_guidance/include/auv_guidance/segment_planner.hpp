@@ -7,7 +7,7 @@
 
 using namespace Eigen;
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 // This class performs motion planning along a single axis using the distance to be traveled,
 // with which is constrains velocity to a trapezoidal profile
@@ -33,6 +33,6 @@ class SegmentPlanner
     double getTravelTime();
     Vector2d computeState(double t);
 };
-} // namespace AUVGuidance
+} // namespace auv_guidance
 
 #endif

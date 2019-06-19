@@ -5,7 +5,7 @@
 #include "eigen3/Eigen/Core"
 #include <sstream>
 
-namespace AUVNavigation
+namespace auv_navigation
 {
 // Basic Kalman Filter
 // If not initialized manually, then it will auto-initialize (set Xhat prediction to zero-vector).
@@ -33,6 +33,6 @@ public:
   Eigen::VectorXf getXhat();
   Eigen::MatrixXf getErrorCovariance();
 };
-} // namespace AUVNavigation
+} // namespace auv_navigation
 
 #endif

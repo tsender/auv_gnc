@@ -7,7 +7,7 @@
 #include "math.h"
 #include <sstream>
 
-namespace AUVNavigation
+namespace auv_navigation
 {
 typedef Eigen::Matrix<float, 9, 1> Vector9f;
 typedef Eigen::Matrix<float, 9, 9> Matrix9f;
@@ -17,25 +17,34 @@ typedef Eigen::Matrix<float, 9, 9> Matrix9f;
 // and the vehicle's linear velocity and acceleration as expressed in the B-frame.
 // Since the sensory input come from INERTIAL sensors, state predictions are ALSO inertial.
 // Assumptions: the velocity and acceleration sensor provide data in all three axis
-class EKFTranslation
+// NOTES: Body frame sensor data will be converted to inertial frame coordinates.
+//        Calculations performed in inertial frame coordinates.
+//        Result returned in inertial frame coordinates
+class TranslationEKF
 {
 private:
   KalmanFilter *ekf_;
   Vector9f Xhat_;
+  Eigen::Vector3i posMask_;
   Eigen::Matrix3i fullMsmtMask_;
-  Eigen::Matrix3f Rpos_, Rvel_, Raccel_;
+  Eigen::Matrix3f Rvel_, Raccel_;
+  Eigen::MatrixXf Rpos_;
   Matrix9f Q_;
   bool init_;
   int n_; // Size of A matrix (nxn = 9x9)
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  
-  EKFTranslation(const Eigen::Ref<const Eigen::Matrix3i> &sensorMaskIn, const Eigen::Ref<const Eigen::MatrixXf> &RposIn, const Eigen::Ref<const Eigen::MatrixXf> &RvelIn,
-           const Eigen::Ref<const Eigen::MatrixXf> &RaccelIn, const Eigen::Ref<const Matrix9f> &Qin);
+
+  TranslationEKF(const Eigen::Ref<const Eigen::Vector3i> &posMask,
+                 const Eigen::Ref<const Eigen::MatrixXf> &Rpos,
+                 const Eigen::Ref<const Eigen::Matrix3f> &Rvel,
+                 const Eigen::Ref<const Eigen::Matrix3f> &Raccel,
+                 const Eigen::Ref<const Matrix9f> &Q);
   void init(const Eigen::Ref<const Eigen::VectorXf> &Xo);
-  Vector9f update(float dt, const Eigen::Ref<const Eigen::Vector3f> &attitude, const Eigen::Ref<const Eigen::Vector3i> &sensorMask, const Eigen::Ref<const Eigen::Matrix3f> &Zmat);
+  Vector9f update(float dt, const Eigen::Ref<const Eigen::Vector3i> &sensorMask,
+                  const Eigen::Ref<const Eigen::Matrix3f> &Zmat);
 };
-}
+} // namespace AUVNavigation
 
 #endif

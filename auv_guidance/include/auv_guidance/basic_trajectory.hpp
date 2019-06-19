@@ -16,7 +16,7 @@
 #include "math.h"
 #include <algorithm>
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 class BasicTrajectory : public Trajectory
 {
@@ -46,6 +46,6 @@ public:
   Vector12d computeState(double time);
   Vector6d computeAccel(double time);
 };
-} // namespace AUVGuidance
+} // namespace auv_guidance
 
 #endif

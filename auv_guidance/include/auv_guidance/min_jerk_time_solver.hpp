@@ -6,7 +6,7 @@
 #include "auv_guidance/monotonic_trajectory_time_solver.hpp"
 #include "auv_guidance/min_jerk_trajectory.hpp"
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 // Solve for optimal time between two points given initial/final velocity, accel, and jerk
 class MinJerkTimeSolver
@@ -25,6 +25,6 @@ public:
   double getTime();
   double getMiddleVelocity();
 };
-} // namespace AUVGuidance
+} // namespace auv_guidance
 
 #endif

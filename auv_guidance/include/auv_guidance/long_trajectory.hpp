@@ -14,7 +14,7 @@
 #include "math.h"
 #include <vector>
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 class LongTrajectory : public Trajectory
 {
@@ -43,6 +43,6 @@ class LongTrajectory : public Trajectory
     Vector12d computeState(double time);
     Vector6d computeAccel(double time);
 };
-} // namespace AUVGuidance
+} // namespace auv_guidance
 
 #endif

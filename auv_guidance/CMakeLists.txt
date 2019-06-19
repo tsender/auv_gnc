@@ -53,6 +53,10 @@ add_executable(test_node src/test_node.cpp)
 target_link_libraries(test_node ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} ${CERES_LIBRARIES})
 add_dependencies(test_node ${catkin_EXPORTED_TARGETS})
 
+#############
+## Install ##
+#############
+
 install(TARGETS test_node
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

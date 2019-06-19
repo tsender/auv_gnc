@@ -6,7 +6,7 @@
 #include "eigen3/Eigen/Core"
 #include "auv_navigation/auv_math_lib.hpp"
 
-namespace AUVControl
+namespace auv_control
 {
 typedef Eigen::Matrix<double, 6, 1> Vector6d;
 typedef Eigen::Matrix<double, 6, 2> Matrix62d;
@@ -15,10 +15,10 @@ class NominalThrustSolver
 {
 private:
   double mass_, density_, Fg_, Fb_;
-  Eigen::Matrix3d inertia_;           // Inertia matrix expressed in B-frame
-  Eigen::Vector3d CoB_;               // Center of buoyancy relative to center of mass
+  Eigen::Matrix3d inertia_;    // Inertia matrix expressed in B-frame
+  Eigen::Vector3d CoB_;        // Center of buoyancy relative to center of mass
   Matrix62d dragCoeffs_;       // 1st and 2nd order drag coefficients for translational and rotational motion
-  Matrix68d thrustCoeffs_;    // Thrust coefficients (effective contributions of each thruster for force and moment)
+  Matrix68d thrustCoeffs_;     // Thrust coefficients (effective contributions of each thruster for force and moment)
   double *quaternion_;         // (Pointer) to quaternion for orientation
   double *uvw_;                // (Pointer) Inertial translational velocity expressed in B-frame (U, V, W)
   double *pqr_;                // (Pointer) Angular velocity expressed in B-frame (P, Q, R)
@@ -70,8 +70,9 @@ public:
     }
 
     // Map ceres parameters and residuals to Eigen object with Jet type
-    Eigen::Map<const Eigen::Matrix<T, 8, 1> > nominalForcesT(nominalForces);
-    Eigen::Map<Eigen::Matrix<T, 8, 1> > residualsT(residuals);
+    typedef Eigen::Matrix<T, 8, 1> Vector8T;
+    Eigen::Map<const Vector8T> nominalForcesT(nominalForces);
+    Eigen::Map<Vector8T> residualsT(residuals);
 
     // Compute quaternion
     // Using Eigen::Quaternion: quaternion * vector = rotates vector by the described axis-angle
@@ -86,14 +87,14 @@ public:
     transDragT.setZero();
     weightAccelT(2) = T((Fg_ - Fb_) / mass_);
 
-    transDragT(0) = (dragCoeffsT(0, 0) * uvwT(0) + T(0.5 * AUVMathLib::sign(uvw_[0]) * density_) * dragCoeffsT(0, 1) * uvwT(0) * uvwT(0)) / T(mass_);
-    transDragT(1) = (dragCoeffsT(1, 0) * uvwT(1) + T(0.5 * AUVMathLib::sign(uvw_[1]) * density_) * dragCoeffsT(1, 1) * uvwT(1) * uvwT(1)) / T(mass_);
-    transDragT(2) = (dragCoeffsT(2, 0) * uvwT(2) + T(0.5 * AUVMathLib::sign(uvw_[2]) * density_) * dragCoeffsT(2, 1) * uvwT(2) * uvwT(2)) / T(mass_);
-    
-    // Net_F = ma OR 
+    transDragT(0) = (dragCoeffsT(0, 0) * uvwT(0) + T(0.5 * auv_math_lib::sign(uvw_[0]) * density_) * dragCoeffsT(0, 1) * uvwT(0) * uvwT(0)) / T(mass_);
+    transDragT(1) = (dragCoeffsT(1, 0) * uvwT(1) + T(0.5 * auv_math_lib::sign(uvw_[1]) * density_) * dragCoeffsT(1, 1) * uvwT(1) * uvwT(1)) / T(mass_);
+    transDragT(2) = (dragCoeffsT(2, 0) * uvwT(2) + T(0.5 * auv_math_lib::sign(uvw_[2]) * density_) * dragCoeffsT(2, 1) * uvwT(2) * uvwT(2)) / T(mass_);
+
+    // Net_F = ma OR
     // 0 = ma - Net_F
     residualsT.template head<3>() = (T(mass_) * inertialTransAccelT) - (quatT.conjugate() * weightAccelT - transDragT +
-                                                           (thrustCoeffsT.template block<3, 8>(0, 0)) * nominalForcesT) ;
+                                                                        (thrustCoeffsT.template block<3, 8>(0, 0)) * nominalForcesT);
 
     // Rotational Equations
     Eigen::Matrix<T, 3, 1> forceBuoyancyT, rotDragT;
@@ -101,13 +102,13 @@ public:
     rotDragT.setZero();
     forceBuoyancyT(2) = T(-Fb_);
 
-    rotDragT(0) = (dragCoeffsT(3, 0) * pqrT(0) + T(0.5 * AUVMathLib::sign(pqr_[0]) * density_) * dragCoeffsT(3, 1) * pqrT(0) * pqrT(0));
-    rotDragT(1) = (dragCoeffsT(4, 0) * pqrT(1) + T(0.5 * AUVMathLib::sign(pqr_[1]) * density_) * dragCoeffsT(4, 1) * pqrT(1) * pqrT(1));
-    rotDragT(2) = (dragCoeffsT(5, 0) * pqrT(2) + T(0.5 * AUVMathLib::sign(pqr_[2]) * density_) * dragCoeffsT(5, 1) * pqrT(2) * pqrT(2));
-    
-    inertialRotAccelT = inertiaT * pqrDotT + pqrT.cross(inertiaT * pqrT); // Iw + w x Iw
+    rotDragT(0) = (dragCoeffsT(3, 0) * pqrT(0) + T(0.5 * auv_math_lib::sign(pqr_[0]) * density_) * dragCoeffsT(3, 1) * pqrT(0) * pqrT(0));
+    rotDragT(1) = (dragCoeffsT(4, 0) * pqrT(1) + T(0.5 * auv_math_lib::sign(pqr_[1]) * density_) * dragCoeffsT(4, 1) * pqrT(1) * pqrT(1));
+    rotDragT(2) = (dragCoeffsT(5, 0) * pqrT(2) + T(0.5 * auv_math_lib::sign(pqr_[2]) * density_) * dragCoeffsT(5, 1) * pqrT(2) * pqrT(2));
 
-    // Net_Moment = Iw + w x Iw OR 
+    inertialRotAccelT = inertiaT * pqrDotT + pqrT.cross(inertiaT * pqrT); // I*wDot + w x I*w
+
+    // Net_Moment = Iw + w x Iw OR
     // 0 = Iw + w x Iw - Net_Moment
     residualsT.template tail<3>() = inertialRotAccelT - (CoBT.cross(quatT.conjugate() * forceBuoyancyT) - rotDragT +
                                                          (thrustCoeffsT.template block<3, 8>(3, 0)) * nominalForcesT);
@@ -115,6 +116,6 @@ public:
   }
 };
 
-} // namespace AUVControl
+} // namespace auv_control
 
 #endif

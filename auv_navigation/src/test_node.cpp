@@ -18,11 +18,11 @@ struct ScalarBinaryOpTraits<X, CppAD::AD<X>, BinOp>
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "pose_edkf");
-    AUVNavigation::TestNode testNode;
+    auv_navigation::TestNode testNode;
     ros::spin();
 }
 
-namespace AUVNavigation
+namespace auv_navigation
 {
 void GetRotationYPR2Body(Eigen::Ref<Eigen::MatrixXf> R, float yaw, float pitch, float roll)
 {
@@ -99,7 +99,7 @@ TestNode::TestNode() : nh("~")
     Matrix3f skew;
     Vector3f pqr;
     pqr << 1, 2, 3;
-    skew = AUVMathLib::skewSym(pqr);
+    skew = auv_math_lib::skewSym(pqr);
     cout << "skew 123: " << endl << skew << endl;
 
     cout << "v1: " << endl << v1 << endl;
@@ -258,14 +258,10 @@ TestNode::TestNode() : nh("~")
     // The correct format: I-frame --(q2)--> Frame 2 --(q1)--> B-frame (quaternions are left multiplied)
     // Eigen does local frame composition, as in q2 is applied FROM q1
 
-    Eigen::VectorXf vecXf(3,1);
-    vecXf.setZero();
-    vecXf(0) = 2.5;
-    vecXf(1) = 100.3;
-    vecXf(2) = 69;
-    Eigen::Vector3f vec3f = vecXf;
-    cout << "VecXf: " << vecXf << endl;
-    cout << "Vec3f: " << vec3f << endl;
+    q1q2 = q1.toRotationMatrix() * q2;
+    cout << "Eigen: q1 * q2 = " << endl
+         << q1q2.w() << endl
+         << q1q2.vec() << endl;
 }
 
 void TestNode::copy(const Eigen::Ref<const Eigen::MatrixXf> &m)
@@ -284,9 +280,9 @@ Eigen::Matrix4f TestNode::quaternionMatrix(Eigen::Vector4f q)
     Eigen::Matrix4f Q, diag;
     Q.setZero(), diag.setIdentity();
     diag = diag * q(0);
-    Q.block<3, 3>(1, 1) = -AUVMathLib::skewSym(q.tail<3>());
+    Q.block<3, 3>(1, 1) = -auv_math_lib::skewSym(q.tail<3>());
     Q.block<1, 3>(0, 1) = -q.tail<3>().transpose();
     Q.block<3, 1>(1, 0) = q.tail<3>();
     return (Q + diag);
 }
-} // namespace AUVNavigation
+} // namespace auv_navigation

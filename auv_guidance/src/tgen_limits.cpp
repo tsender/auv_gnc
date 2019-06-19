@@ -1,6 +1,6 @@
 #include "auv_guidance/tgen_limits.hpp"
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 TGenLimits::TGenLimits(double maxXYVelocity, double maxXYAccel, double maxZVelocity, double maxZAccel,
                        double maxRotVelocity, double maxRotAccel, double xyzJerk, double xyzClosingJerk,
@@ -91,4 +91,4 @@ double TGenLimits::maxZDistance()
     return maxZDistance_;
 }
 
-} // namespace AUVGuidance
+} // namespace auv_guidance

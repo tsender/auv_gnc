@@ -1,6 +1,6 @@
 #include "auv_guidance/waypoint.hpp"
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 Waypoint::Waypoint(const Eigen::Ref<const Eigen::Vector3d> &posI,
                    const Eigen::Ref<const Eigen::Vector3d> &velI,
@@ -60,4 +60,4 @@ Eigen::Vector3d Waypoint::angVelB()
 {
     return angVelB_;
 }
-} // namespace AUVGuidance
+} // namespace auv_guidance

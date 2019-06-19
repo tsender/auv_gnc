@@ -4,7 +4,7 @@
 #include "eigen3/Eigen/Dense"
 #include "math.h"
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 class Waypoint
 {
@@ -27,6 +27,6 @@ class Waypoint
     Eigen::Quaterniond quaternion();
     Eigen::Vector3d angVelB();
 };
-} // namespace AUVGuidance
+} // namespace auv_guidance
 
 #endif

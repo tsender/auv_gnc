@@ -4,7 +4,7 @@
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 class MinJerkTrajectory
 {
@@ -20,6 +20,6 @@ public:
   Eigen::Vector3d computeState(double time);
   double getMiddleVelocity();
 };
-} // namespace AUVGuidance
+} // namespace auv_guidance
 
 #endif

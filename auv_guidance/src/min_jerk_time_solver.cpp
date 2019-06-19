@@ -1,6 +1,6 @@
 #include "auv_guidance/min_jerk_time_solver.hpp"
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 /**
  * @param start Initial conditions of position, velocity, and acceleration.
@@ -33,4 +33,4 @@ double MinJerkTimeSolver::getMiddleVelocity()
     Eigen::Vector3d state =  mjt_->computeState(minTime_ / 2.0);
     return state(1);
 }
-} // namespace AUVGuidance
+} // namespace auv_guidance

@@ -57,12 +57,12 @@ Vector12f EulerRotation::computeState(float time)
     Vector2f segState = segPlanner_->computeState(time);
 
     Vector3f mask = Vector3f::Zero();
-    mask(eulerAngle_) = AUVMathLib::sign(deltaTheta_);
+    mask(eulerAngle_) = auv_math_lib::sign(deltaTheta_);
     Vector3f continuousAttitude = initialAttitude_ + mask * segState(0);
-    Vector3f constrainedAttitude = AUVMathLib::getConstrainedAttitude(continuousAttitude);
+    Vector3f constrainedAttitude = auv_math_lib::getConstrainedAttitude(continuousAttitude);
     
     Vector3f eulerDot = mask * segState(1); // Rate of change of Euler angles
-    Vector3f pqr = AUVMathLib::eulerDot2PQR(constrainedAttitude, eulerDot);
+    Vector3f pqr = auv_math_lib::eulerDot2PQR(constrainedAttitude, eulerDot);
 
     state.segment<3>(3) = continuousAttitude;
     state.tail<3>() =pqr;

@@ -9,7 +9,7 @@
 
 using namespace std;
 
-namespace AUVGuidance
+namespace auv_guidance
 {
 class TestNode
 {
