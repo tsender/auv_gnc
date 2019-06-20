@@ -15,31 +15,36 @@ class TransEKF
 {
 private:
   auv_navigation::TranslationEKF *transEKF_;
-  auv_navigation::Vector9f inertialState_;
-  auv_navigation::Vector9f bodyState_;
-  auv_navigation::Vector9f lastMeasurement_;
+  auv_navigation::Vector9d inertialState_;
+  auv_navigation::Vector9d bodyState_;
+  auv_navigation::Vector9d lastMeasurement_;
+  Eigen::Quaterniond quaternion_;
 
-  Eigen::MatrixXf Rpos_;
-  Eigen::Matrix3f Rvel_, Raccel_;
-  auv_navigation::Matrix9f Q_;
-  bool posSensing_[3];
+  Eigen::MatrixXd Rpos_;
+  Eigen::Matrix3d Rvel_, Raccel_;
+  auv_navigation::Matrix9d Q_;
+  std::vector<bool> posSensing_;
+  std::vector<double> RposDiag_, RvelDiag_, RaccelDiag_, QDiag_;
   int numPosSensing_;
-
-  YAML::Node config_;
-  std::string configFile_;
+  bool init_;
+  double dt;
+  ros::Time timeLast_;
 
   ros::NodeHandle nh_;
-  ros::Subscriber sub6dof_;
-  ros::Publisher pub6DofInertial_, pub6DofBody_;
+  ros::Subscriber sixDoFSub_;
+  ros::Publisher sixDoFPub_;
+  std::string subTopic_, pubTopic_;
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  TransEKF(ros::NodeHandle nh);
 
-  template <typename T>
-  void loadParam(std::string param, T &var);
-  void configureEKF();
-  //init(auv_navigation::Vector9f);
+  static const int STATE_POS = 0;
+  static const int STATE_VEL = 3;
+  static const int STATE_ACCEL = 6;
+  
+  TransEKF(ros::NodeHandle nh);
+  void initEKF();
+  void sixDofCB(const auv_msgs::SixDoF::ConstPtr &raw);
 };
 } // namespace auv_gnc
 

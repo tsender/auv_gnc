@@ -2,8 +2,10 @@
 
 namespace auv_navigation
 {
-KalmanFilter::KalmanFilter(const Eigen::Ref<const Eigen::MatrixXf> &Ao, const Eigen::Ref<const Eigen::MatrixXf> &Ho,
-                           const Eigen::Ref<const Eigen::MatrixXf> &Qo, const Eigen::Ref<const Eigen::MatrixXf> &Ro)
+KalmanFilter::KalmanFilter(const Eigen::Ref<const Eigen::MatrixXd> &Ao,
+                           const Eigen::Ref<const Eigen::MatrixXd> &Ho,
+                           const Eigen::Ref<const Eigen::MatrixXd> &Qo, 
+                           const Eigen::Ref<const Eigen::MatrixXd> &Ro)
 {
     // Verify Parameter Dimensions
     int Arows = Ao.rows(), Acols = Ao.cols(), Hrows = Ho.rows(), Hcols = Ho.cols();
@@ -57,7 +59,7 @@ KalmanFilter::KalmanFilter(const Eigen::Ref<const Eigen::MatrixXf> &Ao, const Ei
     init_ = false;
 }
 
-void KalmanFilter::init(const Eigen::Ref<const Eigen::VectorXf> &Xo)
+void KalmanFilter::init(const Eigen::Ref<const Eigen::VectorXd> &Xo)
 {
     // Verify Parameter Dimensions
     int Xorows = Xo.rows();
@@ -73,7 +75,7 @@ void KalmanFilter::init(const Eigen::Ref<const Eigen::VectorXf> &Xo)
 }
 
 // Update Kalman Filter, assuming linear system
-Eigen::VectorXf KalmanFilter::update(const Eigen::Ref<const Eigen::VectorXf> &Z)
+Eigen::VectorXd KalmanFilter::update(const Eigen::Ref<const Eigen::VectorXd> &Z)
 {
     // Check for initialization of KF
     // If not, default is to leave Xhat as the zero vector
@@ -101,8 +103,11 @@ Eigen::VectorXf KalmanFilter::update(const Eigen::Ref<const Eigen::VectorXf> &Z)
 // To be called by an Extended Kalman Filter (EKF)
 // A and H matrices are Jacobians calculated by the EKF
 // R is a subset of the complete (original) R for the filter
-Eigen::VectorXf KalmanFilter::updateEKF(const Eigen::Ref<const Eigen::MatrixXf> &Anew, const Eigen::Ref<const Eigen::MatrixXf> &Hnew, const Eigen::Ref<const Eigen::MatrixXf> &Rnew,
-                                        const Eigen::Ref<const Eigen::VectorXf> &Xpredict, const Eigen::Ref<const Eigen::VectorXf> &Z)
+Eigen::VectorXd KalmanFilter::updateEKF(const Eigen::Ref<const Eigen::MatrixXd> &Anew,
+                                        const Eigen::Ref<const Eigen::MatrixXd> &Hnew,
+                                        const Eigen::Ref<const Eigen::MatrixXd> &Rnew,
+                                        const Eigen::Ref<const Eigen::VectorXd> &Xpredict,
+                                        const Eigen::Ref<const Eigen::VectorXd> &Z)
 {
     // Verify Parameter Dimensions
     int Xrows = Xpredict.rows(), Zrows = Z.rows();
@@ -158,12 +163,12 @@ Eigen::VectorXf KalmanFilter::updateEKF(const Eigen::Ref<const Eigen::MatrixXf> 
     return Xhat_;
 }
 
-Eigen::VectorXf KalmanFilter::getXhat()
+Eigen::VectorXd KalmanFilter::getXhat()
 {
     return Xhat_;
 }
 
-Eigen::MatrixXf KalmanFilter::getErrorCovariance()
+Eigen::MatrixXd KalmanFilter::getErrorCovariance()
 {
     return P_;
 }

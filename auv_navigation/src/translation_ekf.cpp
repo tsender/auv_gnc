@@ -4,10 +4,10 @@ namespace auv_navigation
 {
 // NOTE: pos sensors are Inertial-FRAME, and vel and accel sensors are Body-FRAME
 TranslationEKF::TranslationEKF(const Eigen::Ref<const Eigen::Vector3i> &posMask,
-                               const Eigen::Ref<const Eigen::MatrixXf> &Rpos,
-                               const Eigen::Ref<const Eigen::Matrix3f> &Rvel,
-                               const Eigen::Ref<const Eigen::Matrix3f> &Raccel,
-                               const Eigen::Ref<const Matrix9f> &Q)
+                               const Eigen::Ref<const Eigen::MatrixXd> &Rpos,
+                               const Eigen::Ref<const Eigen::Matrix3d> &Rvel,
+                               const Eigen::Ref<const Eigen::Matrix3d> &Raccel,
+                               const Eigen::Ref<const Matrix9d> &Q)
 {
     n_ = 9;
     init_ = false;
@@ -22,20 +22,20 @@ TranslationEKF::TranslationEKF(const Eigen::Ref<const Eigen::Vector3i> &posMask,
     Q_ = Q;
 
     // Initialize the EKF using generic matrices, as they will be overridden with each update call
-    Matrix9f A;
+    Matrix9d A;
     A.setIdentity();
 
     int m = fullMsmtMask_.sum();
-    Eigen::MatrixXf H(m, n_);
+    Eigen::MatrixXd H(m, n_);
     H.setZero();
 
-    Eigen::MatrixXf R(m, m);
+    Eigen::MatrixXd R(m, m);
     R.setIdentity();
 
     ekf_ = new KalmanFilter(A, H, Q_, R);
 }
 
-void TranslationEKF::init(const Eigen::Ref<const Eigen::VectorXf> &Xo)
+void TranslationEKF::init(const Eigen::Ref<const Vector9d> &Xo)
 {
     // Verify Parameter Dimensions
     int Xorows = Xo.rows();
@@ -55,8 +55,8 @@ void TranslationEKF::init(const Eigen::Ref<const Eigen::VectorXf> &Xo)
 // attitude = Euler Angles in the order of (roll, pitch, yaw) [rad]
 // sensorMask = indicates if the sensor (pos, vel, and/or accel) has new data
 // Z = the actual sensor data, same format as Zmask
-Vector9f TranslationEKF::update(float dt, const Eigen::Ref<const Eigen::Vector3i> &sensorMask,
-                                const Eigen::Ref<const Eigen::Matrix3f> &Zmat)
+Vector9d TranslationEKF::update(double dt, const Eigen::Ref<const Eigen::Vector3i> &sensorMask,
+                                const Eigen::Ref<const Eigen::Matrix3d> &Zmat)
 {
     // Check for initialization of KF
     // If not, default is to leave Xhat as the zero vector
@@ -65,13 +65,13 @@ Vector9f TranslationEKF::update(float dt, const Eigen::Ref<const Eigen::Vector3i
 
     // Create A (state transition matrix)
     // Using kinematic relationships in a constant acceleration model
-    Matrix9f A;
+    Matrix9d A;
     A.setIdentity();
 
-    Eigen::Vector3f dtVector;
+    Eigen::Vector3d dtVector;
     dtVector << dt, dt, dt;
-    Eigen::Matrix3f dtMat = dtVector.asDiagonal(); // Diagonal matrix of dt
-    Eigen::Matrix3f dt2Mat = dtMat * dtMat;
+    Eigen::Matrix3d dtMat = dtVector.asDiagonal(); // Diagonal matrix of dt
+    Eigen::Matrix3d dt2Mat = dtMat * dtMat;
 
     // Rotation matrix from B-frame to I-frame
     //Eigen::Matrix3f Rotb2i = auv_math_lib::getEulerRotationMat(attitude).transpose();
@@ -90,8 +90,8 @@ Vector9f TranslationEKF::update(float dt, const Eigen::Ref<const Eigen::Vector3i
     int m = dataMask.sum(); // Number of msmts in this iteration
 
     // Create H (observation/measurement matrix) and Z (measurement vector)
-    Eigen::MatrixXf H(m, n_);
-    Eigen::VectorXf Z(m, 1);
+    Eigen::MatrixXd H(m, n_);
+    Eigen::VectorXd Z(m, 1);
     H.setZero();
     Z.setZero();
     int i = 0;
@@ -111,7 +111,7 @@ Vector9f TranslationEKF::update(float dt, const Eigen::Ref<const Eigen::Vector3i
     }
 
     // Create R (measurement noise covariance matrix) with help from dataMask
-    Eigen::MatrixXf R(m, m);
+    Eigen::MatrixXd R(m, m);
     R.setZero();
     int p = dataMask.col(0).sum();
     int v = dataMask.col(1).sum();
@@ -124,7 +124,7 @@ Vector9f TranslationEKF::update(float dt, const Eigen::Ref<const Eigen::Vector3i
         R.block(p + v, p + v, a, a) = Raccel_;
 
     // Populate Xpredict vector
-    Vector9f Xpredict = A * Xhat_;
+    Vector9d Xpredict = A * Xhat_;
 
     // Run update step
     Xhat_ = ekf_->updateEKF(A, H, R, Xpredict, Z);
