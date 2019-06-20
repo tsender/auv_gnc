@@ -23,7 +23,7 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
 
 add_executable(trans_ekf src/trans_ekf_node.cpp src/trans_ekf.cpp)
-target_link_libraries(trans_ekf ${catkin_LIBRARIES} yaml-cpp)
+target_link_libraries(trans_ekf ${catkin_LIBRARIES})
 add_dependencies(trans_ekf ${catkin_EXPORTED_TARGETS})
 
 install(TARGETS trans_ekf

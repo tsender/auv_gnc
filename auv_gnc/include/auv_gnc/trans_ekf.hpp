@@ -3,7 +3,6 @@
 
 #include "auv_navigation/translation_ekf.hpp"
 #include "auv_msgs/SixDoF.h"
-#include <yaml-cpp/yaml.h>
 #include <ros/ros.h>
 #include "math.h"
 #include <vector>
