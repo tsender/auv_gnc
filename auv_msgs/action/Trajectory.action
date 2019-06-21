@@ -1,0 +1,12 @@
+# Check for new trajctory
+
+# Goal definition
+uint16 id
+geometry_msgs/Pose pose
+
+uint16 BASIC_TRAJECTORY = 0 
+---
+# Result definition
+
+---
+# Feedback definition

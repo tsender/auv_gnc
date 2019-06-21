@@ -1,5 +1,5 @@
-#ifndef AUV_GNC
-#define AUV_GNC
+#ifndef TRANS_EKF
+#define TRANS_EKF
 
 #include "auv_navigation/translation_ekf.hpp"
 #include "auv_msgs/SixDoF.h"

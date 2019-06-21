@@ -1,2 +1,3 @@
-std_msgs/Header Header
-float64[] thrust
+std_msgs/Header header
+string[] names
+float64[] thrusts

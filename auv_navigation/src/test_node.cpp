@@ -269,6 +269,15 @@ TestNode::TestNode() : nh("~")
     zero3d(i,i+1) = 3.2;
     zero3d(i+2,i+1) = 2.3;
     cout << "zero3d " << endl << zero3d << endl;
+
+    q2.w() = 0;
+    q2.x() = 0;
+    q2.y() = 0;
+    q2.z() = 0;
+    q1q2 = q2 * q1;
+    cout << "Eigen: q1 * {zero} = " << endl
+         << q1q2.w() << endl
+         << q1q2.vec() << endl;
 }
 
 void TestNode::copy(const Eigen::Ref<const Eigen::MatrixXf> &m)
