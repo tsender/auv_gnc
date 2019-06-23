@@ -5,18 +5,11 @@
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"
 #include "auv_control/nominal_thrust_solver.hpp"
-#include "auv_navigation/auv_math_lib.hpp"
+#include "auv_core/math_lib.hpp"
+#include "auv_core/constants.hpp"
 #include <cppad/cppad.hpp>
 #include "math.h"
 #include <algorithm>
-
-//using namespace std;
-//namespace AUVMath =  AUV_GNC::auv_math_lib;
-//using namespace AUVMath;
-//using CppAD::AD;
-
-// Constants used for Auto Diff
-// Indeces for state vector
 
 // Add new typedefs to Eigen namespace so we can use CppAD with it
 namespace Eigen
@@ -91,23 +84,6 @@ private:
 public:
   // Calling this macro will fix alignment issues on members that are fixed-size Eigen objects
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-  static constexpr double GRAVITY = 9.80665;    // [m/s^2]
-  static constexpr double WATER_DENSITY = 1000; // [kg/m^3]
-
-  // Indeces for each state
-  static const int STATE_XI = 0; // Inertial X-pos, expressed in I-frame
-  static const int STATE_YI = 1; // Inertial Y-pos, expressed in I-frame
-  static const int STATE_ZI = 2; // Inertial Z-pos, expressed in I-frame
-  static const int STATE_U = 3;  // Inertial X velocity , expressed in B-frame
-  static const int STATE_V = 4;  // Inertial Y velocity , expressed in B-frame
-  static const int STATE_W = 5;  // Inertial Z velocity , expressed in B-frame
-  static const int STATE_Q1 = 6; // Quaternion (I->B Frame) i-component
-  static const int STATE_Q2 = 7; // Quaternion (I->B Frame) j-component
-  static const int STATE_Q3 = 8; // Quaternion (I->B Frame) k-component
-  static const int STATE_P = 9;  // Inertial X angular velocity , expressed in B-frame
-  static const int STATE_Q = 10; // Inertial Y angular velocity , expressed in B-frame
-  static const int STATE_R = 11; // Inertial Z angular velocity , expressed in B-frame
 
   AUVModel(double Fg, double Fb,
            const Eigen::Ref<const Eigen::Vector3d> &CoB,

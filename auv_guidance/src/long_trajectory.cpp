@@ -58,7 +58,7 @@ void LongTrajectory::initTrajectory()
     if (atan(fabs(dz) / xyDistance) < tGenLimits_->maxPathInclination())
     { // Trajectory pitch is ok
         travelHeading = atan2(dy, dx); // Radians
-        qCruise_ = auv_math_lib::toQuaternion(travelHeading, 0.0, 0.0); // yaw, pitch, roll --> quaternion
+        qCruise_ = auv_core::math_lib::toQuaternion(travelHeading, 0.0, 0.0); // yaw, pitch, roll --> quaternion
         Eigen::Quaterniond qDiff = qStart_.conjugate() * qCruise_;
         rotationDuration1_ = LongTrajectory::computeRotationTime(qDiff);
     }
@@ -137,7 +137,7 @@ void LongTrajectory::initSimultaneousTrajectories()
  */
 double LongTrajectory::computeRotationTime(Eigen::Quaterniond qDiff)
 {
-    double angularDistance = auv_math_lib::quaternion2AngleAxis(qDiff)(0);
+    double angularDistance = auv_core::math_lib::quaternion2AngleAxis(qDiff)(0);
 
     Eigen::Vector4d rotStart = Eigen::Vector4d::Zero();
     Eigen::Vector4d rotEnd = Eigen::Vector4d::Zero();

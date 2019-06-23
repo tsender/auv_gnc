@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>auv_guidance</name>
+  <name>auv_core</name>
   <version>0.0.1</version>
-  <description>The auv_guidance package</description>
+  <description>The auv_core package</description>
 
   <maintainer email="tsender97@gmail.com">tsender</maintainer>
 
@@ -10,9 +10,6 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>eigen</build_depend>
-  <build_depend>libceres-dev</build_depend>
-  <build_depend>auv_core</build_depend>
-  <build_depend>auv_control</build_depend>
 
   <export>
   </export>

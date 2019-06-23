@@ -10,6 +10,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>eigen</build_depend>
+  <build_depend>auv_core</build_depend>
   <depend>roscpp</depend>
 
   <export>

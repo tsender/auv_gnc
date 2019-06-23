@@ -5,7 +5,8 @@
 #include "auv_guidance/waypoint.hpp"
 #include "auv_guidance/min_jerk_trajectory.hpp"
 #include "auv_control/auv_model.hpp"
-#include "auv_navigation/auv_math_lib.hpp"
+#include "auv_core/math_lib.hpp"
+#include "auv_core/constants.hpp"
 
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"

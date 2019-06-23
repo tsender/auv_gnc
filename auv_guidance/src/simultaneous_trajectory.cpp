@@ -36,7 +36,7 @@ void SimultaneousTrajectory::initTrajectory()
     qEnd_ = wEnd_->quaternion().normalized();
     qDiff_ = qStart_.conjugate() * qEnd_; // Error quaternion wrt B-frame (q2 * q1.conjugate is wrt I-frame)
     
-    Eigen::Vector4d angleAxis = auv_math_lib::quaternion2AngleAxis(qDiff_);
+    Eigen::Vector4d angleAxis = auv_core::math_lib::quaternion2AngleAxis(qDiff_);
     angularDistance_ = angleAxis(0);
     double angVel = wStart_->angVelB().squaredNorm();
     rotationAxis_ = angleAxis.tail<3>(); // Get axis relative to Body-frame
@@ -112,10 +112,10 @@ Vector12d SimultaneousTrajectory::computeState(double time)
     q(2) = qSlerp_.y();
     q(3) = qSlerp_.z();
 
-    state.segment<3>(auv_control::AUVModel::STATE_XI) = xyz;
-    state.segment<3>(auv_control::AUVModel::STATE_U) = uvw;
-    state.segment<3>(auv_control::AUVModel::STATE_Q1) = q.tail<3>();
-    state.segment<3>(auv_control::AUVModel::STATE_P) = pqr;
+    state.segment<3>(auv_core::constants::STATE_XI) = xyz;
+    state.segment<3>(auv_core::constants::STATE_U) = uvw;
+    state.segment<3>(auv_core::constants::STATE_Q1) = q.tail<3>();
+    state.segment<3>(auv_core::constants::STATE_P) = pqr;
     return state;
 }
 

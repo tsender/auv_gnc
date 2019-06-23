@@ -4,7 +4,8 @@
 #include "ceres/ceres.h"
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"
-#include "auv_navigation/auv_math_lib.hpp"
+#include "auv_core/math_lib.hpp"
+#include "auv_core/constants.hpp"
 
 namespace auv_control
 {
@@ -34,7 +35,7 @@ public:
   {
     Fg_ = Fg;
     Fb_ = Fb;
-    mass_ = Fg_ / NominalThrustSolver::GRAVITY;
+    mass_ = Fg_ / auv_core::constants::GRAVITY;
     CoB_ = CoB;
     inertia_ = inertia;
     dragCoeffs_ = dragCoeffs;
@@ -86,9 +87,9 @@ public:
     transDragT.setZero();
     weightT(2) = T(Fg_ - Fb_);
 
-    transDragT(0) = dragCoeffsT(0, 0) * uvwT(0) + T(auv_math_lib::sign(uvw_[0])) * dragCoeffsT(3, 0) * uvwT(0) * uvwT(0);
-    transDragT(1) = dragCoeffsT(1, 0) * uvwT(1) + T(auv_math_lib::sign(uvw_[1])) * dragCoeffsT(4, 0) * uvwT(1) * uvwT(1);
-    transDragT(2) = dragCoeffsT(2, 0) * uvwT(2) + T(auv_math_lib::sign(uvw_[2])) * dragCoeffsT(5, 0) * uvwT(2) * uvwT(2);
+    transDragT(0) = dragCoeffsT(0, 0) * uvwT(0) + T(auv_core::math_lib::sign(uvw_[0])) * dragCoeffsT(3, 0) * uvwT(0) * uvwT(0);
+    transDragT(1) = dragCoeffsT(1, 0) * uvwT(1) + T(auv_core::math_lib::sign(uvw_[1])) * dragCoeffsT(4, 0) * uvwT(1) * uvwT(1);
+    transDragT(2) = dragCoeffsT(2, 0) * uvwT(2) + T(auv_core::math_lib::sign(uvw_[2])) * dragCoeffsT(5, 0) * uvwT(2) * uvwT(2);
 
     // Net_F = ma OR
     // 0 = ma - Net_F
@@ -101,9 +102,9 @@ public:
     rotDragT.setZero();
     forceBuoyancyT(2) = T(-Fb_);
 
-    rotDragT(0) = dragCoeffsT(0, 1) * pqrT(0) + T(auv_math_lib::sign(pqr_[0])) * dragCoeffsT(3, 1) * pqrT(0) * pqrT(0);
-    rotDragT(1) = dragCoeffsT(1, 1) * pqrT(1) + T(auv_math_lib::sign(pqr_[1])) * dragCoeffsT(4, 1) * pqrT(1) * pqrT(1);
-    rotDragT(2) = dragCoeffsT(2, 1) * pqrT(2) + T(auv_math_lib::sign(pqr_[2])) * dragCoeffsT(5, 1) * pqrT(2) * pqrT(2);
+    rotDragT(0) = dragCoeffsT(0, 1) * pqrT(0) + T(auv_core::math_lib::sign(pqr_[0])) * dragCoeffsT(3, 1) * pqrT(0) * pqrT(0);
+    rotDragT(1) = dragCoeffsT(1, 1) * pqrT(1) + T(auv_core::math_lib::sign(pqr_[1])) * dragCoeffsT(4, 1) * pqrT(1) * pqrT(1);
+    rotDragT(2) = dragCoeffsT(2, 1) * pqrT(2) + T(auv_core::math_lib::sign(pqr_[2])) * dragCoeffsT(5, 1) * pqrT(2) * pqrT(2);
 
     inertialRotAccelT = inertiaT * pqrDotT + pqrT.cross(inertiaT * pqrT); // I*wDot + w x I*w
 

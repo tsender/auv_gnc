@@ -99,7 +99,7 @@ TestNode::TestNode() : nh("~")
     Matrix3f skew;
     Vector3f pqr;
     pqr << 1, 2, 3;
-    skew = auv_math_lib::skewSym(pqr);
+    skew = auv_core::math_lib::skewSym(pqr);
     cout << "skew 123: " << endl << skew << endl;
 
     cout << "v1: " << endl << v1 << endl;
@@ -258,14 +258,14 @@ TestNode::TestNode() : nh("~")
     // The correct format: I-frame --(q2)--> Frame 2 --(q1)--> B-frame (quaternions are left multiplied)
     // Eigen does local frame composition, as in q2 is applied FROM q1
 
-    q1 = auv_math_lib::toQuaternion(45.0 * M_PI / 180, 0, 0);
-    q2 = auv_math_lib::toQuaternion(-45.0 * M_PI / 180, 0, 0);
+    q1 = auv_core::math_lib::toQuaternion(45.0 * M_PI / 180, 0, 0);
+    q2 = auv_core::math_lib::toQuaternion(-45.0 * M_PI / 180, 0, 0);
     cout << "q1 " << endl << q1.w() << endl << q1.vec() << endl;
-    cout << " q1 to euler " << endl << auv_math_lib::toEulerAngle(q1) << endl;
+    cout << " q1 to euler " << endl << auv_core::math_lib::toEulerAngle(q1) << endl;
     cout << "q2 " << endl << q2.w() << endl << q2.vec() << endl;
-    cout << " q2 to euler " << endl << auv_math_lib::toEulerAngle(q2) << endl;
+    cout << " q2 to euler " << endl << auv_core::math_lib::toEulerAngle(q2) << endl;
     Eigen::Quaterniond qDiff = q1.conjugate() * q2;
-    Eigen::Vector4d angleAxis = auv_math_lib::quaternion2AngleAxis(qDiff);
+    Eigen::Vector4d angleAxis = auv_core::math_lib::quaternion2AngleAxis(qDiff);
     cout << "qdiff " << endl << qDiff.w() << endl << qDiff.vec() << endl;
     cout << "angle axis" << endl << angleAxis << endl;
 
@@ -277,6 +277,38 @@ TestNode::TestNode() : nh("~")
     cout << "qSlerp " << endl << qSlerp.w() << endl << qSlerp.vec() << endl;
     qSlerp = q1.slerp(1.5, q2);
     cout << "qSlerp " << endl << qSlerp.w() << endl << qSlerp.vec() << endl;
+
+    // Trajectory Generator Limits
+    double maxXYVelocity, maxXYAccel;
+    double maxZVelocity, maxZAccel;
+    double maxRotVelocity, maxRotAccel;
+    double xyzJerk, xyzClosingJerk;
+    double rotJerk, rotClosingJerk;
+    double closingTolerance;
+    double maxPathInclination;
+    double maxXYDistance, maxZDistance;
+
+    nh.param("max_xy_distance", maxXYDistance, 3.0);            // [m]
+    nh.param("max_z_distance", maxZDistance, 1.0);              // [m]
+    nh.param("max_path_inclination", maxPathInclination, 80.0); // [deg]
+
+    nh.param("max_xy_velocity", maxXYVelocity, 0.75);          // [m/s]
+    nh.param("max_xy_accel", maxXYAccel, 0.4);                 // [m/s^2]
+    nh.param("max_z_velocity", maxZVelocity, 0.3);             // [m/s]
+    nh.param("max_z_accel", maxZAccel, 0.2);                   // [m/s^2]
+    nh.param("max_rotational_velocity", maxRotVelocity, 1.57); // [rad/s]
+    nh.param("max_rotational_accel", maxRotAccel, 3.14);       // [rad/s^2]
+
+    nh.param("closing_tolerance", closingTolerance, 0.1);     // [m] or [rad]
+    nh.param("xyz_jerk", xyzJerk, 0.4);                       // [m/s^3]
+    nh.param("xyz_closing_jerk", xyzClosingJerk, 1.0);        // [m/s^3]
+    nh.param("rotational_jerk", rotJerk, 5.0);                // [rad/s^3]
+    nh.param("rotational_closing_jerk", rotClosingJerk, 6.0); // [rad/s^3]
+
+    /*tGenLimits_ = new auv_guidance::TGenLimits(maxXYDistance, maxZDistance, maxXYVelocity, maxXYAccel,
+                                               maxZVelocity, maxZAccel, maxRotVelocity, maxRotAccel, 
+                                               xyzJerk, xyzClosingJerk, rotJerk, rotClosingJerk, 
+                                               closingTolerance, maxPathInclination);*/
 }
 
 void TestNode::copy(const Eigen::Ref<const Eigen::MatrixXf> &m)
@@ -295,7 +327,7 @@ Eigen::Matrix4f TestNode::quaternionMatrix(Eigen::Vector4f q)
     Eigen::Matrix4f Q, diag;
     Q.setZero(), diag.setIdentity();
     diag = diag * q(0);
-    Q.block<3, 3>(1, 1) = -auv_math_lib::skewSym(q.tail<3>());
+    Q.block<3, 3>(1, 1) = -auv_core::math_lib::skewSym(q.tail<3>());
     Q.block<1, 3>(0, 1) = -q.tail<3>().transpose();
     Q.block<3, 1>(1, 0) = q.tail<3>();
     return (Q + diag);

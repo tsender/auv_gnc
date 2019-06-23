@@ -6,6 +6,7 @@ add_compile_options(-std=c++11)
 
 
 find_package(catkin REQUIRED COMPONENTS
+  auv_core  
   auv_guidance
   auv_navigation
   auv_control
@@ -20,10 +21,10 @@ find_package(Eigen3 REQUIRED)
 ###########
 
 catkin_package(
-  INCLUDE_DIRS include
+  INCLUDE_DIRS include ${EIGEN3_INCLUDE_DIRS}
   CATKIN_DEPENDS roscpp
 )
-include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
 
 add_executable(trans_ekf src/trans_ekf_node.cpp src/trans_ekf.cpp)
 target_link_libraries(trans_ekf ${catkin_LIBRARIES})

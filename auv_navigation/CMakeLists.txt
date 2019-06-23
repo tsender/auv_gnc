@@ -6,6 +6,7 @@ add_compile_options(-std=c++11)
 
 
 find_package(catkin REQUIRED COMPONENTS
+  auv_core
   roscpp
 )
 
@@ -27,12 +28,11 @@ include_directories(
   ${EIGEN3_INCLUDE_DIRS} 
 )
 
-add_executable(test_node src/test_node.cpp src/auv_math_lib.cpp)
+add_executable(test_node src/test_node.cpp)
 target_link_libraries(test_node ${catkin_LIBRARIES})
 add_dependencies(test_node ${catkin_EXPORTED_TARGETS})
 
 add_library(${PROJECT_NAME} SHARED
-  src/auv_math_lib.cpp
   src/kalman_filter.cpp
   src/translation_ekf.cpp
 )

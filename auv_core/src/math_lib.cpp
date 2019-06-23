@@ -1,6 +1,8 @@
-#include "auv_navigation/auv_math_lib.hpp"
+#include "auv_core/math_lib.hpp"
 
-namespace auv_math_lib
+namespace auv_core
+{
+namespace math_lib
 {
 // Return rotation matrix about a single axis
 // Angle is in [rad]
@@ -48,7 +50,7 @@ Eigen::Matrix3f getEulerRotationMat(const Eigen::Ref<const Eigen::Vector3f> &att
 
     int axis = 1;
     for (int i = 0; i < 3; i++)
-        R = R * auv_math_lib::getRotationMat(axis++, attitude(i)); // R1(phi) * R2(theta) * R3(psi)
+        R = R * math_lib::getRotationMat(axis++, attitude(i)); // R1(phi) * R2(theta) * R3(psi)
 
     return R;
 }
@@ -133,7 +135,7 @@ float triangularWave(float x, float period, float max)
 // x is in [rad]
 float rollYawMap(float x)
 {
-    return auv_math_lib::sawtoothWave(x, 2 * M_PI, M_PI);
+    return math_lib::sawtoothWave(x, 2 * M_PI, M_PI);
 }
 
 // Returns value within the bounds of pitch values: [-90, +90] deg = [-pi/2, +pi/2] rad
@@ -141,7 +143,7 @@ float rollYawMap(float x)
 // x is in [rad]
 float pitchMap(float x)
 {
-    return auv_math_lib::triangularWave(x, 2 * M_PI, M_PI / 2);
+    return math_lib::triangularWave(x, 2 * M_PI, M_PI / 2);
 }
 
 // Constrains roll/yaw to [-180,+180] deg and pitch to [-90,+90] deg
@@ -149,9 +151,9 @@ float pitchMap(float x)
 Eigen::Vector3f getConstrainedAttitude(const Eigen::Ref<const Eigen::Vector3f> attitude)
 {
     Eigen::Vector3f constrainedAttitude = Eigen::Vector3f::Zero();
-    constrainedAttitude(0) = auv_math_lib::rollYawMap(attitude(0));
-    constrainedAttitude(1) = auv_math_lib::pitchMap(attitude(1));
-    constrainedAttitude(2) = auv_math_lib::rollYawMap(attitude(2));
+    constrainedAttitude(0) = math_lib::rollYawMap(attitude(0));
+    constrainedAttitude(1) = math_lib::pitchMap(attitude(1));
+    constrainedAttitude(2) = math_lib::rollYawMap(attitude(2));
     return constrainedAttitude;
 }
 
@@ -268,5 +270,5 @@ Eigen::Vector3d toEulerAngle(const Eigen::Quaterniond &quaternion)
 
     return rpy;
 }
-
-} // namespace auv_math_lib
+} // namespace math_lib
+} // namespace auv_core

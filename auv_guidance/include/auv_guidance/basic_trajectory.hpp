@@ -9,7 +9,7 @@
 #include "auv_guidance/long_trajectory.hpp"
 #include "auv_guidance/tgen_limits.hpp"
 #include "auv_control/auv_model.hpp"
-#include "auv_navigation/auv_math_lib.hpp"
+#include "auv_core/math_lib.hpp"
 
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"

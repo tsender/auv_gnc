@@ -1,5 +1,6 @@
 
 <launch>
+  <arg name="tgen" default="$(find auv_gnc)/cfg/tgen.yaml"/>
   <node pkg="auv_navigation" type="test_node" name="test_node" output="screen">
     <param name="w1" value="0.924" />
     <param name="x1" value="0.0" />
@@ -16,5 +17,6 @@
     <param name="xf" value="1.5" />
     <param name="vf" value="0.5" />
     <param name="af" value="0" />
+    <rosparam command="load" file="$(arg tgen)"/>
   </node>
 </launch>

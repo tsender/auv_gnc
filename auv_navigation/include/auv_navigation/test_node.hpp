@@ -1,7 +1,8 @@
 #ifndef POSE_EDKF_INTERFACE
 #define POSE_EDKF_INTERFACE
 
-#include "auv_navigation/auv_math_lib.hpp"
+#include "auv_core/math_lib.hpp"
+#include "auv_guidance/tgen_limits.hpp"
 #include "ros/ros.h"
 #include "eigen3/Eigen/Dense"
 #include "math.h"
@@ -21,6 +22,7 @@ class TestNode
 private:
   ros::NodeHandle nh;
   Eigen::Matrix3f mat;
+  auv_guidance::TGenLimits *tGenLimits_;
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

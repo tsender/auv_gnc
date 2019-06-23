@@ -1,18 +1,20 @@
-#ifndef AUV_MATH_LIB
-#define AUV_MATH_LIB
+#ifndef MATH_LIB
+#define MATH_LIB
 
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"
 #include "math.h"
 
 // Useful math tools
-namespace auv_math_lib
+namespace auv_core
+{
+namespace math_lib
 {
 Eigen::Matrix3f getRotationMat(int axis, float angle);
 
 Eigen::Matrix3f getEulerRotationMat(const Eigen::Ref<const Eigen::Vector3f> &attitude);
 
-Eigen::MatrixXf sign(const Eigen::Ref<const Eigen::MatrixXf>& mat);
+Eigen::MatrixXf sign(const Eigen::Ref<const Eigen::MatrixXf> &mat);
 
 int sign(double x);
 int sign(float x);
@@ -33,6 +35,7 @@ Eigen::Vector4d quaternion2AngleAxis(const Eigen::Quaterniond &quaternion);
 Eigen::Quaterniond angleAxis2Quaternion(const Eigen::Ref<const Eigen::Vector4d> &angleAxis);
 Eigen::Quaterniond toQuaternion(double yaw, double pitch, double roll);
 Eigen::Vector3d toEulerAngle(const Eigen::Quaterniond &quaternion);
-} // namespace auv_math_lib
+} // namespace math_lib
+} // namespace auv_core
 
 #endif
