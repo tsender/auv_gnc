@@ -1,0 +1,11 @@
+# LQR Config: 
+# Tuning values for Q and R matrices
+# Initial first guess: Qi = 1 / (max_state_error_i)^2
+# Initial first guess: Ri = 1 / (max_input_i)^2
+
+# NOTES: 
+# 1. Xstate = [xI, yI, zI, U, V, W, q1, q2, q3, wx, wy, wz]
+# 2. Q_diag must have 12 elements, since Q is a 12x12 matrix
+# 3. R_diag must have 8 elements
+Q_diag: [400.0, 400.0, 400.0, 100.0, 100.0, 100.0, 400.0, 400.0, 400.0, 100.0, 100.0, 100.0]
+R_diag: [0.00082, 0.00082, 0.00082, 0.00082, 0.00082, 0.00082, 0.00082, 0.00082]

@@ -9,8 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
 )
 
-find_package(Ceres REQUIRED)
-find_package(Eigen3)
+find_package(Eigen3 REQUIRED)
 
 ###########
 ## Build ##
@@ -26,7 +25,6 @@ include_directories(
   include 
   ${catkin_INCLUDE_DIRS} 
   ${EIGEN3_INCLUDE_DIRS} 
-  ${CERES_INCLUDE_DIRS}
 )
 
 add_executable(test_node src/test_node.cpp src/auv_math_lib.cpp)
@@ -53,8 +51,8 @@ install(TARGETS test_node
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(DIRECTORY launch/
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+install(DIRECTORY launch
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
 install(DIRECTORY include/${PROJECT_NAME}/

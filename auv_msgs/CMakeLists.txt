@@ -19,11 +19,12 @@ add_message_files(
   FILES
   SixDoF.msg
   Thrust.msg
+  Trajectory.msg
 )
 
 add_action_files(
   FILES
-  Trajectory.action
+  TrajectoryGenerator.action
 )
 
 # Generate added messages and services with any dependencies listed here

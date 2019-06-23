@@ -57,7 +57,7 @@ void LongTrajectory::initTrajectory()
 
     if (atan(fabs(dz) / xyDistance) < tGenLimits_->maxPathInclination())
     { // Trajectory pitch is ok
-        travelHeading = atan2(dy, dx);
+        travelHeading = atan2(dy, dx); // Radians
         qCruise_ = auv_math_lib::toQuaternion(travelHeading, 0.0, 0.0); // yaw, pitch, roll --> quaternion
         Eigen::Quaterniond qDiff = qStart_.conjugate() * qCruise_;
         rotationDuration1_ = LongTrajectory::computeRotationTime(qDiff);

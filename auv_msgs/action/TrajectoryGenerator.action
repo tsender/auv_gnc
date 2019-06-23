@@ -1,10 +1,7 @@
 # Check for new trajctory
 
 # Goal definition
-uint16 id
-geometry_msgs/Pose pose
-
-uint16 BASIC_TRAJECTORY = 0 
+auv_msgs/Trajectory trajectory
 ---
 # Result definition
 

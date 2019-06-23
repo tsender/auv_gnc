@@ -1,0 +1,11 @@
+<launch>
+  <arg name="auv_model" default="$(find auv_gnc)/cfg/auv_model.yaml"/>
+  <arg name="lqr" default="$(find auv_gnc)/cfg/lqr.yaml"/>
+  <arg name="tgen" default="$(find auv_gnc)/cfg/tgen.yaml"/>
+
+  <node pkg="auv_gnc" ns="auv_gnc" type="guidance_controller" name="guidance_controller" output="screen">
+    <param name="auv_model" value="$(arg auv_model)"/>
+    <rosparam command="load" file="$(arg lqr)"/>
+    <rosparam command="load" file="$(arg tgen)"/>
+  </node>
+</launch>

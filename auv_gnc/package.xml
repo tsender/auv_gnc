@@ -10,7 +10,10 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>eigen</build_depend>
+  <build_depend>auv_guidance</build_depend>
   <build_depend>auv_navigation</build_depend>
+  <build_depend>auv_control</build_depend>
+  <build_depend>yaml-cpp</build_depend>
   <depend>roscpp</depend>
   <exec_depend>auv_msgs</exec_depend>
 

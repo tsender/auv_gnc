@@ -1,0 +1,26 @@
+subscriber_topic: /auv_gnc/trans_ekf/six_dof
+publisher_topic: /auv_gnc/guidance_controller/thrust
+action_name: /auv_gnc/guidance_controller/check_for_trajectory
+
+# Trajectory Generator (TGen) Limits
+# Distance Limits (for simltaneous trajectories)
+max_xy_distance: 3.0 # [m]
+max_z_distance: 1.0 # [m]
+
+# Velocity/Accel Limits
+max_xy_velocity: 0.75 # [m/s]
+max_xy_accel: 0.4 # [m/s^2]
+max_z_velocity: 0.3 # [m/s]
+max_z_accel: 0.2 # [m/s^2]
+max_rotational_velocity: 1.57 # [rad/s] = 90 deg/s
+max_rotational_accel: 3.14 # [rad/s^2] = 180 deg/s^2
+
+# Jerk Limits
+closing_tolerance: 0.1 # When within this many units away from endpoint, use higher jerk
+xyz_jerk: 0.4 # [m/s^3]
+xyz_closing_jerk: 1.0 # [m/s^3] Uses this value when within closing tolerance
+rotational_jerk: 5 # [rad/s^3]
+rotational_closing_jerk: 6 # [rad/s^3]
+
+# Change heading towards endpoint when path inclination is less than this angle
+max_path_inclination: 80 # [deg]

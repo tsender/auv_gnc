@@ -2,11 +2,13 @@
 
 namespace auv_guidance
 {
-TGenLimits::TGenLimits(double maxXYVelocity, double maxXYAccel, double maxZVelocity, double maxZAccel,
-                       double maxRotVelocity, double maxRotAccel, double xyzJerk, double xyzClosingJerk,
-                       double rotJerk, double rotClosingJerk, double closingTolerance, double maxPathInclination,
-                       double maxXYDistance, double maxZDistance)
+TGenLimits::TGenLimits(double maxXYDistance, double maxZDistance, double maxXYVelocity, double maxXYAccel,
+                       double maxZVelocity, double maxZAccel, double maxRotVelocity, double maxRotAccel,
+                       double xyzJerk, double xyzClosingJerk, double rotJerk, double rotClosingJerk,
+                       double closingTolerance, double maxPathInclination)
 {
+    maxXYDistance_ = maxXYDistance;
+    maxZDistance_ = maxZDistance;
     maxXYVelocity_ = fabs(maxXYVelocity_);
     maxXYAccel_ = fabs(maxXYAccel);
     maxZVelocity_ = fabs(maxZVelocity_);
@@ -26,9 +28,16 @@ TGenLimits::TGenLimits(double maxXYVelocity, double maxXYAccel, double maxZVeloc
         maxPathInclination_ = 90.0;
     }
     maxPathInclination_ *= M_PI / 180.0; // Convert to radians
+}
 
-    maxXYDistance_ = maxXYDistance;
-    maxZDistance_ = maxZDistance;
+double TGenLimits::maxXYDistance()
+{
+    return maxXYDistance_;
+}
+
+double TGenLimits::maxZDistance()
+{
+    return maxZDistance_;
 }
 
 double TGenLimits::maxXYVel()
@@ -80,15 +89,4 @@ double TGenLimits::maxPathInclination()
 {
     return maxPathInclination_;
 }
-
-double TGenLimits::maxXYDistance()
-{
-    return maxXYDistance_;
-}
-
-double TGenLimits::maxZDistance()
-{
-    return maxZDistance_;
-}
-
 } // namespace auv_guidance

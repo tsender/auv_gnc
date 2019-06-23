@@ -39,7 +39,7 @@ namespace auv_control
 typedef Eigen::Matrix<double, 6, 2> Matrix62d;
 
 // Thruster matrices
-typedef Eigen::Matrix<double, 5, Eigen::Dynamic> Matrix58d;
+typedef Eigen::Matrix<double, 5, 8> Matrix58d;
 typedef Eigen::Matrix<double, 6, 8> Matrix68d;
 
 // State Space Control Matrices
@@ -62,7 +62,7 @@ class AUVModel
   typedef Eigen::Matrix<CppAD::AD<double>, 3, 1> ADVector3d;
 
 private:
-  double mass_, volume_, density_, Fg_, Fb_;
+  double mass_, Fg_, Fb_;
   int numThrusters_, maxThrusters_;
   Eigen::Matrix3d inertia_; // Inertia 3x3 matrix
   Matrix62d dragCoeffs_;
@@ -109,9 +109,9 @@ public:
   static const int STATE_Q = 10; // Inertial Y angular velocity , expressed in B-frame
   static const int STATE_R = 11; // Inertial Z angular velocity , expressed in B-frame
 
-  AUVModel(double mass, double volume, double fluid_density,
-           const Eigen::Ref<const Eigen::Matrix3d> &inertia,
+  AUVModel(double Fg, double Fb,
            const Eigen::Ref<const Eigen::Vector3d> &CoB,
+           const Eigen::Ref<const Eigen::Matrix3d> &inertia,
            const Eigen::Ref<const Matrix62d> &dragCoeffs,
            const Eigen::Ref<const Matrix58d> &thrusters,
            int numThrusters);

@@ -50,7 +50,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 add_executable(test_node src/test_node.cpp)
-target_link_libraries(test_node ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(test_node ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 add_dependencies(test_node ${catkin_EXPORTED_TARGETS})
 
 #############
@@ -61,8 +61,8 @@ install(TARGETS test_node
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(DIRECTORY launch/
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+install(DIRECTORY launch
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
 install(DIRECTORY include/${PROJECT_NAME}/

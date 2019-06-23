@@ -14,7 +14,7 @@ typedef Eigen::Matrix<double, 6, 8> Matrix68d;
 class NominalThrustSolver
 {
 private:
-  double mass_, density_, Fg_, Fb_;
+  double mass_, Fg_, Fb_;
   Eigen::Matrix3d inertia_;    // Inertia matrix expressed in B-frame
   Eigen::Vector3d CoB_;        // Center of buoyancy relative to center of mass
   Matrix62d dragCoeffs_;       // 1st and 2nd order drag coefficients for translational and rotational motion
@@ -28,16 +28,15 @@ private:
   static constexpr double GRAVITY = 9.80665;
 
 public:
-  NominalThrustSolver(double mass, double volume, double density, const Eigen::Ref<const Eigen::Matrix3d> &inertia, const Eigen::Ref<const Eigen::Vector3d> &CoB,
+  NominalThrustSolver(double Fg, double Fb, const Eigen::Ref<const Eigen::Vector3d> &CoB, const Eigen::Ref<const Eigen::Matrix3d> &inertia,
                       const Eigen::Ref<const Matrix62d> &dragCoeffs, const Eigen::Ref<const Matrix68d> &thrustCoeffs,
                       double *quaternion, double *uvw, double *pqr, double *inertialTransAccel, double *pqrDot)
   {
-    mass_ = mass;
-    density_ = density;
-    Fg_ = mass_ * NominalThrustSolver::GRAVITY;
-    Fb_ = volume * density_ * NominalThrustSolver::GRAVITY;
-    inertia_ = inertia;
+    Fg_ = Fg;
+    Fb_ = Fb;
+    mass_ = Fg_ / NominalThrustSolver::GRAVITY;
     CoB_ = CoB;
+    inertia_ = inertia;
     dragCoeffs_ = dragCoeffs;
     thrustCoeffs_ = thrustCoeffs;
     quaternion_ = quaternion;
@@ -82,18 +81,18 @@ public:
     Eigen::Quaternion<T> quatT = quat.cast<T>();
 
     // Translational Equations
-    Eigen::Matrix<T, 3, 1> weightAccelT, transDragT;
-    weightAccelT.setZero();
+    Eigen::Matrix<T, 3, 1> weightT, transDragT;
+    weightT.setZero();
     transDragT.setZero();
-    weightAccelT(2) = T((Fg_ - Fb_) / mass_);
+    weightT(2) = T(Fg_ - Fb_);
 
-    transDragT(0) = (dragCoeffsT(0, 0) * uvwT(0) + T(0.5 * auv_math_lib::sign(uvw_[0]) * density_) * dragCoeffsT(0, 1) * uvwT(0) * uvwT(0)) / T(mass_);
-    transDragT(1) = (dragCoeffsT(1, 0) * uvwT(1) + T(0.5 * auv_math_lib::sign(uvw_[1]) * density_) * dragCoeffsT(1, 1) * uvwT(1) * uvwT(1)) / T(mass_);
-    transDragT(2) = (dragCoeffsT(2, 0) * uvwT(2) + T(0.5 * auv_math_lib::sign(uvw_[2]) * density_) * dragCoeffsT(2, 1) * uvwT(2) * uvwT(2)) / T(mass_);
+    transDragT(0) = dragCoeffsT(0, 0) * uvwT(0) + T(auv_math_lib::sign(uvw_[0])) * dragCoeffsT(3, 0) * uvwT(0) * uvwT(0);
+    transDragT(1) = dragCoeffsT(1, 0) * uvwT(1) + T(auv_math_lib::sign(uvw_[1])) * dragCoeffsT(4, 0) * uvwT(1) * uvwT(1);
+    transDragT(2) = dragCoeffsT(2, 0) * uvwT(2) + T(auv_math_lib::sign(uvw_[2])) * dragCoeffsT(5, 0) * uvwT(2) * uvwT(2);
 
     // Net_F = ma OR
     // 0 = ma - Net_F
-    residualsT.template head<3>() = (T(mass_) * inertialTransAccelT) - (quatT.conjugate() * weightAccelT - transDragT +
+    residualsT.template head<3>() = (T(mass_) * inertialTransAccelT) - (quatT.conjugate() * weightT - transDragT +
                                                                         (thrustCoeffsT.template block<3, 8>(0, 0)) * nominalForcesT);
 
     // Rotational Equations
@@ -102,9 +101,9 @@ public:
     rotDragT.setZero();
     forceBuoyancyT(2) = T(-Fb_);
 
-    rotDragT(0) = (dragCoeffsT(3, 0) * pqrT(0) + T(0.5 * auv_math_lib::sign(pqr_[0]) * density_) * dragCoeffsT(3, 1) * pqrT(0) * pqrT(0));
-    rotDragT(1) = (dragCoeffsT(4, 0) * pqrT(1) + T(0.5 * auv_math_lib::sign(pqr_[1]) * density_) * dragCoeffsT(4, 1) * pqrT(1) * pqrT(1));
-    rotDragT(2) = (dragCoeffsT(5, 0) * pqrT(2) + T(0.5 * auv_math_lib::sign(pqr_[2]) * density_) * dragCoeffsT(5, 1) * pqrT(2) * pqrT(2));
+    rotDragT(0) = dragCoeffsT(0, 1) * pqrT(0) + T(auv_math_lib::sign(pqr_[0])) * dragCoeffsT(3, 1) * pqrT(0) * pqrT(0);
+    rotDragT(1) = dragCoeffsT(1, 1) * pqrT(1) + T(auv_math_lib::sign(pqr_[1])) * dragCoeffsT(4, 1) * pqrT(1) * pqrT(1);
+    rotDragT(2) = dragCoeffsT(2, 1) * pqrT(2) + T(auv_math_lib::sign(pqr_[2])) * dragCoeffsT(5, 1) * pqrT(2) * pqrT(2);
 
     inertialRotAccelT = inertiaT * pqrDotT + pqrT.cross(inertiaT * pqrT); // I*wDot + w x I*w
 

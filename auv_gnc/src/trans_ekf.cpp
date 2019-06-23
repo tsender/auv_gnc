@@ -5,7 +5,6 @@ namespace auv_gnc
 TransEKF::TransEKF(ros::NodeHandle nh)
 {
     nh_ = nh;
-
     nh_.param("subscriber_topic", subTopic_, std::string("input_data"));
     nh_.param("publisher_topic", pubTopic_, std::string("six_dof"));
 

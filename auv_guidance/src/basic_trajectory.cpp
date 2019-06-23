@@ -53,7 +53,7 @@ void BasicTrajectory::setStopTrajectory()
     angleAxis(0) = angularDistance;
 
     Eigen::Quaterniond qRotate = auv_math_lib::angleAxis2Quaternion(angleAxis); // Relative to B-frame
-    qStop_ = wStart_->quaternion() * qRotate;
+    qStop_ = wStart_->quaternion() * qRotate; // Apply qRotate FROM qStart
 
     Eigen::Vector3d zero3d = Eigen::Vector3d::Zero();
     wStop_ = new Waypoint(stopPos, zero3d, zero3d, qStop_, zero3d);

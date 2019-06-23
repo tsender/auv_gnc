@@ -237,13 +237,13 @@ TestNode::TestNode() : nh("~")
     // I-frame vector = q^(-1) * v * q = Rquat^T * B-frame vector
 
     // Quaternion * Quaternion
-    Eigen::Quaternionf q1(w1, x1, y1, z1);
-    Eigen::Quaternionf q2(w2, x2, y2, z2);
-    Eigen::Quaternionf qdiffI = q2 * (q1.conjugate());
+    Eigen::Quaterniond q1(w1, x1, y1, z1);
+    Eigen::Quaterniond q2(w2, x2, y2, z2);
+    Eigen::Quaterniond qdiffI = q2 * (q1.conjugate());
     cout << "Eigen: q2 * (q1.conj) = " << endl
          << qdiffI.w() << endl
          << qdiffI.vec() << endl;
-    Eigen::Quaternionf q1q2 = q1 * q2;
+    Eigen::Quaterniond q1q2 = q1 * q2;
     cout << "Eigen: q1 * q2 = " << endl
          << q1q2.w() << endl
          << q1q2.vec() << endl;
@@ -258,26 +258,25 @@ TestNode::TestNode() : nh("~")
     // The correct format: I-frame --(q2)--> Frame 2 --(q1)--> B-frame (quaternions are left multiplied)
     // Eigen does local frame composition, as in q2 is applied FROM q1
 
-    q1q2 = q1.toRotationMatrix() * q2;
-    cout << "Eigen: q1 * q2 = " << endl
-         << q1q2.w() << endl
-         << q1q2.vec() << endl;
+    q1 = auv_math_lib::toQuaternion(45.0 * M_PI / 180, 0, 0);
+    q2 = auv_math_lib::toQuaternion(-45.0 * M_PI / 180, 0, 0);
+    cout << "q1 " << endl << q1.w() << endl << q1.vec() << endl;
+    cout << " q1 to euler " << endl << auv_math_lib::toEulerAngle(q1) << endl;
+    cout << "q2 " << endl << q2.w() << endl << q2.vec() << endl;
+    cout << " q2 to euler " << endl << auv_math_lib::toEulerAngle(q2) << endl;
+    Eigen::Quaterniond qDiff = q1.conjugate() * q2;
+    Eigen::Vector4d angleAxis = auv_math_lib::quaternion2AngleAxis(qDiff);
+    cout << "qdiff " << endl << qDiff.w() << endl << qDiff.vec() << endl;
+    cout << "angle axis" << endl << angleAxis << endl;
 
-    Eigen::MatrixXd zero3d(3,3);
-    zero3d.setZero();
-    int i = 0;
-    zero3d(i,i+1) = 3.2;
-    zero3d(i+2,i+1) = 2.3;
-    cout << "zero3d " << endl << zero3d << endl;
-
-    q2.w() = 0;
-    q2.x() = 0;
-    q2.y() = 0;
-    q2.z() = 0;
-    q1q2 = q2 * q1;
-    cout << "Eigen: q1 * {zero} = " << endl
-         << q1q2.w() << endl
-         << q1q2.vec() << endl;
+    Eigen::Quaterniond qSlerp = q1.slerp(0.5, q2);
+    cout << "qSlerp " << endl << qSlerp.w() << endl << qSlerp.vec() << endl;
+    qSlerp = q1.slerp(0, q2);
+    cout << "qSlerp " << endl << qSlerp.w() << endl << qSlerp.vec() << endl;
+    qSlerp = q1.slerp(1, q2);
+    cout << "qSlerp " << endl << qSlerp.w() << endl << qSlerp.vec() << endl;
+    qSlerp = q1.slerp(1.5, q2);
+    cout << "qSlerp " << endl << qSlerp.w() << endl << qSlerp.vec() << endl;
 }
 
 void TestNode::copy(const Eigen::Ref<const Eigen::MatrixXf> &m)
