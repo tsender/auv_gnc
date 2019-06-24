@@ -1,7 +1,7 @@
 subscriber_topic: /auv_gnc/trans_ekf/input_data
 publisher_topic: /auv_gnc/trans_ekf/six_dof
 
-position_sensing: [false, false, true] # Indicates if X,Y,Z axess have inertial position
+position_sensing: [false, false, true] # Indicates if X,Y,Z axes have inertial position
 R_pos_diag: [0.0, 0.0, 0.05] # Measurement noise covariance (diagonal elements) for position sensor
 R_vel_diag: [0.001, 0.001, 0.001] # Measurement noise covariance (diagonal elements) for velocity sensor
 R_accel_diag: [0.05, 0.05, 0.05] # Measurement noise covariance (diagonal elements) for accelerometer

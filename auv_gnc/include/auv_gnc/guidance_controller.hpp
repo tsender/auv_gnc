@@ -1,8 +1,9 @@
 #ifndef GUIDANCE_CONTROLLER
 #define GUIDANCE_CONTROLLER
 
-//#include "auv_guidance/basic_trajectory.hpp"
+#include "auv_guidance/basic_trajectory.hpp"
 #include "auv_guidance/tgen_limits.hpp"
+#include "auv_guidance/waypoint.hpp"
 #include "auv_control/auv_model.hpp"
 #include "auv_msgs/SixDoF.h"
 #include "auv_msgs/Thrust.h"
@@ -15,6 +16,7 @@
 #include "math.h"
 #include <algorithm>
 #include <vector>
+#include <boost/thread.hpp>
 
 namespace auv_gnc
 {
@@ -35,6 +37,11 @@ private:
 
   // Trajectory Generator Parameters
   auv_guidance::TGenLimits *tGenLimits_;
+  auv_guidance::Waypoint *currentState_;
+  auv_guidance::BasicTrajectory *basicTrajectory_;
+
+  //boost::shared_mutex mutexCurrentWaypoint_;
+  //boost::shared_mutex mutexCurrentWaypoint_;
 
   typedef actionlib::SimpleActionServer<auv_msgs::TrajectoryGeneratorAction> TGenActionServer;
   typedef std::shared_ptr<TGenActionServer> TGenActionServerPtr_;

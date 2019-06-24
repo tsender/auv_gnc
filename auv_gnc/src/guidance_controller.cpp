@@ -48,10 +48,10 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
     nh_.param("rotational_jerk", rotJerk, 5.0);                // [rad/s^3]
     nh_.param("rotational_closing_jerk", rotClosingJerk, 6.0); // [rad/s^3]
 
-    /*tGenLimits_ = new auv_guidance::TGenLimits(maxXYDistance, maxZDistance, maxXYVelocity, maxXYAccel,
+    tGenLimits_ = new auv_guidance::TGenLimits(maxXYDistance, maxZDistance, maxXYVelocity, maxXYAccel,
                                                maxZVelocity, maxZAccel, maxRotVelocity, maxRotAccel, 
                                                xyzJerk, xyzClosingJerk, rotJerk, rotClosingJerk, 
-                                               closingTolerance, maxPathInclination);*/
+                                               closingTolerance, maxPathInclination);
 
     // Pubs, Subs, and Action Servers
     nh_.param("subscriber_topic", subTopic_, std::string("/auv_gnc/trans_ekf/six_dof"));
@@ -143,7 +143,6 @@ void GuidanceController::initAUVModel()
     {
         if (thrustersEnabled[i])
         {
-            ROS_INFO("col: %i", col);
             for (int j = 0; j < 5; j++)
                 thrusters(j, col) = auvConfig_["thrusters"][i]["pose"][j].as<double>();
             col++;

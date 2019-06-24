@@ -35,8 +35,8 @@ void TransEKF::initEKF()
 
     quaternion_.w() = 1;
     quaternion_.x() = 0;
+    quaternion_.y() = 0;
     quaternion_.z() = 0;
-    quaternion_.x() = 0;
 
     for (int i = 0; i < 3; i++)
         if (posSensing_[i])
@@ -107,9 +107,7 @@ void TransEKF::sixDofCB(const auv_msgs::SixDoF::ConstPtr &raw)
     }
     else
     {
-        dt = timeNew.toSec() - timeLast_.toSec();
-
-        // Check for which sensor provided new data (at least one did since the callback was called)
+        // Check for which sensor provided new data
         if (!lastMeasurement_.segment<3>(STATE_POS).isApprox(newData.segment<3>(STATE_POS)))
             sensorMask(0) = 1;
 
@@ -121,6 +119,7 @@ void TransEKF::sixDofCB(const auv_msgs::SixDoF::ConstPtr &raw)
 
         if (sensorMask.sum() > 0)
         {
+            dt = timeNew.toSec() - timeLast_.toSec();
             inertialState_ = transEKF_->update(dt, sensorMask, dataMat);
 
             // Express linear velocity and accel in B-frame

@@ -277,38 +277,6 @@ TestNode::TestNode() : nh("~")
     cout << "qSlerp " << endl << qSlerp.w() << endl << qSlerp.vec() << endl;
     qSlerp = q1.slerp(1.5, q2);
     cout << "qSlerp " << endl << qSlerp.w() << endl << qSlerp.vec() << endl;
-
-    // Trajectory Generator Limits
-    double maxXYVelocity, maxXYAccel;
-    double maxZVelocity, maxZAccel;
-    double maxRotVelocity, maxRotAccel;
-    double xyzJerk, xyzClosingJerk;
-    double rotJerk, rotClosingJerk;
-    double closingTolerance;
-    double maxPathInclination;
-    double maxXYDistance, maxZDistance;
-
-    nh.param("max_xy_distance", maxXYDistance, 3.0);            // [m]
-    nh.param("max_z_distance", maxZDistance, 1.0);              // [m]
-    nh.param("max_path_inclination", maxPathInclination, 80.0); // [deg]
-
-    nh.param("max_xy_velocity", maxXYVelocity, 0.75);          // [m/s]
-    nh.param("max_xy_accel", maxXYAccel, 0.4);                 // [m/s^2]
-    nh.param("max_z_velocity", maxZVelocity, 0.3);             // [m/s]
-    nh.param("max_z_accel", maxZAccel, 0.2);                   // [m/s^2]
-    nh.param("max_rotational_velocity", maxRotVelocity, 1.57); // [rad/s]
-    nh.param("max_rotational_accel", maxRotAccel, 3.14);       // [rad/s^2]
-
-    nh.param("closing_tolerance", closingTolerance, 0.1);     // [m] or [rad]
-    nh.param("xyz_jerk", xyzJerk, 0.4);                       // [m/s^3]
-    nh.param("xyz_closing_jerk", xyzClosingJerk, 1.0);        // [m/s^3]
-    nh.param("rotational_jerk", rotJerk, 5.0);                // [rad/s^3]
-    nh.param("rotational_closing_jerk", rotClosingJerk, 6.0); // [rad/s^3]
-
-    /*tGenLimits_ = new auv_guidance::TGenLimits(maxXYDistance, maxZDistance, maxXYVelocity, maxXYAccel,
-                                               maxZVelocity, maxZAccel, maxRotVelocity, maxRotAccel, 
-                                               xyzJerk, xyzClosingJerk, rotJerk, rotClosingJerk, 
-                                               closingTolerance, maxPathInclination);*/
 }
 
 void TestNode::copy(const Eigen::Ref<const Eigen::MatrixXf> &m)
