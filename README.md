@@ -28,9 +28,10 @@ AUV GNC only relies on the Control Toolbox for optimal control solvers, but beca
 ### Building
 To get started, first setup a catkin workspace and clone the library into it
 
-    mkdir ~/auv_gnc
-    cd ~/auv_gnc
-    git clone --recursive https://github.com/tsender/auv_gnc.git src
+    mkdir -p ~/catkin_ws/src
+    cd ~/catkin_ws/src
+    git clone --recursive https://github.com/tsender/auv_gnc.git
+    cd ..
 
 The suggested way to build/install this library is with [Catkin tools](https://catkin-tools.readthedocs.io/en/latest/installing.html). Then build the `auv_gnc` package, with the command
 
@@ -45,7 +46,7 @@ it is unnecessary to build all of the Control Toolbox packages since AUV GNC is 
 ### Installing to /opt/ros/kinetic
 If you wish to install AUV GNC to the same location as where ROS Kinetic is installed, then you can run these commands (assuming you have already cloned the repo)
 
-    cd ~/auv_gnc
+    cd ~/catkin_ws/src
     sudo su
     source /opt/ros/kinetic/setup.bash
     catkin build auv_gnc --cmake-args -DCMAKE_INSTALL_PREFIX=/opt/ros/kinetic
