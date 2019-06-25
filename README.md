@@ -19,9 +19,11 @@ AUV GNC is currently targeted towards the Robot Operatin System ([ROS1](https://
 * [CppAD](https://coin-or.github.io/CppAD/doc/cppad.htm) (C++ automatic differentiation library)
 
 ### Included System Dependencies
-For your convenience, this library includes two other dependencies:
+This library has two other dependencies, but these are included in the repo for your convenience:
 * [Control Toolbox](https://github.com/ethz-adrl/control-toolbox) (C++ optimized control library developed by researchers at ETH Zurich's Agile & Dexterous Robotics Lab)
 * [Kindr](https://github.com/ANYbotics/kindr) (C++ robotics library, only included because the Control Toolbox depends on it)
+
+AUV GNC only relies on the Control Toolbox for optimal control solvers, but because the Control Toolbox depends on Kindr, both libraries are included.
 
 ### Building
 To get started, first setup a catkin workspace and clone the library into it
@@ -41,7 +43,7 @@ The `auv_gnc` package is the main ROS-related packaged inside the library, and i
 it is unnecessary to build all of the Control Toolbox packages since AUV GNC is only dependent on two of them. Building the entire repo actually takes quite a while due to all the overhead in the Control Toolbox, namely due to the `ct_models` package.
 
 ### Installing to /opt/ros/kinetic
-If you wish to install AUV GNC to the same location as where ROS Kinetic is installed, then you can run these commands
+If you wish to install AUV GNC to the same location as where ROS Kinetic is installed, then you can run these commands (assuming you have already cloned the repo)
 
     cd ~/auv_gnc
     sudo su
