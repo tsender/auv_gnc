@@ -61,10 +61,17 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
     sixDoFSub_ = nh_.subscribe<auv_msgs::SixDoF>(subTopic_, 1, &GuidanceController::sixDofCB, this);
     thrustPub_ = nh_.advertise<auv_msgs::Thrust>(pubTopic_, 1, this);
 
-    /*trajectoryActionServer_.reset(new TrajectoryActionServer(nodeHandle_, actionName_, false));
-    trajectoryActionServer_->registerGoalCallback(boost::bind(&GuidanceController::trajectoryActionGoalCB, this));
-    trajectoryActionServer_->registerPreemptCallback(boost::bind(&GuidanceController::trajctoryActionPreemptCB, this));
-    trajectoryActionServer_->start();*/
+    state_.setZero();
+    quaternion_.w() = 1;
+    quaternion_.x() = 0;
+    quaternion_.y() = 0;
+    quaternion_.z() = 0;
+    tGenInit_ = false;
+
+    tgenActionServer_.reset(new TGenActionServer(nh_, actionName_, false));
+    tgenActionServer_->registerGoalCallback(boost::bind(&GuidanceController::tgenActionGoalCB, this));
+    tgenActionServer_->registerPreemptCallback(boost::bind(&GuidanceController::tgenActionPreemptCB, this));
+    tgenActionServer_->start();
 }
 
 /**
@@ -170,6 +177,47 @@ void GuidanceController::initAUVModel()
  */
 void GuidanceController::sixDofCB(const auv_msgs::SixDoF::ConstPtr &state)
 {
+    state_(acc::STATE_XI) = state->pose.position.x;
+    state_(acc::STATE_YI) = state->pose.position.y;
+    state_(acc::STATE_ZI) = state->pose.position.z;
+
+    quaternion_.w() = state->pose.orientation.w;
+    quaternion_.x() = state->pose.orientation.x;
+    quaternion_.y() = state->pose.orientation.y;
+    quaternion_.z() = state->pose.orientation.z;
+
+    state_(acc::STATE_U) = state->velocity.linear.x;
+    state_(acc::STATE_V) = state->velocity.linear.y;
+    state_(acc::STATE_W) = state->velocity.linear.z;
+
+    state_(acc::STATE_Q1) = state->pose.orientation.x;
+    state_(acc::STATE_Q2) = state->pose.orientation.y;
+    state_(acc::STATE_Q3) = state->pose.orientation.z;
+
+    state_(acc::STATE_P) = state->velocity.angular.x;
+    state_(acc::STATE_Q) = state->velocity.angular.y;
+    state_(acc::STATE_R) = state->velocity.angular.z;
+}
+
+void GuidanceController::tgenActionGoalCB()
+{
+
+}
+
+void GuidanceController::tgenActionPreemptCB()
+{
+    tgenActionServer_->setPreempted();
+}
+
+void GuidanceController::runController()
+{
+    if (tGenType_ == amt::BASIC_ABS_XYZ || tGenType_ == amt::BASIC_ABS_XYZ)
+    {
+        if (tGenType_ == amt::BASIC_ABS_XYZ)
+        {
+
+        }
+    }
 }
 
 } // namespace auv_gnc

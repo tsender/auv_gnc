@@ -6,6 +6,7 @@ add_compile_options(-std=c++11)
 
 
 find_package(catkin REQUIRED COMPONENTS
+  actionlib
   auv_core  
   auv_guidance
   auv_navigation

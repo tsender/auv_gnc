@@ -1,6 +1,7 @@
 #ifndef GUIDANCE_CONTROLLER
 #define GUIDANCE_CONTROLLER
 
+#include "auv_core/constants.hpp"
 #include "auv_guidance/basic_trajectory.hpp"
 #include "auv_guidance/tgen_limits.hpp"
 #include "auv_guidance/waypoint.hpp"
@@ -17,6 +18,8 @@
 #include <algorithm>
 #include <vector>
 #include <boost/thread.hpp>
+
+namespace acc = auv_core::constants;
 
 namespace auv_gnc
 {
@@ -36,15 +39,18 @@ private:
   auv_control::Matrix8d R_;
 
   // Trajectory Generator Parameters
+  typedef auv_msgs::Trajectory amt;
+  int tGenType_;
+  bool tGenInit_;
+  Eigen::Quaterniond quaternion_;
+
   auv_guidance::TGenLimits *tGenLimits_;
+  auv_guidance::Vector12d state_;
   auv_guidance::Waypoint *currentState_;
   auv_guidance::BasicTrajectory *basicTrajectory_;
 
-  //boost::shared_mutex mutexCurrentWaypoint_;
-  //boost::shared_mutex mutexCurrentWaypoint_;
-
   typedef actionlib::SimpleActionServer<auv_msgs::TrajectoryGeneratorAction> TGenActionServer;
-  typedef std::shared_ptr<TGenActionServer> TGenActionServerPtr_;
+  typedef std::shared_ptr<TGenActionServer> TGenActionServerPtr;
 
   bool init_;
   double dt;
@@ -54,7 +60,7 @@ private:
   ros::Subscriber sixDoFSub_;
   ros::Publisher thrustPub_;
   std::string subTopic_, pubTopic_, actionName_;
-  TGenActionServerPtr_ tGenActionServer_;
+  TGenActionServerPtr tgenActionServer_;
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -62,6 +68,9 @@ public:
   GuidanceController(ros::NodeHandle nh);
   void initAUVModel();
   void sixDofCB(const auv_msgs::SixDoF::ConstPtr &state);
+  void tgenActionGoalCB();
+  void tgenActionPreemptCB();
+  void runController();
 };
 } // namespace auv_gnc
 
