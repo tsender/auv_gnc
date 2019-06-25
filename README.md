@@ -13,7 +13,7 @@ Finding an opensource "GNC-like" library for AUVs used to be a struggle, until n
 
 ## Building/Installation
 ### System Dependencies
-AUV GNC is currently targeted towards the Robot Operatin System ([ROS1](https://www.ros.org/)), which must be installed to build the library as is. The library contains the following system dependencies:
+AUV GNC is currently targeted towards the Robot Operating System ([ROS](https://www.ros.org/)), which must be installed to build the library as is. The library contains the following system dependencies:
 * [Eigen](https://eigen.tuxfamily.org/dox/GettingStarted.html), minimum version 3 (C++ linear algebra library). Note: this already comes pre-installed with ROS, but you may use newer versions if you like
 * [Ceres Solver](http://ceres-solver.org/) (C++ non-linear solver developed by Google)
 * [CppAD](https://coin-or.github.io/CppAD/doc/cppad.htm) (C++ automatic differentiation library)
