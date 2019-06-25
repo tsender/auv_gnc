@@ -24,18 +24,27 @@ For your convenience, this library includes two other dependencies:
 * [Kindr](https://github.com/ANYbotics/kindr) (C++ robotics library, only included because the Control Toolbox depends on it)
 
 ### Building
-To get started, first setup a catkin workspace and clone the library:
+To get started, first setup a catkin workspace and clone the library into it
 
     mkdir ~/auv_gnc
     cd ~/auv_gnc
     git clone --recursive https://github.com/tsender/auv_gnc.git src
 
-The suggested way to build/install this library is with [Catkin tools](https://catkin-tools.readthedocs.io/en/latest/installing.html). While you may build the entire library with the command
-
-    catkin build
-  
-it is unnecessary to build all of the Control Toolbox to use AUV GNC (doing so actually takes quite a while due to all the overhead, primarily in the `ct_models` package). Instead, it is recommended that you run
+The suggested way to build/install this library is with [Catkin tools](https://catkin-tools.readthedocs.io/en/latest/installing.html). Then build the `auv_gnc` package, with the command
 
     catkin build auv_gnc
 
-The `auv_gnc` package is the main ROS-related packaged inside the library, and it will automatically build its dependent catkin/cmake packages.
+The `auv_gnc` package is the main ROS-related packaged inside the library, and it will automatically build its dependent catkin/cmake packages. While you may also build the entire repo with the command
+
+    catkin build
+  
+it is unnecessary to build all of the Control Toolbox packages since AUV GNC is only dependent on two of them. Building the entire repo actually takes quite a while due to all the overhead in the Control Toolbox, namely due to the `ct_models` package.
+
+### Installing to /opt/ros/kinetic
+If you wish to install AUV GNC to the same location as where ROS Kinetic is installed, then you can run these commands
+
+    cd ~/auv_gnc
+    sudo su
+    source /opt/ros/kinetic/setup.bash
+    catkin build auv_gnc --cmake-args -DCMAKE_INSTALL_PREFIX=/opt/ros/kinetic
+    exit
