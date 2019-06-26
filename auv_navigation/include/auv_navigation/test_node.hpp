@@ -7,6 +7,9 @@
 #include "math.h"
 #include <sstream>
 #include <cppad/cppad.hpp>
+#include <tf/tf.h>
+#include "geometry_msgs/Vector3.h"
+#include <eigen_conversions/eigen_msg.h>
 
 using namespace std;
 //using namespace CppAD;

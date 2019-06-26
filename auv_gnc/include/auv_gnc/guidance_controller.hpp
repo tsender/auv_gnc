@@ -13,6 +13,9 @@
 
 #include <actionlib/server/simple_action_server.h>
 #include <ros/ros.h>
+#include <tf/tf.h>
+#include "eigen_conversions/eigen_msg.h"
+
 #include <yaml-cpp/yaml.h>
 #include "math.h"
 #include <algorithm>
@@ -26,7 +29,7 @@ namespace auv_gnc
 class GuidanceController
 {
 private:
-  // AUV Model parameters
+  // AUV Model Parameters
   int activeThrusters_;
   std::vector<std::string> activeThrusterNames_, inactiveThrusterNames_;
   std::string auvConfigFile_;
@@ -39,37 +42,43 @@ private:
   auv_control::Matrix8d R_;
 
   // Trajectory Generator Parameters
-  typedef auv_msgs::Trajectory amt;
-  int tGenType_;
-  bool tGenInit_;
+  auv_msgs::Trajectory desiredTrajectory_;
+  int tgenType_;
+  bool tgenInit_, newTrajectory_;
   Eigen::Quaterniond quaternion_;
+  ros::Time timeStart_;
+  auv_control::Vector8d thrust_;
 
-  auv_guidance::TGenLimits *tGenLimits_;
+  auv_guidance::TGenLimits *tgenLimits_;
   auv_guidance::Vector12d state_;
-  auv_guidance::Waypoint *currentState_;
+  Eigen::Vector3d linearAccel_;
+  auv_guidance::Waypoint *startWaypt_, *endWaypt_;
   auv_guidance::BasicTrajectory *basicTrajectory_;
 
-  typedef actionlib::SimpleActionServer<auv_msgs::TrajectoryGeneratorAction> TGenActionServer;
-  typedef std::shared_ptr<TGenActionServer> TGenActionServerPtr;
-
-  bool init_;
-  double dt;
-  ros::Time timeLast_;
-
+  // ROS Parameters
   ros::NodeHandle nh_;
   ros::Subscriber sixDoFSub_;
   ros::Publisher thrustPub_;
   std::string subTopic_, pubTopic_, actionName_;
+
+  typedef actionlib::SimpleActionServer<auv_msgs::TrajectoryGeneratorAction> TGenActionServer;
+  typedef std::shared_ptr<TGenActionServer> TGenActionServerPtr;
   TGenActionServerPtr tgenActionServer_;
+
+  // Private Methods
+  void initAUVModel();
+  void sixDofCB(const auv_msgs::SixDoF::ConstPtr &state);
+  void tgenActionGoalCB();
+  void tgenActionPreemptCB();
+  bool isActionServerActive();
+  bool isTrajectoryTypeValid(int type);
+  void initNewTrajectory();
+  void publishThrustMessage();
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   GuidanceController(ros::NodeHandle nh);
-  void initAUVModel();
-  void sixDofCB(const auv_msgs::SixDoF::ConstPtr &state);
-  void tgenActionGoalCB();
-  void tgenActionPreemptCB();
   void runController();
 };
 } // namespace auv_gnc

@@ -4,6 +4,6 @@
 auv_msgs/Trajectory trajectory
 ---
 # Result definition
-
+bool completed
 ---
 # Feedback definition

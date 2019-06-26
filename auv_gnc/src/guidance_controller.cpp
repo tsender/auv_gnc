@@ -48,9 +48,9 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
     nh_.param("rotational_jerk", rotJerk, 5.0);                // [rad/s^3]
     nh_.param("rotational_closing_jerk", rotClosingJerk, 6.0); // [rad/s^3]
 
-    tGenLimits_ = new auv_guidance::TGenLimits(maxXYDistance, maxZDistance, maxXYVelocity, maxXYAccel,
-                                               maxZVelocity, maxZAccel, maxRotVelocity, maxRotAccel, 
-                                               xyzJerk, xyzClosingJerk, rotJerk, rotClosingJerk, 
+    tgenLimits_ = new auv_guidance::TGenLimits(maxXYDistance, maxZDistance, maxXYVelocity, maxXYAccel,
+                                               maxZVelocity, maxZAccel, maxRotVelocity, maxRotAccel,
+                                               xyzJerk, xyzClosingJerk, rotJerk, rotClosingJerk,
                                                closingTolerance, maxPathInclination);
 
     // Pubs, Subs, and Action Servers
@@ -61,13 +61,21 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
     sixDoFSub_ = nh_.subscribe<auv_msgs::SixDoF>(subTopic_, 1, &GuidanceController::sixDofCB, this);
     thrustPub_ = nh_.advertise<auv_msgs::Thrust>(pubTopic_, 1, this);
 
+    // Initialize variables
     state_.setZero();
+    linearAccel_.setZero();
+    thrust_.setZero();
+
     quaternion_.w() = 1;
     quaternion_.x() = 0;
     quaternion_.y() = 0;
     quaternion_.z() = 0;
-    tGenInit_ = false;
 
+    tgenType_ = 0;
+    tgenInit_ = false;
+    newTrajectory_ = false;
+
+    // Initialize action server
     tgenActionServer_.reset(new TGenActionServer(nh_, actionName_, false));
     tgenActionServer_->registerGoalCallback(boost::bind(&GuidanceController::tgenActionGoalCB, this));
     tgenActionServer_->registerPreemptCallback(boost::bind(&GuidanceController::tgenActionPreemptCB, this));
@@ -181,10 +189,7 @@ void GuidanceController::sixDofCB(const auv_msgs::SixDoF::ConstPtr &state)
     state_(acc::STATE_YI) = state->pose.position.y;
     state_(acc::STATE_ZI) = state->pose.position.z;
 
-    quaternion_.w() = state->pose.orientation.w;
-    quaternion_.x() = state->pose.orientation.x;
-    quaternion_.y() = state->pose.orientation.y;
-    quaternion_.z() = state->pose.orientation.z;
+    tf::quaternionMsgToEigen(state->pose.orientation, quaternion_);
 
     state_(acc::STATE_U) = state->velocity.linear.x;
     state_(acc::STATE_V) = state->velocity.linear.y;
@@ -197,27 +202,140 @@ void GuidanceController::sixDofCB(const auv_msgs::SixDoF::ConstPtr &state)
     state_(acc::STATE_P) = state->velocity.angular.x;
     state_(acc::STATE_Q) = state->velocity.angular.y;
     state_(acc::STATE_R) = state->velocity.angular.z;
+
+    linearAccel_(0) = state->linear_accel.x;
+    linearAccel_(1) = state->linear_accel.y;
+    linearAccel_(2) = state->linear_accel.z;
 }
 
 void GuidanceController::tgenActionGoalCB()
 {
+    boost::shared_ptr<const auv_msgs::TrajectoryGeneratorGoal> tgenPtr = tgenActionServer_->acceptNewGoal();
 
+    if (!GuidanceController::isTrajectoryTypeValid(tgenPtr->trajectory.type))
+    {
+        auv_msgs::TrajectoryGeneratorResult result;
+        result.completed = false;
+        tgenActionServer_->setAborted(result);
+    }
+    else
+    {
+        desiredTrajectory_ = tgenPtr->trajectory;
+        tgenType_ = desiredTrajectory_.type;
+        newTrajectory_ = true;
+
+        if (!tgenInit_)
+            tgenInit_ = true;
+    }
 }
 
 void GuidanceController::tgenActionPreemptCB()
 {
     tgenActionServer_->setPreempted();
+    tgenInit_ = false;
+    thrust_.setZero();
+    GuidanceController::publishThrustMessage();
+}
+
+bool GuidanceController::isActionServerActive()
+{
+    return (tgenActionServer_->isActive() && !tgenActionServer_->isPreemptRequested());
+}
+
+/**
+ * @param type Type of trajectory
+ * \brief Returns true if trajectory type is valid, false otherwise
+ */
+bool GuidanceController::isTrajectoryTypeValid(int type)
+{
+    bool valid = false;
+    if (type == auv_msgs::Trajectory::BASIC_ABS_XYZ)
+        valid = true;
+    else if (type == auv_msgs::Trajectory::BASIC_REL_XYZ)
+        valid = true;
+    return valid;
 }
 
 void GuidanceController::runController()
 {
-    if (tGenType_ == amt::BASIC_ABS_XYZ || tGenType_ == amt::BASIC_ABS_XYZ)
+    if (!tgenInit_)
+        return;
+    
+    if (newTrajectory_) // Initialize new trajectory once
     {
-        if (tGenType_ == amt::BASIC_ABS_XYZ)
-        {
-
-        }
+        GuidanceController::initNewTrajectory();
     }
+    else
+    {
+        auv_guidance::Vector12d ref;
+        auv_guidance::Vector6d accel;
+        ref.setZero();
+        accel.setZero();
+
+        double dt = ros::Time::now().toSec() - timeStart_.toSec();
+
+        if (tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ || tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ)
+        {
+            ref = basicTrajectory_->computeState(dt);
+            accel = basicTrajectory_->computeAccel(dt);
+        }
+
+        thrust_ = auvModel_->computeLQRThrust(state_, ref, accel);
+        GuidanceController::publishThrustMessage();
+    }
+}
+
+/**
+ * \brief Initialize new trajectory
+ */
+void GuidanceController::initNewTrajectory()
+{
+    newTrajectory_ = false;
+    timeStart_ = ros::Time::now();
+
+    Eigen::Vector3d zero3d = Eigen::Vector3d::Zero();
+    Eigen::Vector3d posIStart = zero3d;
+    Eigen::Vector3d velIStart = zero3d;
+    Eigen::Vector3d accelIStart = zero3d;
+    
+    // Inertial position, velocity, and accel expressed in I-frame
+    posIStart = state_.segment<3>(acc::STATE_XI);
+    velIStart = quaternion_ * state_.segment<3>(acc::STATE_U);
+    accelIStart = quaternion_ * linearAccel_;
+
+    startWaypt_ = new auv_guidance::Waypoint(posIStart, velIStart, accelIStart, quaternion_, state_.segment<3>(acc::STATE_P));
+
+    if (tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ || tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ)
+    {  
+        Eigen::Vector3d posIEnd = zero3d;
+        Eigen::Quaterniond quatEnd;
+
+        tf::pointMsgToEigen(desiredTrajectory_.pose.position, posIEnd);
+        tf::quaternionMsgToEigen(desiredTrajectory_.pose.orientation, quatEnd);
+
+        if (tgenType_ == auv_msgs::Trajectory::BASIC_REL_XYZ)
+            posIEnd = (quaternion_ * posIStart) + posIEnd;
+
+        endWaypt_ = new auv_guidance::Waypoint(posIEnd, zero3d, zero3d, quatEnd, zero3d);
+        basicTrajectory_ = new auv_guidance::BasicTrajectory(startWaypt_, endWaypt_, tgenLimits_);
+    }
+}
+
+void GuidanceController::publishThrustMessage()
+{
+    auv_msgs::Thrust thrustMsg;
+
+    for (int i = 0; i < activeThrusterNames_.size(); i++)
+        thrustMsg.names.push_back(activeThrusterNames_[i]);
+
+    for (int i = 0; i < inactiveThrusterNames_.size(); i++)
+        thrustMsg.names.push_back(inactiveThrusterNames_[i]);
+
+    for (int i = 0; i < thrust_.rows(); i++)
+        thrustMsg.thrusts.push_back(thrust_(i));
+
+    thrustMsg.header.stamp = ros::Time::now();
+    thrustPub_.publish(thrustMsg);
 }
 
 } // namespace auv_gnc

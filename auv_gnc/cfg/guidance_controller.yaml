@@ -22,5 +22,5 @@ xyz_closing_jerk: 1.0 # [m/s^3] Uses this value when within closing tolerance
 rotational_jerk: 5 # [rad/s^3]
 rotational_closing_jerk: 6 # [rad/s^3]
 
-# Change heading towards endpoint when path inclination is less than this angle
+# Set heading towards destination when path inclination is less than this angle
 max_path_inclination: 80 # [deg]

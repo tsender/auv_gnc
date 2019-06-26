@@ -8,6 +8,9 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   auv_core
   roscpp
+  geometry_msgs
+  tf
+  eigen_conversions
 )
 
 find_package(Eigen3 REQUIRED)

@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
   auv_gnc::GuidanceController gcon(nh);
 
   ros::Rate rate(50);
-  while (ros::ok)
+  while (ros::ok())
   {
     ros::spinOnce();
     gcon.runController();

@@ -34,6 +34,9 @@ private:
   ros::Publisher sixDoFPub_;
   std::string subTopic_, pubTopic_;
 
+  void initEKF();
+  void sixDofCB(const auv_msgs::SixDoF::ConstPtr &raw);
+
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -42,8 +45,6 @@ public:
   static const int STATE_ACCEL = 6;
   
   TransEKF(ros::NodeHandle nh);
-  void initEKF();
-  void sixDofCB(const auv_msgs::SixDoF::ConstPtr &raw);
 };
 } // namespace auv_gnc
 
