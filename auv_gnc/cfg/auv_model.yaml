@@ -1,6 +1,6 @@
 Fg: 400.7 # Weight in air, [N]
-Fb: 410.0 # Buoyant Force, [N]
-center_of_buoyancy: [0.38403, 0.182, -0.1953] # Relative to center of mass (X [m], Y [m], Z [m])
+Fb: 412.0 # Buoyant Force, [N]
+center_of_buoyancy: [0.02, 0.0, -0.03] # Relative to center of mass (X [m], Y [m], Z [m])
 inertia: { # Inertias [kg-m^2]
   Ixx: 1.32,
   Iyy: 2.84,
@@ -10,63 +10,64 @@ inertia: { # Inertias [kg-m^2]
   Iyz: 0.0  
 }
 translational_drag: { # In the order of X, Y, Z axes
-  linear: [1.0, 1.0, 1.0], # Fdrag = -c*Xdot [N], where c = drag coeff
-  quadratic: [1.0, 1.0, 1.0] # Fdrag = -c*sign(Xdot)*Xdot^2 [N], where c = drag coeff
+  linear: [11.7391, 20, 31.8678], # Fdrag = -c*Xdot [N], where c = drag coeff
+  quadratic: [5, 25,44.9085] # Fdrag = -c*sign(Xdot)*Xdot^2 [N], where c = drag coeff
 }
 rotational_drag: { # In the order of X, Y, Z axes
-  linear: [1.0, 1.0, 1.0], # Tdrag = -C*Xdot [Nm], where c = drag coeff
-  quadratic: [1.0, 1.0, 1.0] # Tdrag = -C*sign(Xdot)*Xdot^2 [Nm], where c = drag coeff
+  linear: [11.7391, 20, 31.8678], # Tdrag = -C*Xdot [Nm], where c = drag coeff
+  quadratic: [5, 25,44.9085] # Tdrag = -C*sign(Xdot)*Xdot^2 [Nm], where c = drag coeff
 }
 thrusters: [
   # You can add up to EIGHT thruster blocks
-  # Pose (relative to center of mass): [x (m), y (m), z (m), yaw (deg), pitch (deg)]
+  # Pose (relative to center of mass with the NED convention): [x (m), y (m), z (m), yaw (deg), pitch (deg)]
   # Disable thrusters with care. You are responsible for ensuring the system is fully controllable.
   {
     id: 0,
-    name: "VPF",
+    name: "HPF",
     enable: true,
-    pose: [0.8255, -0.12065, -0.257175, -135.0, 0.0]
+    pose: [0.37273, -0.18946, 0.01509, 0.0, 90.0]
   },
   {
     id: 1,
-    name: "VSF",
+    name: "HPA",
     enable: true,
-    pose: [0.8255, 0.48895, -0.257175, 135.0, 0.0]
+    pose: [-0.37273, -0.18946, 0.01509, 0.0, 90.0]
   },
   {
     id: 2,
-    name: "VPA",
+    name: "HSF",
     enable: true,
-    pose: [0.03175, -0.12065, -0.257175, -45.0, 0.0]
+    pose: [0.37273, 0.18946, 0.01509, 0.0, 90.0]
   },
   {
     id: 3,
-    name: "VSA",
+    name: "HSA",
     enable: true,
-    pose: [0.03175, 0.48895, -0.257175, 45.0, 0.0]
+    pose: [-0.37273, 0.18946, 0.01509, 0.0, 90.0]
   },
   {
     id: 4,
-    name: "HPF",
+    name: "VPF",
     enable: true,
-    pose: [0.7747, 0, -0.161925, 0.0, 90.0]
+    pose: [0.398, -0.29921, -0.10615, -135.0, 0.0]
   },
   {
     id: 5,
-    name: "HSF",
+    name: "VPA",
     enable: true,
-    pose: [0.7747, 0.3683, -0.161925, 0.0, 90.0]
+    pose: [-0.398, -0.29921, -0.10615, -45.0, 0.0]
   },
   {
     id: 6,
-    name: "HPA",
+    name: "VSF",
     enable: true,
-    pose: [0.08255, 0, -0.161925, 0.0, 90.0]
+    pose: [0.398, 0.29921, -0.10615, 135.0, 0.0]
   },
   {
     id: 7,
-    name: "HSA",
+    name: "VSA",
     enable: true,
-    pose: [0.08255, 0.3683, -0.161925, 0.0, 90.0]
+    pose: [-0.398, 0.29921, -0.10615, 45.0, 0.0]
   }
+  
 ]

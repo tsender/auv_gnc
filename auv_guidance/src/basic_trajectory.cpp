@@ -187,6 +187,8 @@ void BasicTrajectory::setPrimaryTrajectory()
         stPrimary_ = new SimultaneousTrajectory(wStop_, wEnd_, simultaneousDuration_);
         totalDuration_ = simultaneousDuration_;
     }
+    std::cout << "BT long trajectory " << longTrajectory_ << std::endl;
+    std::cout << "BT simultaneous trajectory " << simultaneousTrajectory_ << std::endl;
 }
 
 double BasicTrajectory::getTime()
@@ -198,7 +200,7 @@ double BasicTrajectory::getTime()
  * @param time Time to compute the state at
  * Computes the trajectory state at the specified time
  */
-Vector12d BasicTrajectory::computeState(double time)
+Vector13d BasicTrajectory::computeState(double time)
 {
     if (time <= stopDuration_)
     {

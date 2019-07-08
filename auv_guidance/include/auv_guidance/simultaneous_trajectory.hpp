@@ -32,7 +32,7 @@ public:
   SimultaneousTrajectory(Waypoint *start, Waypoint *end, double duration);
   void initTrajectory();
   double getTime();
-  Vector12d computeState(double time);
+  Vector13d computeState(double time);
   Vector6d computeAccel(double time);
 };
 } // namespace auv_guidance

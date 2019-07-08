@@ -71,8 +71,9 @@ public:
 
     // Map ceres parameters and residuals to Eigen object with Jet type
     typedef Eigen::Matrix<T, 8, 1> Vector8T;
+    typedef Eigen::Matrix<T, 6, 1> Vector6T;
     Eigen::Map<const Vector8T> nominalForcesT(nominalForces);
-    Eigen::Map<Vector8T> residualsT(residuals);
+    Eigen::Map<Vector6T> residualsT(residuals);
 
     // Compute quaternion
     // Using Eigen::Quaternion: quaternion * vector = rotates vector by the described axis-angle

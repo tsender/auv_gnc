@@ -29,7 +29,7 @@ AUVModel::AUVModel(double Fg, double Fb,
 
     // Initialize arrays
     for (int i = 0; i < maxThrusters_; i++)
-        nominalForces[i] = 0;
+        nominalForces_[i] = 0;
 
     for (int i = 0; i < 3; i++)
     {
@@ -37,20 +37,20 @@ AUVModel::AUVModel(double Fg, double Fb,
         uvw_[i] = 0;
         pqr_[i] = 0;
         inertialTransAccel_[i] = 0;
-        pqrDot_[0] = 0;
+        pqrDot_[i] = 0;
     }
     quaternion_[3] = 0;
+
+    AUVModel::setThrustCoeffs();
+    AUVModel::setLinearizedInputMatrix();
 
     // Initialize ceres problem
     problemNominalThrust.AddResidualBlock(
         new ceres::AutoDiffCostFunction<NominalThrustSolver, 6, 8>(new NominalThrustSolver(Fg_, Fb_, CoB_, inertia_, dragCoeffs_, thrustCoeffs_,
                                                                                            quaternion_, uvw_, pqr_, inertialTransAccel_, pqrDot_)),
-        NULL, nominalForces);
+        NULL, nominalForces_);
     optionsNominalThrust.max_num_iterations = 100;
     optionsNominalThrust.linear_solver_type = ceres::DENSE_QR;
-
-    AUVModel::setThrustCoeffs();
-    AUVModel::setLinearizedInputMatrix();
 }
 
 // Set the thruster coefficients. Each column corresponds to a single thruster.
@@ -89,12 +89,8 @@ void AUVModel::setLQRCostMatrices(const Eigen::Ref<const Matrix12d> &Q, const Ei
  * \param state Reference state for a given time instance
  * \brief Compute the 12x12 Jacobian of the A-matrix
  */
-void AUVModel::setLinearizedSystemMatrix(const Eigen::Ref<const Vector12d> &ref)
+void AUVModel::setLinearizedSystemMatrix(const Eigen::Ref<const Vector13d> &ref)
 {
-    // Get unit quaternions
-    //double q0State = sqrt(1.0 - pow(state(auv_core::constants::STATE_Q1), 2) + pow(state(auv_core::constants::STATE_Q2), 2) + pow(state(auv_core::constants::STATE_Q3), 2));
-    double q0Ref = sqrt(1.0 - pow(ref(auv_core::constants::STATE_Q1), 2) + pow(ref(auv_core::constants::STATE_Q2), 2) + pow(ref(auv_core::constants::STATE_Q3), 2));
-
     // Eigen::Quaterniond qState(q0State, state(auv_core::constants::STATE_Q1), state(auv_core::constants::STATE_Q2), state(auv_core::constants::STATE_Q2));
     // Eigen::Quaterniond qRef(q0Ref, ref(auv_core::constants::STATE_Q1), ref(auv_core::constants::STATE_Q2), ref(auv_core::constants::STATE_Q2));
     // Eigen::Quaterniond qError = qState.conjugate() * qRef;
@@ -122,39 +118,39 @@ void AUVModel::setLinearizedSystemMatrix(const Eigen::Ref<const Vector12d> &ref)
     ADRquat(1, 2) = 2 * X[q2_] * X[q3_] + 2 * q0 * X[q1_];
     ADRquat(2, 1) = 2 * X[q2_] * X[q3_] - 2 * q0 * X[q1_];*/
 
-    // Using Eigen::Quaternion: quaternion * vector = rotates vector by the axis-angle specified
+    // Using Eigen::Quaternion: quaternion * vector = vector rotated thru the axis-angle encoded within the quaternion
     // So: B-frame vector = quaternion.conjugate() * I-frame vector
     // So: I-frame vector = quaternion * B-frame vector
-    Eigen::Quaternion<CppAD::AD<double>> ADquat(q0Ref, X[auv_core::constants::STATE_Q1], X[auv_core::constants::STATE_Q2], X[auv_core::constants::STATE_Q3]);
+    Eigen::Quaternion<CppAD::AD<double>> ADquat(ref(auv_core::constants::STATE_Q0), X[auv_core::constants::STATE_Q1], X[auv_core::constants::STATE_Q2], X[auv_core::constants::STATE_Q3]);
 
     // Translational States
     // 1. Time derivatives of: xI, yI, zI (expressed in I-frame)
-    Xdot.head<3>() = ADquat * Xdot.segment<3>(auv_core::constants::STATE_U);
+    Xdot.head<3>() = ADquat * Xdot.segment<3>(auv_core::constants::ESTATE_U);
 
     // 2. Time-derivatives of: U, V, W (expressed in B-frame)
     Eigen::Vector3d weight = Eigen::Vector3d::Zero();
     weight(2) = Fg_ - Fb_;
     ADVector3d transDrag; // Translation drag accel
-    transDrag(0) = dragCoeffs_(0, 0) * X[auv_core::constants::STATE_U] + auv_core::math_lib::sign(ref(auv_core::constants::STATE_U)) * dragCoeffs_(3, 0) * X[auv_core::constants::STATE_U] * X[auv_core::constants::STATE_U];
-    transDrag(1) = dragCoeffs_(1, 0) * X[auv_core::constants::STATE_V] + auv_core::math_lib::sign(ref(auv_core::constants::STATE_V)) * dragCoeffs_(4, 0) * X[auv_core::constants::STATE_V] * X[auv_core::constants::STATE_V];
-    transDrag(2) = dragCoeffs_(2, 0) * X[auv_core::constants::STATE_W] + auv_core::math_lib::sign(ref(auv_core::constants::STATE_W)) * dragCoeffs_(5, 0) * X[auv_core::constants::STATE_W] * X[auv_core::constants::STATE_W];
-    Xdot.segment<3>(auv_core::constants::STATE_U) = ((ADquat.conjugate() * weight) - transDrag - (X.segment<3>(auv_core::constants::STATE_P).cross(X.segment<3>(auv_core::constants::STATE_U)))) / mass_;
+    transDrag(0) = dragCoeffs_(0, 0) * X[auv_core::constants::ESTATE_U] + auv_core::math_lib::sign(ref(auv_core::constants::STATE_U)) * dragCoeffs_(3, 0) * X[auv_core::constants::ESTATE_U] * X[auv_core::constants::ESTATE_U];
+    transDrag(1) = dragCoeffs_(1, 0) * X[auv_core::constants::ESTATE_V] + auv_core::math_lib::sign(ref(auv_core::constants::STATE_V)) * dragCoeffs_(4, 0) * X[auv_core::constants::ESTATE_V] * X[auv_core::constants::ESTATE_V];
+    transDrag(2) = dragCoeffs_(2, 0) * X[auv_core::constants::ESTATE_W] + auv_core::math_lib::sign(ref(auv_core::constants::STATE_W)) * dragCoeffs_(5, 0) * X[auv_core::constants::ESTATE_W] * X[auv_core::constants::ESTATE_W];
+    Xdot.segment<3>(auv_core::constants::ESTATE_U) = ((ADquat.conjugate() * weight) - transDrag - (X.segment<3>(auv_core::constants::ESTATE_P).cross(X.segment<3>(auv_core::constants::ESTATE_U)))) / mass_;
 
     // Rotational States
     // 3. Time Derivatives of: q1, q2, q3 (remember, quaternion represents the B-frame orientation wrt to the I-frame)
     ADMatrix3d qoIdentity;
     Eigen::Matrix3d identity = Eigen::Matrix3d::Identity();
-    qoIdentity = identity * q0Ref;
-    Xdot.segment<3>(auv_core::constants::STATE_Q1) = 0.5 * (qoIdentity * X.segment<3>(auv_core::constants::STATE_P) + X.segment<3>(auv_core::constants::STATE_Q1).cross(X.segment<3>(auv_core::constants::STATE_P)));
+    qoIdentity = identity * ref(auv_core::constants::STATE_Q0);
+    Xdot.segment<3>(auv_core::constants::ESTATE_Q1) = 0.5 * (qoIdentity * X.segment<3>(auv_core::constants::ESTATE_P) + X.segment<3>(auv_core::constants::ESTATE_Q1).cross(X.segment<3>(auv_core::constants::ESTATE_P)));
 
     // 4. Time Derivatives of: P, Q, R (expressed in B-frame)
     Eigen::Vector3d forceBuoyancy = Eigen::Vector3d::Zero();
     forceBuoyancy(2) = -Fb_;
     ADVector3d rotDrag; // Rotational drag accel
-    rotDrag(0) = dragCoeffs_(0, 1) * X[auv_core::constants::STATE_P] + auv_core::math_lib::sign(ref(auv_core::constants::STATE_P)) * dragCoeffs_(3, 1) * X[auv_core::constants::STATE_P] * X[auv_core::constants::STATE_P];
-    rotDrag(1) = dragCoeffs_(1, 1) * X[auv_core::constants::STATE_Q] + auv_core::math_lib::sign(ref(auv_core::constants::STATE_Q)) * dragCoeffs_(4, 1) * X[auv_core::constants::STATE_Q] * X[auv_core::constants::STATE_Q];
-    rotDrag(2) = dragCoeffs_(2, 1) * X[auv_core::constants::STATE_R] + auv_core::math_lib::sign(ref(auv_core::constants::STATE_R)) * dragCoeffs_(5, 1) * X[auv_core::constants::STATE_R] * X[auv_core::constants::STATE_R];
-    Xdot.segment<3>(auv_core::constants::STATE_P) = inertia_.inverse() * (CoB_.cross(ADquat.conjugate() * forceBuoyancy) - rotDrag - X.segment<3>(auv_core::constants::STATE_P).cross(inertia_ * X.segment<3>(auv_core::constants::STATE_P)));
+    rotDrag(0) = dragCoeffs_(0, 1) * X[auv_core::constants::ESTATE_P] + auv_core::math_lib::sign(ref(auv_core::constants::STATE_P)) * dragCoeffs_(3, 1) * X[auv_core::constants::ESTATE_P] * X[auv_core::constants::ESTATE_P];
+    rotDrag(1) = dragCoeffs_(1, 1) * X[auv_core::constants::ESTATE_Q] + auv_core::math_lib::sign(ref(auv_core::constants::STATE_Q)) * dragCoeffs_(4, 1) * X[auv_core::constants::ESTATE_Q] * X[auv_core::constants::ESTATE_Q];
+    rotDrag(2) = dragCoeffs_(2, 1) * X[auv_core::constants::ESTATE_R] + auv_core::math_lib::sign(ref(auv_core::constants::STATE_R)) * dragCoeffs_(5, 1) * X[auv_core::constants::ESTATE_R] * X[auv_core::constants::ESTATE_R];
+    Xdot.segment<3>(auv_core::constants::ESTATE_P) = inertia_.inverse() * (CoB_.cross(ADquat.conjugate() * forceBuoyancy) - rotDrag - X.segment<3>(auv_core::constants::ESTATE_P).cross(inertia_ * X.segment<3>(auv_core::constants::ESTATE_P)));
 
     // Get Rotation Matrices (Matrices filled by column-order)
     /*ADMatrixXd ADRotX, ADRotY, ADRotZ, ADRoti2b, ADRotb2i;
@@ -190,15 +186,20 @@ void AUVModel::setLinearizedSystemMatrix(const Eigen::Ref<const Vector12d> &ref)
     transportPQR = X.segment<3>(P_).cross(inertia_ * X.segment<3>(P_)); // [p, q, r] x I*[p, q, r]
     Xdot.segment<3>(P_) = -inertia_.inverse() * transportPQR;*/
 
+    // Evaluated reference state (excludes q0)
+    Vector12d evalRef;
+    evalRef.head<6>() = ref.head<6>();
+    evalRef.tail<6>() = ref.tail<6>();
+
     // Compute Jacobian
     std::vector<double> x;
     for (int i = 0; i < 12; i++)
-        x.push_back(ref(i));
+        x.push_back(evalRef(i));
     CppAD::ADFun<double> f(X, Xdot);
     jac = f.Jacobian(x);
 
-    A_.setZero();
     // Put jac elements into matrix format
+    A_.setZero();
     for (int i = 0; i < 12; i++)
         for (int j = 0; j < 12; j++)
             A_(i, j) = (float)jac[i * 12 + j];
@@ -210,8 +211,8 @@ void AUVModel::setLinearizedSystemMatrix(const Eigen::Ref<const Vector12d> &ref)
 void AUVModel::setLinearizedInputMatrix()
 {
     B_.setZero();
-    B_.block<3, 8>(auv_core::constants::STATE_U, 0) = thrustCoeffs_.block<3, 8>(0, 0);
-    B_.block<3, 8>(auv_core::constants::STATE_P, 0) = inertia_.inverse() * thrustCoeffs_.block<3, 8>(3, 0);
+    B_.block<3, 8>(auv_core::constants::ESTATE_U, 0) = thrustCoeffs_.block<3, 8>(0, 0);
+    B_.block<3, 8>(auv_core::constants::ESTATE_P, 0) = inertia_.inverse() * thrustCoeffs_.block<3, 8>(3, 0);
 }
 
 /**
@@ -244,17 +245,15 @@ Vector6d AUVModel::getTotalThrustLoad(const Eigen::Ref<const Vector8d> &thrusts)
     return thrustLoad;
 }
 
-Vector8d AUVModel::computeLQRThrust(const Eigen::Ref<const Vector12d> &state,
-                                    const Eigen::Ref<const Vector12d> &ref,
+Vector8d AUVModel::computeLQRThrust(const Eigen::Ref<const Vector13d> &state,
+                                    const Eigen::Ref<const Vector13d> &ref,
                                     const Eigen::Ref<const Vector6d> &accel)
 {
     Vector8d totalThrust;
     totalThrust.setZero();
 
     // Set variables for nominal thrust solver
-    double q0State = sqrt(1.0 - pow(state(auv_core::constants::STATE_Q1), 2) + pow(state(auv_core::constants::STATE_Q2), 2) + pow(state(auv_core::constants::STATE_Q3), 2));
-    double q0Ref = sqrt(1.0 - pow(ref(auv_core::constants::STATE_Q1), 2) + pow(ref(auv_core::constants::STATE_Q2), 2) + pow(ref(auv_core::constants::STATE_Q3), 2));
-    quaternion_[0] = q0Ref;
+    quaternion_[0] = ref(auv_core::constants::STATE_Q0);;
     quaternion_[1] = ref(auv_core::constants::STATE_Q1);
     quaternion_[2] = ref(auv_core::constants::STATE_Q2);
     quaternion_[3] = ref(auv_core::constants::STATE_Q3);
@@ -265,24 +264,32 @@ Vector8d AUVModel::computeLQRThrust(const Eigen::Ref<const Vector12d> &state,
     Eigen::Map<Eigen::Vector3d>(&pqrDot_[0], 3, 1) = accel.tail<3>();
 
     // Initialize nominal forces to zero (this doesn't make too much of a difference)
-    for (int i = 0; i < 10; i++)
-        nominalForces[i] = 0;
+    for (int i = 0; i < maxThrusters_; i++)
+        nominalForces_[i] = 0;
 
     if (initLQR_)
     {
         ceres::Solve(optionsNominalThrust, &problemNominalThrust, &summaryNominalThrust);
-        Eigen::Map<Vector8d> nominalThrust(nominalForces);
+        Eigen::Map<Vector8d> nominalThrust(nominalForces_);
+        AUVModel::setLinearizedSystemMatrix(ref);
+        std::cout << "State matrix jacobian computed" << std::endl;
 
-        Eigen::Quaterniond qState(q0State, state(auv_core::constants::STATE_Q1), state(auv_core::constants::STATE_Q2), state(auv_core::constants::STATE_Q3));
-        Eigen::Quaterniond qRef(q0Ref, ref(auv_core::constants::STATE_Q1), ref(auv_core::constants::STATE_Q2), ref(auv_core::constants::STATE_Q3));
+        Eigen::Quaterniond qState(state(auv_core::constants::STATE_Q0), state(auv_core::constants::STATE_Q1), state(auv_core::constants::STATE_Q2), state(auv_core::constants::STATE_Q3));
+        Eigen::Quaterniond qRef(ref(auv_core::constants::STATE_Q0), ref(auv_core::constants::STATE_Q1), ref(auv_core::constants::STATE_Q2), ref(auv_core::constants::STATE_Q3));
         Eigen::Quaterniond qError = qState.conjugate() * qRef;
-        Vector12d error = state - ref;
-        error.segment<3>(auv_core::constants::STATE_Q1) = qError.vec();
+        Vector12d error;
+        error.head<6>() = state.head<6>() - ref.head<6>();
+        error.tail<6>() = state.tail<6>() - ref.tail<6>();
+        error.segment<3>(auv_core::constants::ESTATE_Q1) = qError.vec();
 
         Vector8d lqrThrust;
         lqrThrust.setZero();
-        lqrSolver_.compute(Q_, R_, A_, B_, K_);
-        lqrThrust = -K_ * error; // U = -K*(state-ref)
+        //std::cout << "Solve LQR, A matrix: " << std::endl << A_ << std::endl;
+        //std::cout << "Reference state: " << std::endl << ref << std::endl;
+        //std::cout << "Accel state: " << std::endl << accel << std::endl;
+        //std::cout << "Nominal Thrust: " << std::endl << nominalThrust << std::endl;
+        //lqrSolver_.compute(Q_, R_, A_, B_, K_);
+        //lqrThrust = -K_ * error; // U = -K*(state-ref)
 
         totalThrust = nominalThrust + lqrThrust;
     }

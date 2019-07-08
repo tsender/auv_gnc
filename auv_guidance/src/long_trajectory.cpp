@@ -160,7 +160,7 @@ double LongTrajectory::getTime()
  * @param time Time to compute the state at
  * Computes the trajectory state at the specified time
  */
-Vector12d LongTrajectory::computeState(double time)
+Vector13d LongTrajectory::computeState(double time)
 {
     if (time < 0)
         return stList_.front()->computeState(time);

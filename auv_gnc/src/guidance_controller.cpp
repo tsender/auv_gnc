@@ -80,6 +80,8 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
     tgenActionServer_->registerGoalCallback(boost::bind(&GuidanceController::tgenActionGoalCB, this));
     tgenActionServer_->registerPreemptCallback(boost::bind(&GuidanceController::tgenActionPreemptCB, this));
     tgenActionServer_->start();
+
+    ROS_INFO("Guidance Controller initialized");
 }
 
 /**
@@ -195,6 +197,7 @@ void GuidanceController::sixDofCB(const auv_msgs::SixDoF::ConstPtr &state)
     state_(acc::STATE_V) = state->velocity.linear.y;
     state_(acc::STATE_W) = state->velocity.linear.z;
 
+    state_(acc::STATE_Q0) = state->pose.orientation.w;
     state_(acc::STATE_Q1) = state->pose.orientation.x;
     state_(acc::STATE_Q2) = state->pose.orientation.y;
     state_(acc::STATE_Q3) = state->pose.orientation.z;
@@ -212,13 +215,7 @@ void GuidanceController::tgenActionGoalCB()
 {
     boost::shared_ptr<const auv_msgs::TrajectoryGeneratorGoal> tgenPtr = tgenActionServer_->acceptNewGoal();
 
-    if (!GuidanceController::isTrajectoryTypeValid(tgenPtr->trajectory.type))
-    {
-        auv_msgs::TrajectoryGeneratorResult result;
-        result.completed = false;
-        tgenActionServer_->setAborted(result);
-    }
-    else
+    if (GuidanceController::isTrajectoryTypeValid(tgenPtr->trajectory.type))
     {
         desiredTrajectory_ = tgenPtr->trajectory;
         tgenType_ = desiredTrajectory_.type;
@@ -226,6 +223,12 @@ void GuidanceController::tgenActionGoalCB()
 
         if (!tgenInit_)
             tgenInit_ = true;
+    }
+    else
+    {
+        auv_msgs::TrajectoryGeneratorResult result;
+        result.completed = false;
+        tgenActionServer_->setAborted(result);
     }
 }
 
@@ -267,7 +270,7 @@ void GuidanceController::runController()
     }
     else
     {
-        auv_guidance::Vector12d ref;
+        auv_guidance::Vector13d ref;
         auv_guidance::Vector6d accel;
         ref.setZero();
         accel.setZero();
@@ -276,8 +279,11 @@ void GuidanceController::runController()
 
         if (tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ || tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ)
         {
-            ref = basicTrajectory_->computeState(dt);
-            accel = basicTrajectory_->computeAccel(dt);
+            ref = basicTrajectory_->computeState(2.56);
+            accel = basicTrajectory_->computeAccel(2.56);
+            ROS_INFO("Time in Trajectory: %f", dt);
+            std::cout << "Reference state: " << std::endl << ref << std::endl;
+            std::cout << "Accel state: " << std::endl << accel << std::endl;
         }
 
         thrust_ = auvModel_->computeLQRThrust(state_, ref, accel);

@@ -50,7 +50,7 @@ private:
   auv_control::Vector8d thrust_;
 
   auv_guidance::TGenLimits *tgenLimits_;
-  auv_guidance::Vector12d state_;
+  auv_guidance::Vector13d state_;
   Eigen::Vector3d linearAccel_;
   auv_guidance::Waypoint *startWaypt_, *endWaypt_;
   auv_guidance::BasicTrajectory *basicTrajectory_;

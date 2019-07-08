@@ -1,5 +1,5 @@
 #include "auv_guidance/min_jerk_trajectory.hpp"
-
+#include <iostream>
 namespace auv_guidance
 {
 /**
@@ -45,6 +45,7 @@ Eigen::Vector3d MinJerkTrajectory::computeState(double time)
         state(0) = x0_; // Pos
         state(1) = v0_; // Vel
         state(2) = a0_; // Accel
+        std::cout << "MJT time <= 0" << std::endl;
         return state;
     }
     else if (time >= tf_)
@@ -52,6 +53,7 @@ Eigen::Vector3d MinJerkTrajectory::computeState(double time)
         state(0) = xf_; // Pos
         state(1) = vf_; // Vel
         state(2) = af_; // Accel
+        std::cout << "MJT time >= tf of " << tf_ << std::endl;
         return state;
     }
     
@@ -64,6 +66,7 @@ Eigen::Vector3d MinJerkTrajectory::computeState(double time)
     state(0) = c0_ + c1_ * tau + c2_ * tau2 + c3_ * tau3 + c4_ * tau4 + c5_ * tau5;
     state(1) = (c1_ + 2.0 * c2_ * tau + 3.0 * c3_ * tau2 + 4.0 * c4_ * tau3 + 5.0 * c5_ * tau4) / dt;
     state(2) = (2.0 * c2_ + 6.0 * c3_ * tau + 12.0 * c4_ * tau2 + 20.0 * c5_ * tau3) / dt2;
+    return state;
 }
 
 double MinJerkTrajectory::getMiddleVelocity()

@@ -41,6 +41,7 @@ typedef Eigen::Matrix<double, 8, 8> Matrix8d;
 typedef Eigen::Matrix<double, 12, 8> Matrix12x8d;
 typedef Eigen::Matrix<double, 8, 12> Matrix8x12d;
 
+typedef Eigen::Matrix<double, 13, 1> Vector13d;
 typedef Eigen::Matrix<double, 12, 1> Vector12d;
 typedef Eigen::Matrix<double, 8, 1> Vector8d;
 typedef Eigen::Matrix<double, 6, 1> Vector6d;
@@ -72,7 +73,7 @@ private:
   ceres::Problem problemNominalThrust;
   ceres::Solver::Options optionsNominalThrust;
   ceres::Solver::Summary summaryNominalThrust;
-  double nominalForces[10];
+  double nominalForces_[8];
   double quaternion_[4], uvw_[3], pqr_[3], inertialTransAccel_[3], pqrDot_[3];
 
   // LQR Variables
@@ -94,15 +95,15 @@ public:
 
   void setThrustCoeffs();
   void setLQRCostMatrices(const Eigen::Ref<const Matrix12d> &Q, const Eigen::Ref<const Matrix8d> &R);
-  void setLinearizedSystemMatrix(const Eigen::Ref<const Vector12d> &ref);
+  void setLinearizedSystemMatrix(const Eigen::Ref<const Vector13d> &ref);
   void setLinearizedInputMatrix();
 
   Matrix12x8d getLinearizedInputMatrix();
   Matrix12d getLinearizedSystemMatrix();
 
   Vector6d getTotalThrustLoad(const Eigen::Ref<const Vector8d> &thrusts);
-  Vector8d computeLQRThrust(const Eigen::Ref<const Vector12d> &state,
-                            const Eigen::Ref<const Vector12d> &ref,
+  Vector8d computeLQRThrust(const Eigen::Ref<const Vector13d> &state,
+                            const Eigen::Ref<const Vector13d> &ref,
                             const Eigen::Ref<const Vector6d> &accel);
 };
 } // namespace auv_control
