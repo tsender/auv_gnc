@@ -91,9 +91,15 @@ void BasicTrajectory::computeMaxVelocity()
     distance_ = deltaVec_.squaredNorm();
 
     if (distanceXY > tGenLimits_->maxXYDistance())
+    {
         longTrajectory_ = true;
+        std::cout << "BT: dixtance XY too large: " << distanceXY << " > " << tGenLimits_->maxXYDistance() << std::endl; // Debug
+    }
     else if (distanceZ > tGenLimits_->maxZDistance())
+    {
         longTrajectory_ = true;
+        std::cout << "BT: dixtance Z too large: " << distanceZ << " > " << tGenLimits_->maxZDistance() << std::endl; // Debug
+    }
 
     BasicTrajectory::computeSimultaneousTime();
 
@@ -135,6 +141,7 @@ void BasicTrajectory::computeSimultaneousTime()
     timeRot = mjts->getTime();
 
     simultaneousDuration_ = std::max(timeTrans, timeRot); // Take longer duration
+    std::cout << "BT: simultaneous duration: " << simultaneousDuration_ << std::endl; // Debug
 }
 
 void BasicTrajectory::setPrimaryTrajectory()
@@ -155,6 +162,7 @@ void BasicTrajectory::setPrimaryTrajectory()
         // Update max velocities
         maxVelocityXY = maxVelocityVec_.head<2>().squaredNorm();
         maxVelocityZ = fabs(maxVelocityVec_(2));
+        std::cout << "BT: max velocity too large: " << maxVelocity_ << " > " << maxVelocityLimit << std::endl; // Debug
     }
 
     // Verify XY and Z velocities are not violated
@@ -162,11 +170,13 @@ void BasicTrajectory::setPrimaryTrajectory()
     {
         exceedsMaxSpeed_ = true;
         maxVelocityXY = tGenLimits_->maxXYVel();
+        std::cout << "BT: max XY velocity too large: " << maxVelocityXY <<  " > " << tGenLimits_->maxXYVel() << std::endl; // Debug
     }
     if (maxVelocityZ > tGenLimits_->maxZVel())
     {
         exceedsMaxSpeed_ = true;
         maxVelocityZ = tGenLimits_->maxZVel();
+        std::cout << "BT: max Z velocity too large: " << maxVelocityZ << " > " << tGenLimits_->maxZVel() << std::endl; // Debug
     }
 
     // Update max velocity one last time
@@ -187,8 +197,8 @@ void BasicTrajectory::setPrimaryTrajectory()
         stPrimary_ = new SimultaneousTrajectory(wStop_, wEnd_, simultaneousDuration_);
         totalDuration_ = simultaneousDuration_;
     }
-    std::cout << "BT long trajectory " << longTrajectory_ << std::endl;
-    std::cout << "BT simultaneous trajectory " << simultaneousTrajectory_ << std::endl;
+    std::cout << "BT long trajectory " << longTrajectory_ << std::endl; // Debug
+    std::cout << "BT simultaneous trajectory " << simultaneousTrajectory_ << std::endl; // Debug
 }
 
 double BasicTrajectory::getTime()

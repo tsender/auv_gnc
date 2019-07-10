@@ -50,7 +50,7 @@ void SimultaneousTrajectory::initTrajectory()
     mjtY_ = new MinJerkTrajectory(wStart_->yI(), wEnd_->yI(), totalDuration_);
     mjtZ_ = new MinJerkTrajectory(wStart_->zI(), wEnd_->zI(), totalDuration_);
     mjtAtt_ = new MinJerkTrajectory(angleStart, angleEnd, totalDuration_);
-    std::cout << "ST duration set for " << totalDuration_ << std::endl;
+    std::cout << "ST duration set for " << totalDuration_ << std::endl; // Debug
 }
 
 double SimultaneousTrajectory::getTime()
@@ -71,7 +71,7 @@ Vector13d SimultaneousTrajectory::computeState(double time)
     yState_ = mjtY_->computeState(time);
     zState_ = mjtZ_->computeState(time);
     angleState_ = mjtAtt_->computeState(time);
-    std::cout << "ST: angle state " << std::endl << angleState_ << std::endl;
+    //std::cout << "ST: angle state " << std::endl << angleState_ << std::endl; // Debug
     
     // Translational Components
     Eigen::Vector3d xyz = Eigen::Vector3d::Zero();
@@ -106,7 +106,7 @@ Vector13d SimultaneousTrajectory::computeState(double time)
         qSlerp_ = qEnd_;
     }
     Eigen::Vector3d eulerSlerp = auv_core::math_lib::toEulerAngle(qSlerp_);
-    std::cout << "qSlerp in euler " << std::endl << eulerSlerp << std::endl;
+    std::cout << "qSlerp in euler " << std::endl << eulerSlerp << std::endl; // Debug
     
     uvw = qSlerp_.conjugate() * uvw; // Inertial velocity expressed in B-frame
 

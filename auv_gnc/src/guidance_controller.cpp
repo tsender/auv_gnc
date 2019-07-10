@@ -74,6 +74,8 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
     tgenType_ = 0;
     tgenInit_ = false;
     newTrajectory_ = false;
+    resultMessageSent_ = false;
+    trajectoryDuration_ = 0;
 
     // Initialize action server
     tgenActionServer_.reset(new TGenActionServer(nh_, actionName_, false));
@@ -220,6 +222,7 @@ void GuidanceController::tgenActionGoalCB()
         desiredTrajectory_ = tgenPtr->trajectory;
         tgenType_ = desiredTrajectory_.type;
         newTrajectory_ = true;
+        resultMessageSent_ = false;
 
         if (!tgenInit_)
             tgenInit_ = true;
@@ -229,6 +232,7 @@ void GuidanceController::tgenActionGoalCB()
         auv_msgs::TrajectoryGeneratorResult result;
         result.completed = false;
         tgenActionServer_->setAborted(result);
+        resultMessageSent_ = false;
     }
 }
 
@@ -237,6 +241,7 @@ void GuidanceController::tgenActionPreemptCB()
     tgenActionServer_->setPreempted();
     tgenInit_ = false;
     thrust_.setZero();
+    resultMessageSent_ = false;
     GuidanceController::publishThrustMessage();
 }
 
@@ -279,11 +284,19 @@ void GuidanceController::runController()
 
         if (tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ || tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ)
         {
-            ref = basicTrajectory_->computeState(2.56);
-            accel = basicTrajectory_->computeAccel(2.56);
+            ref = basicTrajectory_->computeState(dt);
+            accel = basicTrajectory_->computeAccel(dt);
             ROS_INFO("Time in Trajectory: %f", dt);
-            std::cout << "Reference state: " << std::endl << ref << std::endl;
-            std::cout << "Accel state: " << std::endl << accel << std::endl;
+            std::cout << "Reference state: " << std::endl << ref << std::endl; // Debug
+            std::cout << "Accel state: " << std::endl << accel << std::endl; // Debug
+        }
+
+        if (dt > trajectoryDuration_ && !resultMessageSent_)
+        {
+            resultMessageSent_ = true;
+            auv_msgs::TrajectoryGeneratorResult result;
+            result.completed = true;
+            tgenActionServer_->setSucceeded(result);
         }
 
         thrust_ = auvModel_->computeLQRThrust(state_, ref, accel);
@@ -324,6 +337,7 @@ void GuidanceController::initNewTrajectory()
 
         endWaypt_ = new auv_guidance::Waypoint(posIEnd, zero3d, zero3d, quatEnd, zero3d);
         basicTrajectory_ = new auv_guidance::BasicTrajectory(startWaypt_, endWaypt_, tgenLimits_);
+        trajectoryDuration_ = basicTrajectory_->getTime();
     }
 }
 

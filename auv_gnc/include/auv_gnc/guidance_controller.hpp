@@ -1,11 +1,11 @@
 #ifndef GUIDANCE_CONTROLLER
 #define GUIDANCE_CONTROLLER
 
+#include "auv_control/auv_model.hpp"
 #include "auv_core/constants.hpp"
 #include "auv_guidance/basic_trajectory.hpp"
 #include "auv_guidance/tgen_limits.hpp"
 #include "auv_guidance/waypoint.hpp"
-#include "auv_control/auv_model.hpp"
 #include "auv_msgs/SixDoF.h"
 #include "auv_msgs/Thrust.h"
 #include "auv_msgs/Trajectory.h"
@@ -17,10 +17,10 @@
 #include "eigen_conversions/eigen_msg.h"
 
 #include <yaml-cpp/yaml.h>
-#include "math.h"
 #include <algorithm>
-#include <vector>
 #include <boost/thread.hpp>
+#include <vector>
+#include "math.h"
 
 namespace acc = auv_core::constants;
 
@@ -60,6 +60,8 @@ private:
   ros::Subscriber sixDoFSub_;
   ros::Publisher thrustPub_;
   std::string subTopic_, pubTopic_, actionName_;
+  double trajectoryDuration_;
+  bool resultMessageSent_;
 
   typedef actionlib::SimpleActionServer<auv_msgs::TrajectoryGeneratorAction> TGenActionServer;
   typedef std::shared_ptr<TGenActionServer> TGenActionServerPtr;
@@ -81,6 +83,6 @@ public:
   GuidanceController(ros::NodeHandle nh);
   void runController();
 };
-} // namespace auv_gnc
+}  // namespace auv_gnc
 
 #endif

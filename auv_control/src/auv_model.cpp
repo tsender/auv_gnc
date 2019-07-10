@@ -11,7 +11,7 @@ AUVModel::AUVModel(double Fg, double Fb,
 {
     // Vehicle Properties
     Fg_ = Fg;                        // [N]
-    Fb = Fb;                         // [N]
+    Fb_ = Fb;                         // [N]
     mass_ = Fg_ / auv_core::constants::GRAVITY; // [kg]
     CoB_ = CoB;                      // Center of buoyancy relative to center of mass (X [m], Y [m], Z [m])
     inertia_ = inertia;              // 3x3 inertia matrix [kg-m^2]
@@ -287,7 +287,7 @@ Vector8d AUVModel::computeLQRThrust(const Eigen::Ref<const Vector13d> &state,
         //std::cout << "Solve LQR, A matrix: " << std::endl << A_ << std::endl;
         //std::cout << "Reference state: " << std::endl << ref << std::endl;
         //std::cout << "Accel state: " << std::endl << accel << std::endl;
-        //std::cout << "Nominal Thrust: " << std::endl << nominalThrust << std::endl;
+        std::cout << "Nominal Thrust: " << std::endl << nominalThrust << std::endl;
         //lqrSolver_.compute(Q_, R_, A_, B_, K_);
         //lqrThrust = -K_ * error; // U = -K*(state-ref)
 

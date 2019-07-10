@@ -9,9 +9,9 @@ TGenLimits::TGenLimits(double maxXYDistance, double maxZDistance, double maxXYVe
 {
     maxXYDistance_ = maxXYDistance;
     maxZDistance_ = maxZDistance;
-    maxXYVelocity_ = fabs(maxXYVelocity_);
+    maxXYVelocity_ = fabs(maxXYVelocity);
     maxXYAccel_ = fabs(maxXYAccel);
-    maxZVelocity_ = fabs(maxZVelocity_);
+    maxZVelocity_ = fabs(maxZVelocity);
     maxZAccel_ = fabs(maxZAccel);
     maxRotVelocity_ = fabs(maxRotVelocity);
     maxRotAccel_ = fabs(maxRotAccel);

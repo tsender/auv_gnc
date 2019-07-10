@@ -45,7 +45,6 @@ Eigen::Vector3d MinJerkTrajectory::computeState(double time)
         state(0) = x0_; // Pos
         state(1) = v0_; // Vel
         state(2) = a0_; // Accel
-        std::cout << "MJT time <= 0" << std::endl;
         return state;
     }
     else if (time >= tf_)
@@ -53,7 +52,6 @@ Eigen::Vector3d MinJerkTrajectory::computeState(double time)
         state(0) = xf_; // Pos
         state(1) = vf_; // Vel
         state(2) = af_; // Accel
-        std::cout << "MJT time >= tf of " << tf_ << std::endl;
         return state;
     }
     
