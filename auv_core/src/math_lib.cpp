@@ -199,19 +199,29 @@ Eigen::Vector3f pqr2EulerDot(const Eigen::Ref<const Eigen::Vector3f> attitude, c
     return eulerDot;
 }
 
+/**
+ * /brief Caution, if the quaternion's scalar component is too close to 1, then the entire angleAxis vector returned is the zero vector.
+ */
 Eigen::Vector4d quaternion2AngleAxis(const Eigen::Quaterniond &quaternion)
 {
     Eigen::Vector4d angleAxis;
     angleAxis.setZero();
     Eigen::Quaterniond q = quaternion.normalized();
-    double i = 1 - q.w() * q.w();
+    double val = 1 - q.w() * q.w();
 
     angleAxis(0) = 2 * acos(q.w()); // Angle [rad]
-    angleAxis(1) = q.x() / sqrt(i); // Axis, x-component
-    angleAxis(2) = q.y() / sqrt(i); // Axis, y-component
-    angleAxis(3) = q.z() / sqrt(i); // Axis, z-component
-    angleAxis.tail<3>().normalize();
-
+    if (val != 0)
+    {
+        angleAxis(1) = q.x() / sqrt(val); // Axis, x-component
+        angleAxis(2) = q.y() / sqrt(val); // Axis, y-component
+        angleAxis(3) = q.z() / sqrt(val); // Axis, z-component
+        angleAxis.tail<3>().normalize();
+    }
+    else
+    {
+        angleAxis.tail<3>() = Eigen::Vector3d::Zero(); // Instead of nan, use the zero vector
+    }
+    
     return angleAxis;
 }
 

@@ -25,6 +25,7 @@ private:
 
   Eigen::Vector3d xState_, yState_, zState_, angleState_;
   Eigen::Vector3d rotationAxis_; // Axis for rotation wrt B-frame
+  bool noRotation_;
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

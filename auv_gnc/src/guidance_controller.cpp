@@ -65,11 +65,7 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
     state_.setZero();
     linearAccel_.setZero();
     thrust_.setZero();
-
-    quaternion_.w() = 1;
-    quaternion_.x() = 0;
-    quaternion_.y() = 0;
-    quaternion_.z() = 0;
+    quaternion_ = Eigen::Quaterniond::Identity();
 
     tgenType_ = 0;
     tgenInit_ = false;
@@ -256,12 +252,11 @@ bool GuidanceController::isActionServerActive()
  */
 bool GuidanceController::isTrajectoryTypeValid(int type)
 {
-    bool valid = false;
     if (type == auv_msgs::Trajectory::BASIC_ABS_XYZ)
-        valid = true;
+        return true;
     else if (type == auv_msgs::Trajectory::BASIC_REL_XYZ)
-        valid = true;
-    return valid;
+        return true;
+    return false;
 }
 
 void GuidanceController::runController()
@@ -309,6 +304,7 @@ void GuidanceController::runController()
  */
 void GuidanceController::initNewTrajectory()
 {
+    ROS_INFO("GuidanceController: Initializing new trajectory.");
     newTrajectory_ = false;
     timeStart_ = ros::Time::now();
 
@@ -322,7 +318,7 @@ void GuidanceController::initNewTrajectory()
     velIStart = quaternion_ * state_.segment<3>(acc::STATE_U);
     accelIStart = quaternion_ * linearAccel_;
 
-    startWaypt_ = new auv_guidance::Waypoint(posIStart, velIStart, accelIStart, quaternion_, state_.segment<3>(acc::STATE_P));
+    startWaypoint_ = new auv_guidance::Waypoint(posIStart, velIStart, accelIStart, quaternion_, state_.segment<3>(acc::STATE_P));
 
     if (tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ || tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ)
     {  
@@ -335,8 +331,8 @@ void GuidanceController::initNewTrajectory()
         if (tgenType_ == auv_msgs::Trajectory::BASIC_REL_XYZ)
             posIEnd = (quaternion_ * posIStart) + posIEnd;
 
-        endWaypt_ = new auv_guidance::Waypoint(posIEnd, zero3d, zero3d, quatEnd, zero3d);
-        basicTrajectory_ = new auv_guidance::BasicTrajectory(startWaypt_, endWaypt_, tgenLimits_);
+        endWaypoint_ = new auv_guidance::Waypoint(posIEnd, zero3d, zero3d, quatEnd, zero3d);
+        basicTrajectory_ = new auv_guidance::BasicTrajectory(startWaypoint_, endWaypoint_, tgenLimits_);
         trajectoryDuration_ = basicTrajectory_->getTime();
     }
 }

@@ -13,16 +13,13 @@ SimultaneousTrajectory::SimultaneousTrajectory(Waypoint *start, Waypoint *end, d
     wEnd_ = end;
     totalDuration_ = duration;
 
-    qDiff_.w() = 1;
-    qDiff_.x() = 0;
-    qDiff_.y() = 0;
-    qDiff_.z() = 0;
-    
+    qDiff_ = Eigen::Quaterniond::Identity();
     xState_.setZero();
     yState_.setZero();
     zState_.setZero();
     angleState_.setZero();
     rotationAxis_.setZero();
+    noRotation_ = false;
 
     SimultaneousTrajectory::initTrajectory();
 }
@@ -35,11 +32,17 @@ void SimultaneousTrajectory::initTrajectory()
     qStart_ = wStart_->quaternion().normalized();
     qEnd_ = wEnd_->quaternion().normalized();
     qDiff_ = qStart_.conjugate() * qEnd_; // Error quaternion wrt B-frame (q2 * q1.conjugate is wrt I-frame)
-    
+
     Eigen::Vector4d angleAxis = auv_core::math_lib::quaternion2AngleAxis(qDiff_);
+    if (angleAxis.isApprox(Eigen::Vector4d::Zero()))
+        noRotation_ = true;
+    std::cout << "ST no rotation = " << noRotation_ << std::endl;
+    std::cout << "ST qDiff = " << std::endl << qDiff_.w() << std::endl << qDiff_.vec() << std::endl;
+    std::cout << "ST angle axis = " << std::endl << angleAxis << std::endl;
+    
     angularDistance_ = angleAxis(0);
-    double angVel = wStart_->angVelB().squaredNorm();
     rotationAxis_ = angleAxis.tail<3>(); // Get axis relative to Body-frame at starting position
+    double angVel = wStart_->angVelB().squaredNorm();
 
     Eigen::Vector3d angleStart = Eigen::Vector3d::Zero(); 
     Eigen::Vector3d angleEnd = Eigen::Vector3d::Zero();
@@ -71,7 +74,6 @@ Vector13d SimultaneousTrajectory::computeState(double time)
     yState_ = mjtY_->computeState(time);
     zState_ = mjtZ_->computeState(time);
     angleState_ = mjtAtt_->computeState(time);
-    //std::cout << "ST: angle state " << std::endl << angleState_ << std::endl; // Debug
     
     // Translational Components
     Eigen::Vector3d xyz = Eigen::Vector3d::Zero();
@@ -91,7 +93,11 @@ Vector13d SimultaneousTrajectory::computeState(double time)
     Eigen::Vector3d pqr = Eigen::Vector3d::Zero();
     Eigen::Vector4d quat = Eigen::Vector4d::Zero();
 
-    if (time >= 0 && time <= totalDuration_)
+    if (noRotation_)
+    {
+        qSlerp_ = qStart_;
+    }
+    else if (time >= 0 && time <= totalDuration_)
     {
         double frac = time / totalDuration_;
         qSlerp_ = qStart_.slerp(frac, qEnd_); // Attitude wrt I-frame
@@ -105,7 +111,7 @@ Vector13d SimultaneousTrajectory::computeState(double time)
     {
         qSlerp_ = qEnd_;
     }
-    Eigen::Vector3d eulerSlerp = auv_core::math_lib::toEulerAngle(qSlerp_);
+    Eigen::Vector3d eulerSlerp = auv_core::math_lib::toEulerAngle(qSlerp_); // Debug
     std::cout << "qSlerp in euler " << std::endl << eulerSlerp << std::endl; // Debug
     
     uvw = qSlerp_.conjugate() * uvw; // Inertial velocity expressed in B-frame
