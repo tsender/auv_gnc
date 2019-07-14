@@ -59,8 +59,6 @@ void LongTrajectory::initTrajectory()
     { // Trajectory pitch is ok
         travelHeading = atan2(dy, dx); // Radians
         qCruise_ = auv_core::math_lib::toQuaternion(travelHeading, 0.0, 0.0); // yaw, pitch, roll --> quaternion
-        Eigen::Quaterniond qDiff = qStart_.conjugate() * qCruise_;
-        rotationDuration1_ = LongTrajectory::computeRotationTime(qDiff);
     }
     else
     {                              // Trajectory pitch is too steep, do not set a new travel heading
@@ -77,19 +75,29 @@ void LongTrajectory::initWaypoints()
     // Init travel vectors
     deltaVec_ = wEnd_->posI() - wStart_->posI();
     unitVec_ = deltaVec_.normalized();
-    double accelDistance = deltaVec_.squaredNorm() * (1 - cruiseRatio_) / 2;
+    double accelDistance = deltaVec_.squaredNorm() * (1.0 - cruiseRatio_) / 2.0;
 
+    // Calculate accel duration
+    Eigen::Vector4d transStart = Eigen::Vector4d::Zero();
+    Eigen::Vector4d transEnd = Eigen::Vector4d::Zero();
+    transStart << 0, 0, 0, tGenLimits_->xyzJerk(accelDistance);
+    transEnd << accelDistance, 0, 0, tGenLimits_->xyzJerk(accelDistance);
+    MinJerkTimeSolver *mjts;
+    mjts = new MinJerkTimeSolver(transStart, transEnd);
+    accelDuration_ = mjts->getTime();
+
+    // Init position vectors and cruise duration
     cruiseStartPos_ = wStart_->posI() + accelDistance * unitVec_;
     cruiseEndPos_ = wEnd_->posI() - accelDistance * unitVec_;
     cruiseVel_ = cruiseSpeed_ * unitVec_;
     cruiseDuration_ = deltaVec_.squaredNorm() * cruiseRatio_ / cruiseSpeed_;
 
-    // Init waypoints
+    // Init waypoints: pre-translate -> cruise start -> cruise end -> post-translate
     // Pre/Post translate waypoints are at rest
     Eigen::Vector3d zero3d = Eigen::Vector3d::Zero();
+    wPreTranslate_ = new Waypoint(wStart_->posI(), zero3d, zero3d, qCruise_, zero3d);
     wCruiseStart_ = new Waypoint(cruiseStartPos_, cruiseVel_, zero3d, qCruise_, zero3d);
     wCruiseEnd_ = new Waypoint(cruiseEndPos_, cruiseVel_, zero3d, qCruise_, zero3d);
-    wPreTranslate_ = new Waypoint(wStart_->posI(), zero3d, zero3d, qCruise_, zero3d);
     wPostTranslate_ = new Waypoint(wEnd_->posI(), zero3d, zero3d, qCruise_, zero3d);
 }
 
@@ -98,9 +106,12 @@ void LongTrajectory::initSimultaneousTrajectories()
     totalDuration_ = 0;
     stList_.clear();
     stTimes_.clear();
+    Eigen::Quaterniond qDiff = Eigen::Quaterniond::Identity();
 
     if (newTravelHeading_)
     {
+        qDiff = qStart_.conjugate() * qCruise_;
+        rotationDuration1_ = LongTrajectory::computeRotationTime(qDiff);
         stPreRotation_ = new SimultaneousTrajectory(wStart_, wPreTranslate_, rotationDuration1_);
         stList_.push_back(stPreRotation_);
         totalDuration_ += rotationDuration1_;
@@ -122,9 +133,8 @@ void LongTrajectory::initSimultaneousTrajectories()
     totalDuration_ += accelDuration_;
     stTimes_.push_back(totalDuration_);
 
-    Eigen::Quaterniond qDiff = qCruise_.conjugate() * qEnd_;
+    qDiff = qCruise_.conjugate() * qEnd_;
     rotationDuration2_ = LongTrajectory::computeRotationTime(qDiff);
-
     stPostRotation_ = new SimultaneousTrajectory(wPostTranslate_, wEnd_, rotationDuration2_);
     stList_.push_back(stPostRotation_);
     totalDuration_ += rotationDuration2_;
@@ -144,7 +154,6 @@ double LongTrajectory::computeRotationTime(Eigen::Quaterniond qDiff)
     rotStart << 0, 0, 0, tGenLimits_->rotJerk(angularDistance);
     rotEnd << angularDistance, 0, 0, tGenLimits_->rotJerk(angularDistance);
 
-    double timeRot = 0;
     MinJerkTimeSolver *mjts;
     mjts = new MinJerkTimeSolver(rotStart, rotEnd);
 

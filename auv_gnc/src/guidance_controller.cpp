@@ -7,7 +7,7 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
     nh_ = nh;
 
     // AUV Model Variables
-    nh_.param("auv_model", auvConfigFile_, std::string("none"));
+    nh_.param("auv_model_path", auvConfigFile_, std::string("none"));
     if (auvConfigFile_ == std::string("none"))
     {
         ROS_ERROR("AUD Model not specified. Shutting down.");
@@ -22,36 +22,37 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
     GuidanceController::initAUVModel();
 
     // Trajectory Generator Limits
-    double maxXYVelocity, maxXYAccel;
-    double maxZVelocity, maxZAccel;
-    double maxRotVelocity, maxRotAccel;
+    double maxXYDistance, maxZDistance, maxPathInclination;
+    double maxXVel, maxYVel, maxZVel, maxRotVel;
+    double maxXAccel, maxYAccel, maxZAccel, maxRotAccel;
     double xyzJerk, xyzClosingJerk;
     double rotJerk, rotClosingJerk;
-    double closingTolerance;
-    double maxPathInclination;
-    double maxXYDistance, maxZDistance;
+    double closingTolXYZ, closingTolRot;
 
-    nh_.param("max_xy_distance", maxXYDistance, 3.0);            // [m]
-    nh_.param("max_z_distance", maxZDistance, 1.0);              // [m]
-    nh_.param("max_path_inclination", maxPathInclination, 80.0); // [deg]
+    nh_.param("max_xy_distance", maxXYDistance, 3.0);               // [m]
+    nh_.param("max_z_distance", maxZDistance, 1.0);                 // [m]
+    nh_.param("max_path_inclination", maxPathInclination, 1.40);    // [rad]
+    nh_.param("closing_tolerance/xyz", closingTolXYZ, 0.1);         // [m]
+    nh_.param("closing_tolerance/rotational", closingTolRot, 6.0);  // [rad]
 
-    nh_.param("max_xy_velocity", maxXYVelocity, 0.75);          // [m/s]
-    nh_.param("max_xy_accel", maxXYAccel, 0.4);                 // [m/s^2]
-    nh_.param("max_z_velocity", maxZVelocity, 0.3);             // [m/s]
-    nh_.param("max_z_accel", maxZAccel, 0.2);                   // [m/s^2]
-    nh_.param("max_rotational_velocity", maxRotVelocity, 1.57); // [rad/s]
-    nh_.param("max_rotational_accel", maxRotAccel, 3.14);       // [rad/s^2]
+    nh_.param("max_velocity/x", maxXVel, 0.75);                     // [m/s]
+    nh_.param("max_velocity/y", maxYVel, 0.5);                      // [m/s]
+    nh_.param("max_velocity/z", maxZVel, 0.3);                      // [m/s]
+    nh_.param("max_velocity/rotational", maxRotVel, 1.57);          // [rad/s]
 
-    nh_.param("closing_tolerance", closingTolerance, 0.1);     // [m] or [rad]
-    nh_.param("xyz_jerk", xyzJerk, 0.4);                       // [m/s^3]
-    nh_.param("xyz_closing_jerk", xyzClosingJerk, 1.0);        // [m/s^3]
-    nh_.param("rotational_jerk", rotJerk, 5.0);                // [rad/s^3]
-    nh_.param("rotational_closing_jerk", rotClosingJerk, 6.0); // [rad/s^3]
+    nh_.param("max_accel/x", maxXAccel, 0.4);                       // [m/s^2]
+    nh_.param("max_accel/y", maxYAccel, 0.4);                       // [m/s^2]
+    nh_.param("max_accel/z", maxZAccel, 0.2);                       // [m/s^2]
+    nh_.param("max_accel/rotational", maxRotAccel, 3.14);           // [rad/s^2]
 
-    tgenLimits_ = new auv_guidance::TGenLimits(maxXYDistance, maxZDistance, maxXYVelocity, maxXYAccel,
-                                               maxZVelocity, maxZAccel, maxRotVelocity, maxRotAccel,
-                                               xyzJerk, xyzClosingJerk, rotJerk, rotClosingJerk,
-                                               closingTolerance, maxPathInclination);
+    nh_.param("jerk/xyz/nominal", xyzJerk, 0.4);                    // [m/s^3]
+    nh_.param("jerk/xyz/closing", xyzClosingJerk, 1.0);             // [m/s^3]
+    nh_.param("jerk/rotational/nominal", rotJerk, 5.0);             // [rad/s^3]
+    nh_.param("jerk/rotational/closing", rotClosingJerk, 6.0);      // [rad/s^3]
+
+    tgenLimits_ = new auv_guidance::TGenLimits(maxXYDistance, maxZDistance, maxPathInclination, closingTolXYZ, closingTolRot,
+                                               maxXVel, maxYVel, maxZVel, maxRotVel, maxXAccel, maxYAccel, maxZAccel, maxRotAccel,
+                                               xyzJerk, xyzClosingJerk, rotJerk, rotClosingJerk);
 
     // Pubs, Subs, and Action Servers
     nh_.param("subscriber_topic", subTopic_, std::string("/auv_gnc/trans_ekf/six_dof"));
@@ -91,11 +92,17 @@ void GuidanceController::initAUVModel()
     double Fg = fabs(auvConfig_["Fg"].as<double>());
     double Fb = fabs(auvConfig_["Fb"].as<double>());
 
-    // Center of buoyancy
+    // Center of Buoyancy (relative to the center of mass)
     Eigen::Vector3d CoB = Eigen::Vector3d::Zero();
     CoB[0] = auvConfig_["center_of_buoyancy"][0].as<double>(); // X
     CoB[1] = auvConfig_["center_of_buoyancy"][1].as<double>(); // Y
     CoB[2] = auvConfig_["center_of_buoyancy"][2].as<double>(); // Z
+
+    // Center of Mass (relative to the reference point)
+    Eigen::Vector3d CoM = Eigen::Vector3d::Zero();
+    CoM[0] = auvConfig_["center_of_mass"][0].as<double>(); // X
+    CoM[1] = auvConfig_["center_of_mass"][1].as<double>(); // Y
+    CoM[2] = auvConfig_["center_of_mass"][2].as<double>(); // Z
 
     // Inertia
     Eigen::Matrix3d inertia = Eigen::Matrix3d::Zero();
@@ -127,7 +134,7 @@ void GuidanceController::initAUVModel()
     }
 
     // Thrusters
-    activeThrusters_ = 0;
+    numActiveThrusters_ = 0;
     activeThrusterNames_.clear();
     inactiveThrusterNames_.clear();
 
@@ -143,7 +150,7 @@ void GuidanceController::initAUVModel()
         std::string name = auvConfig_["thrusters"][i]["name"].as<std::string>();
         if (enabled)
         {
-            activeThrusters_++;
+            numActiveThrusters_++;
             activeThrusterNames_.push_back(name);
         }
         else
@@ -159,12 +166,15 @@ void GuidanceController::initAUVModel()
         if (thrustersEnabled[i])
         {
             for (int j = 0; j < 5; j++)
-                thrusters(j, col) = auvConfig_["thrusters"][i]["pose"][j].as<double>();
+                if (j < 3)
+                    thrusters(j, col) = auvConfig_["thrusters"][i]["pose"][j].as<double>() - CoM(j);
+                else
+                    thrusters(j, col) = auvConfig_["thrusters"][i]["pose"][j].as<double>();
             col++;
         }
     }
 
-    auvModel_ = new auv_control::AUVModel(Fg, Fb, CoB, inertia, dragCoeffs, thrusters, activeThrusters_);
+    auvModel_ = new auv_control::AUVModel(Fg, Fb, CoB, inertia, dragCoeffs, thrusters, numActiveThrusters_);
 
     // LQR Cost Matrices
     Q_.setZero();
@@ -185,25 +195,30 @@ void GuidanceController::initAUVModel()
  */
 void GuidanceController::sixDofCB(const auv_msgs::SixDoF::ConstPtr &state)
 {
+    // Inertial Position, expressed in Inertial-frame
     state_(acc::STATE_XI) = state->pose.position.x;
     state_(acc::STATE_YI) = state->pose.position.y;
     state_(acc::STATE_ZI) = state->pose.position.z;
 
     tf::quaternionMsgToEigen(state->pose.orientation, quaternion_);
 
+    // Inertial Translational Velocity, expressed in Body-frame
     state_(acc::STATE_U) = state->velocity.linear.x;
     state_(acc::STATE_V) = state->velocity.linear.y;
     state_(acc::STATE_W) = state->velocity.linear.z;
 
+    // Quaternion, from Inertial-frame to Body-frame
     state_(acc::STATE_Q0) = state->pose.orientation.w;
     state_(acc::STATE_Q1) = state->pose.orientation.x;
     state_(acc::STATE_Q2) = state->pose.orientation.y;
     state_(acc::STATE_Q3) = state->pose.orientation.z;
 
+    // Rotational Velocity, expressed in Body-frame
     state_(acc::STATE_P) = state->velocity.angular.x;
     state_(acc::STATE_Q) = state->velocity.angular.y;
     state_(acc::STATE_R) = state->velocity.angular.z;
 
+    // Inertial Translational Acceleration, expressed in Body-frame
     linearAccel_(0) = state->linear_accel.x;
     linearAccel_(1) = state->linear_accel.y;
     linearAccel_(2) = state->linear_accel.z;

@@ -210,16 +210,12 @@ Eigen::Vector4d quaternion2AngleAxis(const Eigen::Quaterniond &quaternion)
     double val = 1 - q.w() * q.w();
 
     angleAxis(0) = 2 * acos(q.w()); // Angle [rad]
-    if (val != 0)
+    if (val != 0) // If val == 0, all axis components are zero
     {
         angleAxis(1) = q.x() / sqrt(val); // Axis, x-component
         angleAxis(2) = q.y() / sqrt(val); // Axis, y-component
         angleAxis(3) = q.z() / sqrt(val); // Axis, z-component
         angleAxis.tail<3>().normalize();
-    }
-    else
-    {
-        angleAxis.tail<3>() = Eigen::Vector3d::Zero(); // Instead of nan, use the zero vector
     }
     
     return angleAxis;

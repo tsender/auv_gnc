@@ -1,11 +1,11 @@
 <launch>
-  <arg name="auv_model" default="$(find auv_gnc)/cfg/auv_model.yaml"/>
-  <arg name="lqr_config" default="$(find auv_gnc)/cfg/lqr.yaml"/>
-  <arg name="gnc_config" default="$(find auv_gnc)/cfg/guidance_controller.yaml"/>
+  <arg name="auv_model_path" default="$(find auv_gnc)/cfg/auv_model.yaml"/>
+  <arg name="lqr_config_path" default="$(find auv_gnc)/cfg/lqr.yaml"/>
+  <arg name="gnc_config_path" default="$(find auv_gnc)/cfg/guidance_controller.yaml"/>
 
   <node pkg="auv_gnc" ns="auv_gnc" type="guidance_controller" name="guidance_controller" output="screen">
-    <param name="auv_model" value="$(arg auv_model)"/>
-    <rosparam command="load" file="$(arg lqr_config)"/>
-    <rosparam command="load" file="$(arg gnc_config)"/>
+    <param name="auv_model_path" value="$(arg auv_model_path)"/>
+    <rosparam command="load" file="$(arg lqr_config_path)"/>
+    <rosparam command="load" file="$(arg gnc_config_path)"/>
   </node>
 </launch>

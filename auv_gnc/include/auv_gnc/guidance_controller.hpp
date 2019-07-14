@@ -30,7 +30,7 @@ class GuidanceController
 {
 private:
   // AUV Model Parameters
-  int activeThrusters_;
+  int numActiveThrusters_;
   std::vector<std::string> activeThrusterNames_, inactiveThrusterNames_;
   std::string auvConfigFile_;
   YAML::Node auvConfig_;
