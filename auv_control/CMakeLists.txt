@@ -41,6 +41,7 @@ target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES} 
   ${EIGEN3_LIBRARIES} 
   ${CERES_LIBRARIES}
+  ct_optcon
 )
 
 #############

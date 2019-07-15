@@ -296,9 +296,9 @@ void GuidanceController::runController()
         {
             ref = basicTrajectory_->computeState(dt);
             accel = basicTrajectory_->computeAccel(dt);
-            ROS_INFO("Time in Trajectory: %f", dt);
-            std::cout << "Reference state: " << std::endl << ref << std::endl; // Debug
-            std::cout << "Accel state: " << std::endl << accel << std::endl; // Debug
+            //ROS_INFO("Time in Trajectory: %f", dt);
+            //std::cout << "Reference state: " << std::endl << ref << std::endl; // Debug
+            //std::cout << "Accel state: " << std::endl << accel << std::endl; // Debug
         }
 
         if (dt > trajectoryDuration_ && !resultMessageSent_)
@@ -335,7 +335,7 @@ void GuidanceController::initNewTrajectory()
 
     startWaypoint_ = new auv_guidance::Waypoint(posIStart, velIStart, accelIStart, quaternion_, state_.segment<3>(acc::STATE_P));
 
-    if (tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ || tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ)
+    if (tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ || tgenType_ == auv_msgs::Trajectory::BASIC_REL_XYZ)
     {  
         Eigen::Vector3d posIEnd = zero3d;
         Eigen::Quaterniond quatEnd;

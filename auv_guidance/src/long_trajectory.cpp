@@ -10,16 +10,17 @@ namespace auv_guidance
  * @param cruiseRatio Indicates what fraction of the total distance is to be traveled while cruising
  * @param cruiseSpeed Vehicle speed while cruising
  */
-LongTrajectory::LongTrajectory(Waypoint *start, Waypoint *end, TGenLimits *tGenLimits, double cruiseRatio, double cruiseSpeed)
+LongTrajectory::LongTrajectory(Waypoint *wStart, Waypoint *wEnd, TGenLimits *tGenLimits, double cruiseRatio, double cruiseSpeed)
 {
-    wStart_ = start;
-    wEnd_ = end;
+    wStart_ = wStart;
+    wEnd_ = wEnd;
     tGenLimits_ = tGenLimits;
 
     totalDuration_ = 0;
     rotationDuration1_ = 0;
     rotationDuration2_ = 0;
     accelDuration_ = 0;
+    cruiseDuration_ = 0;
     cruiseSpeed_ = cruiseSpeed;
     newTravelHeading_ = true;
 
@@ -49,15 +50,19 @@ void LongTrajectory::initTrajectory()
     qEnd_ = wEnd_->quaternion().normalized();
 
     // Determine travel attitude
-    double dx = wEnd_->xI()(0) - wStart_->xI()(0);
-    double dy = wEnd_->xI()(1) - wStart_->xI()(1);
-    double dz = wEnd_->xI()(2) - wStart_->xI()(2);
+    double dx = wEnd_->posI()(0) - wStart_->posI()(0);
+    double dy = wEnd_->posI()(1) - wStart_->posI()(1);
+    double dz = wEnd_->posI()(2) - wStart_->posI()(2);
     double xyDistance = sqrt(dx * dx + dy * dy);
     double travelHeading = 0;
 
+    std::cout << "LT path inclination " << atan(fabs(dz) / xyDistance) << std::endl;
+    std::cout << "LT dz/dxy = " << dz << "/" << xyDistance << std::endl;
     if (atan(fabs(dz) / xyDistance) < tGenLimits_->maxPathInclination())
     { // Trajectory pitch is ok
         travelHeading = atan2(dy, dx); // Radians
+        std::cout << "LT new travel heading " << travelHeading << std::endl;
+        std::cout << "LT dy/dx = " << dy << "/" << dx << std::endl;
         qCruise_ = auv_core::math_lib::toQuaternion(travelHeading, 0.0, 0.0); // yaw, pitch, roll --> quaternion
     }
     else
@@ -75,7 +80,7 @@ void LongTrajectory::initWaypoints()
     // Init travel vectors
     deltaVec_ = wEnd_->posI() - wStart_->posI();
     unitVec_ = deltaVec_.normalized();
-    double accelDistance = deltaVec_.squaredNorm() * (1.0 - cruiseRatio_) / 2.0;
+    double accelDistance = deltaVec_.norm() * (1.0 - cruiseRatio_) / 2.0;
 
     // Calculate accel duration
     Eigen::Vector4d transStart = Eigen::Vector4d::Zero();
@@ -90,7 +95,7 @@ void LongTrajectory::initWaypoints()
     cruiseStartPos_ = wStart_->posI() + accelDistance * unitVec_;
     cruiseEndPos_ = wEnd_->posI() - accelDistance * unitVec_;
     cruiseVel_ = cruiseSpeed_ * unitVec_;
-    cruiseDuration_ = deltaVec_.squaredNorm() * cruiseRatio_ / cruiseSpeed_;
+    cruiseDuration_ = deltaVec_.norm() * cruiseRatio_ / cruiseSpeed_;
 
     // Init waypoints: pre-translate -> cruise start -> cruise end -> post-translate
     // Pre/Post translate waypoints are at rest
@@ -139,6 +144,12 @@ void LongTrajectory::initSimultaneousTrajectories()
     stList_.push_back(stPostRotation_);
     totalDuration_ += rotationDuration2_;
     stTimes_.push_back(totalDuration_);
+
+    std::cout << "LT: set travel heading duration: " << rotationDuration1_ << std::endl;
+    std::cout << "LT: speed up duration: " << accelDuration_ << std::endl;
+    std::cout << "LT: cruise duration: " << cruiseDuration_ << std::endl;
+    std::cout << "LT: slow down duration: " << accelDuration_ << std::endl;
+    std::cout << "LT: final rotation duration: " << rotationDuration2_ << std::endl;
 }
 
 /**
@@ -180,7 +191,8 @@ Vector13d LongTrajectory::computeState(double time)
     {
         if (time < stTimes_[i])
         {
-            double t = (i==0) ? time : stTimes_[i] - time;
+            double t = (i==0) ? time : time- stTimes_[i-1];
+            //std::cout << "BT: compute state from ST " << i << "at time " << t << std::endl;
             return stList_[i]->computeState(t);
         }
     }
@@ -197,7 +209,7 @@ Vector6d LongTrajectory::computeAccel(double time)
     {
         if (time < stTimes_[i])
         {
-            double t = (i==0) ? time : stTimes_[i] - time;
+            double t = (i==0) ? time : time - stTimes_[i-1];
             return stList_[i]->computeAccel(t);
         }
     }

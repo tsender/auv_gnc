@@ -36,13 +36,10 @@ void SimultaneousTrajectory::initTrajectory()
     Eigen::Vector4d angleAxis = auv_core::math_lib::quaternion2AngleAxis(qDiff_);
     if (angleAxis.isApprox(Eigen::Vector4d::Zero()))
         noRotation_ = true;
-    std::cout << "ST no rotation = " << noRotation_ << std::endl;
-    std::cout << "ST qDiff = " << std::endl << qDiff_.w() << std::endl << qDiff_.vec() << std::endl;
-    std::cout << "ST angle axis = " << std::endl << angleAxis << std::endl;
     
     angularDistance_ = angleAxis(0);
     rotationAxis_ = angleAxis.tail<3>(); // Get axis relative to Body-frame at starting position
-    double angVel = wStart_->angVelB().squaredNorm();
+    double angVel = wStart_->angVelB().norm();
 
     Eigen::Vector3d angleStart = Eigen::Vector3d::Zero(); 
     Eigen::Vector3d angleEnd = Eigen::Vector3d::Zero();
@@ -53,7 +50,6 @@ void SimultaneousTrajectory::initTrajectory()
     mjtY_ = new MinJerkTrajectory(wStart_->yI(), wEnd_->yI(), totalDuration_);
     mjtZ_ = new MinJerkTrajectory(wStart_->zI(), wEnd_->zI(), totalDuration_);
     mjtAtt_ = new MinJerkTrajectory(angleStart, angleEnd, totalDuration_);
-    std::cout << "ST duration set for " << totalDuration_ << std::endl; // Debug
 }
 
 double SimultaneousTrajectory::getTime()
@@ -112,7 +108,7 @@ Vector13d SimultaneousTrajectory::computeState(double time)
         qSlerp_ = qEnd_;
     }
     Eigen::Vector3d eulerSlerp = auv_core::math_lib::toEulerAngle(qSlerp_); // Debug
-    std::cout << "qSlerp in euler " << std::endl << eulerSlerp << std::endl; // Debug
+    //std::cout << "qSlerp in euler " << std::endl << eulerSlerp << std::endl; // Debug
     
     uvw = qSlerp_.conjugate() * uvw; // Inertial velocity expressed in B-frame
 

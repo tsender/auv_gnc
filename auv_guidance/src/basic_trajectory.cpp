@@ -35,8 +35,8 @@ BasicTrajectory::BasicTrajectory(Waypoint *wStart, Waypoint *wEnd, TGenLimits *t
 void BasicTrajectory::setStopTrajectory()
 {
     // Get stop position
-    double transVel = wStart_->velI().squaredNorm();
-    double transAccel = wStart_->accelI().squaredNorm();
+    double transVel = wStart_->velI().norm();
+    double transAccel = wStart_->accelI().norm();
     double accel = 0;
     if (fabs(wStart_->velI()(0)) > fabs(wStart_->velI()(1))) // Xvel > Yvel
     {
@@ -60,14 +60,14 @@ void BasicTrajectory::setStopTrajectory()
     //std::cout << "BT set stop trajectory: ang vel start " << std::endl << wStart_->angVelB().normalized() << std::endl;
     //std::cout << "BT set stop trajectory: angle axis " << std::endl << angleAxis << std::endl;
 
-    double angVel = wStart_->angVelB().squaredNorm(); // Magnitude
+    double angVel = wStart_->angVelB().norm(); // Magnitude
     double angularDistance = (2.0 / 3.0) * (angVel * angVel) / tGenLimits_->maxRotAccel();
     angleAxis(0) = angularDistance;
 
     Eigen::Quaterniond qRotate = auv_core::math_lib::angleAxis2Quaternion(angleAxis); // Relative to B-frame
     qStop_ = wStart_->quaternion() * qRotate;                                         // Apply qRotate FROM qStart
     //std::cout << "BT set stop trajetory: start waypoint quat" << std::endl << wStart_->quaternion().w() << std::endl << wStart_->quaternion().vec() << std::endl;
-    //std::cout << "BT set stop trajetory: rotate quat" << std::endl << qRotate.w() << std::endl << qRotate.vec() << std::endl;
+    std::cout << "BT stop trajetory euler" << std::endl << auv_core::math_lib::toEulerAngle(qStop_) << std::endl;
     //std::cout << "BT set stop trajetory:  qStop" << std::endl << qStop_.w() << std::endl << qStop_.vec() << std::endl;
 
     Eigen::Vector3d zero3d = Eigen::Vector3d::Zero();
@@ -94,6 +94,7 @@ void BasicTrajectory::setStopTrajectory()
 
     stStop_ = new SimultaneousTrajectory(wStart_, wStop_, stopDuration_);
     totalDuration_ = stopDuration_;
+    std::cout << "BT: stop duration: " << stopDuration_ << std::endl;
 }
 
 void BasicTrajectory::computeMaxVelocity()
@@ -101,9 +102,9 @@ void BasicTrajectory::computeMaxVelocity()
     deltaVec_ = wEnd_->posI() - wStop_->posI();
     unitVec_ = deltaVec_.normalized();
 
-    double distanceXY = deltaVec_.head<2>().squaredNorm();
+    double distanceXY = deltaVec_.head<2>().norm();
     double distanceZ = fabs(deltaVec_(2));
-    distance_ = deltaVec_.squaredNorm();
+    distance_ = deltaVec_.norm();
 
     if (distanceXY > tGenLimits_->maxXYDistance())
     {
@@ -171,20 +172,20 @@ void BasicTrajectory::setPrimaryTrajectory()
     if (maxXVel > tGenLimits_->maxXVel())
     {
         exceedsMaxSpeed_ = true;
-        maxXVel = tGenLimits_->maxXVel();
         std::cout << "BT: max X velocity too large: " << maxXVel <<  " > " << tGenLimits_->maxXVel() << std::endl; // Debug
+        maxXVel = tGenLimits_->maxXVel();
     }
     if (maxYVel > tGenLimits_->maxYVel())
     {
         exceedsMaxSpeed_ = true;
-        maxYVel = tGenLimits_->maxYVel();
         std::cout << "BT: max Y velocity too large: " << maxYVel <<  " > " << tGenLimits_->maxYVel() << std::endl; // Debug
+        maxYVel = tGenLimits_->maxYVel();
     }
     if (maxZVel > tGenLimits_->maxZVel())
     {
         exceedsMaxSpeed_ = true;
-        maxZVel = tGenLimits_->maxZVel();
         std::cout << "BT: max Z velocity too large: " << maxZVel << " > " << tGenLimits_->maxZVel() << std::endl; // Debug
+        maxZVel = tGenLimits_->maxZVel();
     }
 
     // Update max velocity vector
@@ -222,12 +223,12 @@ Vector13d BasicTrajectory::computeState(double time)
 {
     if (time <= stopDuration_)
     {
-        std::cout << "ST: stop trajectory at time " << time << std::endl;
+        //std::cout << "ST: stop trajectory at time " << time << std::endl;
         return stStop_->computeState(time);
     }
     else if (simultaneousTrajectory_)
     {
-        std::cout << "ST: main trajectory at time " << time - stopDuration_ << std::endl;
+        //std::cout << "ST: main trajectory at time " << time - stopDuration_ << std::endl;
         return stPrimary_->computeState(time - stopDuration_);
     }
     else if (longTrajectory_)

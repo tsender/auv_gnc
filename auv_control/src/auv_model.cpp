@@ -107,25 +107,27 @@ void AUVModel::setLinearizedSystemMatrix(const Eigen::Ref<const Vector13d> &ref)
     // MUST set X to contain INDEPENDENT variables
     CppAD::Independent(X); // Begin recording sequence
 
+    double q0 = ref(auv_core::constants::STATE_Q0);
     /*ADMatrix3d ADRquat; // This math converts I-frame vector to B-frame vector
-    ADRquat(0, 0) = q0 * q0 + X[q1_] * X[q1_] - X[q2_] * X[q2_] - X[q3_] * X[q3_];
-    ADRquat(1, 1) = q0 * q0 - X[q1_] * X[q1_] + X[q2_] * X[q2_] - X[q3_] * X[q3_];
-    ADRquat(2, 2) = q0 * q0 - X[q1_] * X[q1_] - X[q2_] * X[q2_] + X[q3_] * X[q3_];
-    ADRquat(0, 1) = 2 * X[q1_] * X[q2_] + 2 * q0 * X[q3_];
-    ADRquat(1, 0) = 2 * X[q1_] * X[q2_] - 2 * q0 * X[q3_];
-    ADRquat(0, 2) = 2 * X[q1_] * X[q3_] - 2 * q0 * X[q2_];
-    ADRquat(2, 0) = 2 * X[q1_] * X[q3_] + 2 * q0 * X[q2_];
-    ADRquat(1, 2) = 2 * X[q2_] * X[q3_] + 2 * q0 * X[q1_];
-    ADRquat(2, 1) = 2 * X[q2_] * X[q3_] - 2 * q0 * X[q1_];*/
+    ADRquat(0, 0) = q0 * q0 + X(auv_core::constants::STATE_Q1) * X[auv_core::constants::STATE_Q1] - X[auv_core::constants::STATE_Q2] * X[auv_core::constants::STATE_Q2] - X[auv_core::constants::STATE_Q3] * X[auv_core::constants::STATE_Q3];
+    ADRquat(1, 1) = q0 * q0 - X[auv_core::constants::STATE_Q1] * X[auv_core::constants::STATE_Q1] + X[auv_core::constants::STATE_Q2] * X[auv_core::constants::STATE_Q2] - X[auv_core::constants::STATE_Q3] * X[auv_core::constants::STATE_Q3];
+    ADRquat(2, 2) = q0 * q0 - X[auv_core::constants::STATE_Q1] * X[auv_core::constants::STATE_Q1] - X[auv_core::constants::STATE_Q2] * X[auv_core::constants::STATE_Q2] + X[auv_core::constants::STATE_Q3] * X[auv_core::constants::STATE_Q3];
+    ADRquat(0, 1) = 2 * X[auv_core::constants::STATE_Q1] * X[auv_core::constants::STATE_Q2] + 2 * q0 * X[auv_core::constants::STATE_Q3];
+    ADRquat(1, 0) = 2 * X[auv_core::constants::STATE_Q1] * X[auv_core::constants::STATE_Q2] - 2 * q0 * X[auv_core::constants::STATE_Q3];
+    ADRquat(0, 2) = 2 * X[auv_core::constants::STATE_Q1] * X[auv_core::constants::STATE_Q3] - 2 * q0 * X[auv_core::constants::STATE_Q2];
+    ADRquat(2, 0) = 2 * X[auv_core::constants::STATE_Q1] * X[auv_core::constants::STATE_Q3] + 2 * q0 * X[auv_core::constants::STATE_Q2];
+    ADRquat(1, 2) = 2 * X[auv_core::constants::STATE_Q2] * X[auv_core::constants::STATE_Q3] + 2 * q0 * X[auv_core::constants::STATE_Q1];
+    ADRquat(2, 1) = 2 * X[auv_core::constants::STATE_Q2] * X[auv_core::constants::STATE_Q3] - 2 * q0 * X[auv_core::constants::STATE_Q1];*/
 
     // Using Eigen::Quaternion: quaternion * vector = vector rotated thru the axis-angle encoded within the quaternion
     // So: B-frame vector = quaternion.conjugate() * I-frame vector
     // So: I-frame vector = quaternion * B-frame vector
-    Eigen::Quaternion<CppAD::AD<double>> ADquat(ref(auv_core::constants::STATE_Q0), X[auv_core::constants::STATE_Q1], X[auv_core::constants::STATE_Q2], X[auv_core::constants::STATE_Q3]);
+    Eigen::Quaternion<CppAD::AD<double> > ADquat(ref(auv_core::constants::STATE_Q0), X[auv_core::constants::ESTATE_Q1], X[auv_core::constants::ESTATE_Q2], X[auv_core::constants::ESTATE_Q3]);
+    //std::cout << "ADquat : " << ADquat << std::endl;
 
     // Translational States
     // 1. Time derivatives of: xI, yI, zI (expressed in I-frame)
-    Xdot.head<3>() = ADquat * Xdot.segment<3>(auv_core::constants::ESTATE_U);
+    Xdot.segment<3>(auv_core::constants::ESTATE_XI) = ADquat * X.segment<3>(auv_core::constants::ESTATE_U);
 
     // 2. Time-derivatives of: U, V, W (expressed in B-frame)
     Eigen::Vector3d weight = Eigen::Vector3d::Zero();
@@ -190,6 +192,7 @@ void AUVModel::setLinearizedSystemMatrix(const Eigen::Ref<const Vector13d> &ref)
     Vector12d evalRef;
     evalRef.head<6>() = ref.head<6>();
     evalRef.tail<6>() = ref.tail<6>();
+    //std::cout << "ref" << std::endl << evalRef << std::endl;
 
     // Compute Jacobian
     std::vector<double> x;
@@ -272,24 +275,28 @@ Vector8d AUVModel::computeLQRThrust(const Eigen::Ref<const Vector13d> &state,
         ceres::Solve(optionsNominalThrust, &problemNominalThrust, &summaryNominalThrust);
         Eigen::Map<Vector8d> nominalThrust(nominalForces_);
         AUVModel::setLinearizedSystemMatrix(ref);
-        std::cout << "State matrix jacobian computed" << std::endl;
 
         Eigen::Quaterniond qState(state(auv_core::constants::STATE_Q0), state(auv_core::constants::STATE_Q1), state(auv_core::constants::STATE_Q2), state(auv_core::constants::STATE_Q3));
         Eigen::Quaterniond qRef(ref(auv_core::constants::STATE_Q0), ref(auv_core::constants::STATE_Q1), ref(auv_core::constants::STATE_Q2), ref(auv_core::constants::STATE_Q3));
-        Eigen::Quaterniond qError = qState.conjugate() * qRef;
+        Eigen::Quaterniond qError = qState * qRef.conjugate(); // Want quaternion error relative to Inertial-frame (is it qRef * qState.conjugate()?)
         Vector12d error;
         error.head<6>() = state.head<6>() - ref.head<6>();
         error.tail<6>() = state.tail<6>() - ref.tail<6>();
-        error.segment<3>(auv_core::constants::ESTATE_Q1) = qError.vec();
+        error.segment<3>(auv_core::constants::ESTATE_Q1) = qError.vec(); // Set quaternion error
+        //std::cout << "LQR error: " << error << std::endl;
 
         Vector8d lqrThrust;
         lqrThrust.setZero();
+        lqrSolver_.compute(Q_, R_, A_, B_, K_);
+        lqrThrust = -K_ * error; // U = -K*(state-ref)
+
         //std::cout << "Solve LQR, A matrix: " << std::endl << A_ << std::endl;
+        //std::cout << "Solve LQR, B matrix: " << std::endl << B_ << std::endl;
         //std::cout << "Reference state: " << std::endl << ref << std::endl;
         //std::cout << "Accel state: " << std::endl << accel << std::endl;
-        std::cout << "Nominal Thrust: " << std::endl << nominalThrust << std::endl;
-        //lqrSolver_.compute(Q_, R_, A_, B_, K_);
-        //lqrThrust = -K_ * error; // U = -K*(state-ref)
+        //std::cout << "LQR gain K: " << K_ << std::endl;
+        //std::cout << "Nominal Thrust: " << std::endl << nominalThrust << std::endl;
+        std::cout << "LQR thrust: " << lqrThrust << std::endl;
 
         totalThrust = nominalThrust + lqrThrust;
     }
