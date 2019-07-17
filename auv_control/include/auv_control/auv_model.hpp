@@ -36,9 +36,12 @@ typedef Eigen::Matrix<double, 5, 8> Matrix58d;
 typedef Eigen::Matrix<double, 6, 8> Matrix68d;
 
 // State Space Control Matrices
+typedef Eigen::Matrix<double, 18, 18> Matrix18d;
 typedef Eigen::Matrix<double, 12, 12> Matrix12d;
 typedef Eigen::Matrix<double, 8, 8> Matrix8d;
+typedef Eigen::Matrix<double, 6, 6> Matrix6d;
 typedef Eigen::Matrix<double, 12, 8> Matrix12x8d;
+typedef Eigen::Matrix<double, 8, 18> Matrix8x18d;
 typedef Eigen::Matrix<double, 8, 12> Matrix8x12d;
 
 typedef Eigen::Matrix<double, 13, 1> Vector13d;
@@ -60,14 +63,17 @@ private:
   int numThrusters_, maxThrusters_;
   Eigen::Matrix3d inertia_; // Inertia 3x3 matrix
   Matrix62d dragCoeffs_;
-  Matrix58d thrusters_;
+  Matrix58d thrusterData_;
   Matrix68d thrustCoeffs_;
   Eigen::Vector3d CoB_; // Center of buoyancy position relative to CoM
   Matrix12d A_;         // Linearized system matrix
+  Matrix18d AAug_;      // Linearized, augmented system matrix
   Matrix12x8d B_;       // Linearized control input matrix
-  Matrix8x12d K_;
-  Matrix12d Q_;
-  Matrix8d R_;
+  Matrix8x12d K_;       // Gain matrix
+  Matrix8x18d KAug_;    // Augmented Gain matrix
+  Matrix12d Q_;         // State cost matrix
+  Matrix18d QAug_;      // Augmented state cost matrix
+  Matrix8d R_;          // Input cost matrix
 
   // Ceres Problem
   ceres::Problem problemNominalThrust;
@@ -78,25 +84,29 @@ private:
 
   // LQR Variables
   static const size_t state_dim = 12;
+  static const size_t state_dim_aug = 18;
   static const size_t control_dim = 8;
   ct::optcon::LQR<state_dim, control_dim> lqrSolver_;
-  bool initLQR_;
+  ct::optcon::LQR<state_dim_aug, control_dim> lqrAugSolver_;
+  bool initLQR_, enableLQRIntegral_;
+
+  void setThrustCoeffs();
+  void setLinearizedSystemMatrix(const Eigen::Ref<const Vector13d> &ref);
+  void setLinearizedInputMatrix();
 
 public:
-  // Calling this macro will fix alignment issues on members that are fixed-size Eigen objects
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   AUVModel(double Fg, double Fb,
            const Eigen::Ref<const Eigen::Vector3d> &CoB,
            const Eigen::Ref<const Eigen::Matrix3d> &inertia,
            const Eigen::Ref<const Matrix62d> &dragCoeffs,
-           const Eigen::Ref<const Matrix58d> &thrusters,
+           const Eigen::Ref<const Matrix58d> &thrusterData,
            int numThrusters);
 
-  void setThrustCoeffs();
+  
   void setLQRCostMatrices(const Eigen::Ref<const Matrix12d> &Q, const Eigen::Ref<const Matrix8d> &R);
-  void setLinearizedSystemMatrix(const Eigen::Ref<const Vector13d> &ref);
-  void setLinearizedInputMatrix();
+  void setLQRIntegralCostMatrices(const Eigen::Ref<const Matrix18d> &QAug, const Eigen::Ref<const Matrix8d> &R);
 
   Matrix12x8d getLinearizedInputMatrix();
   Matrix12d getLinearizedSystemMatrix();

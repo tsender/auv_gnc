@@ -37,9 +37,8 @@ private:
   auv_control::AUVModel *auvModel_;
 
   // LQR Parameters
-  std::vector<double> Qdiag_, Rdiag_;
-  auv_control::Matrix12d Q_;
-  auv_control::Matrix8d R_;
+  std::vector<double> QDiag_, QIntegralDiag_, RDiag_;
+  bool enableLQRIntegral_;
 
   // Trajectory Generator Parameters
   auv_msgs::Trajectory desiredTrajectory_;

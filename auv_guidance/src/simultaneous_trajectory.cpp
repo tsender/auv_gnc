@@ -107,8 +107,6 @@ Vector13d SimultaneousTrajectory::computeState(double time)
     {
         qSlerp_ = qEnd_;
     }
-    Eigen::Vector3d eulerSlerp = auv_core::math_lib::toEulerAngle(qSlerp_); // Debug
-    //std::cout << "qSlerp in euler " << std::endl << eulerSlerp << std::endl; // Debug
     
     uvw = qSlerp_.conjugate() * uvw; // Inertial velocity expressed in B-frame
 

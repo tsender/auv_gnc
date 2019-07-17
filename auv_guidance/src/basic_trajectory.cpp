@@ -25,7 +25,7 @@ BasicTrajectory::BasicTrajectory(Waypoint *wStart, Waypoint *wEnd, TGenLimits *t
     distance_ = 0;
 
     longTrajectory_ = false;
-    simultaneousTrajectory_ = false;
+    simultaneousTrajectory_ = true;
     exceedsMaxSpeed_ = false;
 
     BasicTrajectory::setStopTrajectory();
@@ -57,18 +57,12 @@ void BasicTrajectory::setStopTrajectory()
     // Get stop quaternion
     Eigen::Vector4d angleAxis = Eigen::Vector4d::Zero();
     angleAxis.tail<3>() = wStart_->angVelB().normalized();
-    //std::cout << "BT set stop trajectory: ang vel start " << std::endl << wStart_->angVelB().normalized() << std::endl;
-    //std::cout << "BT set stop trajectory: angle axis " << std::endl << angleAxis << std::endl;
-
     double angVel = wStart_->angVelB().norm(); // Magnitude
     double angularDistance = (2.0 / 3.0) * (angVel * angVel) / tGenLimits_->maxRotAccel();
     angleAxis(0) = angularDistance;
 
     Eigen::Quaterniond qRotate = auv_core::math_lib::angleAxis2Quaternion(angleAxis); // Relative to B-frame
     qStop_ = wStart_->quaternion() * qRotate;                                         // Apply qRotate FROM qStart
-    //std::cout << "BT set stop trajetory: start waypoint quat" << std::endl << wStart_->quaternion().w() << std::endl << wStart_->quaternion().vec() << std::endl;
-    std::cout << "BT stop trajetory euler" << std::endl << auv_core::math_lib::toEulerAngle(qStop_) << std::endl;
-    //std::cout << "BT set stop trajetory:  qStop" << std::endl << qStop_.w() << std::endl << qStop_.vec() << std::endl;
 
     Eigen::Vector3d zero3d = Eigen::Vector3d::Zero();
     wStop_ = new Waypoint(stopPos, zero3d, zero3d, qStop_, zero3d);
@@ -94,7 +88,6 @@ void BasicTrajectory::setStopTrajectory()
 
     stStop_ = new SimultaneousTrajectory(wStart_, wStop_, stopDuration_);
     totalDuration_ = stopDuration_;
-    std::cout << "BT: stop duration: " << stopDuration_ << std::endl;
 }
 
 void BasicTrajectory::computeMaxVelocity()
@@ -108,12 +101,12 @@ void BasicTrajectory::computeMaxVelocity()
 
     if (distanceXY > tGenLimits_->maxXYDistance())
     {
-        longTrajectory_ = true;
+        simultaneousTrajectory_ = false;
         std::cout << "BT: dixtance XY too large: " << distanceXY << " > " << tGenLimits_->maxXYDistance() << std::endl; // Debug
     }
     if (distanceZ > tGenLimits_->maxZDistance())
     {
-        longTrajectory_ = true;
+        simultaneousTrajectory_ = false;
         std::cout << "BT: dixtance Z too large: " << distanceZ << " > " << tGenLimits_->maxZDistance() << std::endl; // Debug
     }
 
@@ -164,35 +157,28 @@ void BasicTrajectory::setPrimaryTrajectory()
 {
     BasicTrajectory::computeMaxVelocity();
 
-    double maxXVel = fabs(maxVelocityVec_(0));
-    double maxYVel = fabs(maxVelocityVec_(1));
+    double maxXYVel = maxVelocityVec_.head<2>().norm();
     double maxZVel = fabs(maxVelocityVec_(2));
 
     // Verify XYZ velocities are not violated
-    if (maxXVel > tGenLimits_->maxXVel())
+    if (maxXYVel > tGenLimits_->maxXVel())
     {
-        exceedsMaxSpeed_ = true;
-        std::cout << "BT: max X velocity too large: " << maxXVel <<  " > " << tGenLimits_->maxXVel() << std::endl; // Debug
-        maxXVel = tGenLimits_->maxXVel();
-    }
-    if (maxYVel > tGenLimits_->maxYVel())
-    {
-        exceedsMaxSpeed_ = true;
-        std::cout << "BT: max Y velocity too large: " << maxYVel <<  " > " << tGenLimits_->maxYVel() << std::endl; // Debug
-        maxYVel = tGenLimits_->maxYVel();
+        simultaneousTrajectory_ = false;
+        std::cout << "BT: max XY velocity too large: " << maxXYVel <<  " > " << tGenLimits_->maxXVel() << std::endl; // Debug
+        maxXYVel = tGenLimits_->maxXVel();
     }
     if (maxZVel > tGenLimits_->maxZVel())
     {
-        exceedsMaxSpeed_ = true;
+        simultaneousTrajectory_ = false;
         std::cout << "BT: max Z velocity too large: " << maxZVel << " > " << tGenLimits_->maxZVel() << std::endl; // Debug
         maxZVel = tGenLimits_->maxZVel();
     }
 
     // Update max velocity vector
-    maxVelocity_ = sqrt(maxXVel * maxXVel + maxYVel * maxYVel + maxZVel * maxZVel);
+    maxVelocity_ = sqrt(maxXYVel * maxXYVel + maxZVel * maxZVel);
     maxVelocityVec_ = unitVec_ * maxVelocity_;
 
-    if (longTrajectory_ || exceedsMaxSpeed_) // Execute long trajectory
+    if (!simultaneousTrajectory_) // Execute long trajectory
     {
         longTrajectory_ = true;
         double cruiseRatio = 1.0 - maxVelocity_ / initialMaxVelocity_;

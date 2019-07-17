@@ -56,13 +56,9 @@ void LongTrajectory::initTrajectory()
     double xyDistance = sqrt(dx * dx + dy * dy);
     double travelHeading = 0;
 
-    std::cout << "LT path inclination " << atan(fabs(dz) / xyDistance) << std::endl;
-    std::cout << "LT dz/dxy = " << dz << "/" << xyDistance << std::endl;
-    if (atan(fabs(dz) / xyDistance) < tGenLimits_->maxPathInclination())
+    if ((xyDistance != 0) && (atan(fabs(dz) / xyDistance) < tGenLimits_->maxPathInclination()))
     { // Trajectory pitch is ok
         travelHeading = atan2(dy, dx); // Radians
-        std::cout << "LT new travel heading " << travelHeading << std::endl;
-        std::cout << "LT dy/dx = " << dy << "/" << dx << std::endl;
         qCruise_ = auv_core::math_lib::toQuaternion(travelHeading, 0.0, 0.0); // yaw, pitch, roll --> quaternion
     }
     else

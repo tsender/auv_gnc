@@ -1,11 +1,19 @@
 # LQR Config: 
 # Tuning values for Q and R matrices
-# Initial first guess: Qi = 1 / (max_state_error_i)^2
-# Initial first guess: Ri = 1 / (max_input_i)^2
+# Since the guidance controller provides feed-forward inputs, these values should roughly correspond to the maximum
+# deviations allowed from the REFERENCE trajectory.
+# Initial first guess: Qi = 1 / (max_state_deviation_i)^2
+# Initial first guess: Ri = 1 / (max_input_deviation_i)^2
 
 # NOTES: 
-# 1. Xstate = [xI, yI, zI, U, V, W, q1, q2, q3, wx, wy, wz]
-# 2. Q_diag must have 12 elements, since Q is a 12x12 matrix
+# 1. Xstate is the original 12-state vector
+#    Xstate = [xI, yI, zI, U, V, W, q1, q2, q3, wx, wy, wz]^T
+# 2. Xintegral is the integral state vector, appended to Xstate forming an augmented state vector Xaug = [Xstate, Xintegral]^T
+#    Xintegral = [int(x_error) , int(y_error), int(z_error), int(q1_error), int(q2_error), int(q3_error)]^T
+# 3. Q_diag is for the un-augmented system (Xstate only) and must have 12 elements, since Q is a 12x12 matrix
+# 4. Q_int_diag is for the error states (Xintegral)
 # 3. R_diag must have 8 elements
-Q_diag: [400.0, 400.0, 400.0, 100.0, 100.0, 100.0, 400.0, 400.0, 400.0, 100.0, 100.0, 100.0]
-R_diag: [0.00082, 0.00082, 0.00082, 0.00082, 0.00082, 0.00082, 0.00082, 0.00082]
+enable_LQR_integral: true
+Q_diag: [400.0, 400.0, 400.0, 100.0, 100.0, 100.0, 1000.0, 1000.0, 1000.0, 100.0, 100.0, 100.0]
+Q_integral_diag: [400.0, 400.0, 400.0, 500.0, 500.0, 500.0]
+R_diag: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]

@@ -16,8 +16,10 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
     auvConfig_ = YAML::LoadFile(auvConfigFile_);
 
     // LQR Variables
-    nh_.param("R_diag", Rdiag_, std::vector<double>(0));
-    nh_.param("Q_diag", Qdiag_, std::vector<double>(0));
+    nh_.param("Q_diag", QDiag_, std::vector<double>(0));
+    nh_.param("Q_integral_diag", QIntegralDiag_, std::vector<double>(0));
+    nh_.param("R_diag", RDiag_, std::vector<double>(0));
+    nh_.param("enable_LQR_integral", enableLQRIntegral_, false);
 
     GuidanceController::initAUVModel();
 
@@ -177,17 +179,33 @@ void GuidanceController::initAUVModel()
     auvModel_ = new auv_control::AUVModel(Fg, Fb, CoB, inertia, dragCoeffs, thrusters, numActiveThrusters_);
 
     // LQR Cost Matrices
-    Q_.setZero();
-    R_.setZero();
+    auv_control::Matrix12d Q;
+    auv_control::Matrix18d QAug;
+    auv_control::Matrix8d R;
+    Q.setZero();
+    QAug.setZero();
+    R.setZero();
 
     for (int i = 0; i < 12; i++)
     {
         if (i < 8)
-            R_(i, i) = fabs(Rdiag_[i]);
-        Q_(i, i) = fabs(Qdiag_[i]);
+            R(i, i) = fabs(RDiag_[i]);
+        Q(i, i) = fabs(QDiag_[i]);
     }
 
-    auvModel_->setLQRCostMatrices(Q_, R_);
+    if (!enableLQRIntegral_)
+    {
+        auvModel_->setLQRCostMatrices(Q, R);
+    }
+    else
+    {
+        QAug.block<12, 12>(0, 0) = Q;
+        for (int i = 0; i < 6; i++)
+        {
+            QAug(12 + i, 12 + i) = fabs(QIntegralDiag_[i]);
+        }
+        auvModel_->setLQRIntegralCostMatrices(QAug, R);
+    }
 }
 
 /**
