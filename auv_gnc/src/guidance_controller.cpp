@@ -16,9 +16,9 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
     auvConfig_ = YAML::LoadFile(auvConfigFile_);
 
     // LQR Variables
-    nh_.param("Q_diag", QDiag_, std::vector<double>(0));
-    nh_.param("Q_integral_diag", QIntegralDiag_, std::vector<double>(0));
-    nh_.param("R_diag", RDiag_, std::vector<double>(0));
+    nh_.param("Q_diag", Qdiag_, std::vector<double>(0));
+    nh_.param("Q_diag_integral", QdiagIntegral_, std::vector<double>(0));
+    nh_.param("R_diag", Rdiag_, std::vector<double>(0));
     nh_.param("enable_LQR_integral", enableLQRIntegral_, false);
 
     GuidanceController::initAUVModel();
@@ -61,7 +61,7 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
     nh_.param("publisher_topic", pubTopic_, std::string("/auv_gnc/controller/thrust"));
     nh_.param("action_name", actionName_, std::string("/auv_gnc/controller/check_for_trajectory"));
 
-    sixDoFSub_ = nh_.subscribe<auv_msgs::SixDoF>(subTopic_, 1, &GuidanceController::sixDofCB, this);
+    sixDofSub_ = nh_.subscribe<auv_msgs::SixDoF>(subTopic_, 1, &GuidanceController::sixDofCB, this);
     thrustPub_ = nh_.advertise<auv_msgs::Thrust>(pubTopic_, 1, this);
 
     // Initialize variables
@@ -160,8 +160,8 @@ void GuidanceController::initAUVModel()
     }
 
     // Each COLUMN contains a thruster's info
-    auv_control::Matrix58d thrusters;
-    thrusters.setZero();
+    auv_control::Matrix58d thrusterData;
+    thrusterData.setZero();
     int col = 0;
     for (int i = 0; i < numThrusters; i++)
     {
@@ -169,21 +169,21 @@ void GuidanceController::initAUVModel()
         {
             for (int j = 0; j < 5; j++)
                 if (j < 3)
-                    thrusters(j, col) = auvConfig_["thrusters"][i]["pose"][j].as<double>() - CoM(j);
+                    thrusterData(j, col) = auvConfig_["thrusters"][i]["pose"][j].as<double>() - CoM(j);
                 else
-                    thrusters(j, col) = auvConfig_["thrusters"][i]["pose"][j].as<double>();
+                    thrusterData(j, col) = auvConfig_["thrusters"][i]["pose"][j].as<double>();
             col++;
         }
     }
 
-    auvModel_ = new auv_control::AUVModel(Fg, Fb, CoB, inertia, dragCoeffs, thrusters, numActiveThrusters_);
+    auvModel_ = new auv_control::AUVModel(Fg, Fb, CoB, inertia, dragCoeffs, thrusterData, numActiveThrusters_);
 
     // LQR Cost Matrices
     auv_control::Matrix12d Q;
-    auv_control::Matrix18d QAug;
+    auv_control::Matrix18d Qaug;
     auv_control::Matrix8d R;
     Q.setZero();
-    QAug.setZero();
+    Qaug.setZero();
     R.setZero();
 
     for (int i = 0; i < 12; i++)

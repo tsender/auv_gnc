@@ -37,7 +37,7 @@ private:
   auv_control::AUVModel *auvModel_;
 
   // LQR Parameters
-  std::vector<double> QDiag_, QIntegralDiag_, RDiag_;
+  std::vector<double> Qdiag_, QDiagIntegral_, Rdiag_;
   bool enableLQRIntegral_;
 
   // Trajectory Generator Parameters
@@ -56,7 +56,7 @@ private:
 
   // ROS Parameters
   ros::NodeHandle nh_;
-  ros::Subscriber sixDoFSub_;
+  ros::Subscriber sixDofSub_;
   ros::Publisher thrustPub_;
   std::string subTopic_, pubTopic_, actionName_;
   double trajectoryDuration_;

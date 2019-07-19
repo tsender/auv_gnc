@@ -9,11 +9,12 @@
 # 1. Xstate is the original 12-state vector
 #    Xstate = [xI, yI, zI, U, V, W, q1, q2, q3, wx, wy, wz]^T
 # 2. Xintegral is the integral state vector, appended to Xstate forming an augmented state vector Xaug = [Xstate, Xintegral]^T
-#    Xintegral = [int(x_error) , int(y_error), int(z_error), int(q1_error), int(q2_error), int(q3_error)]^T
-# 3. Q_diag is for the un-augmented system (Xstate only) and must have 12 elements, since Q is a 12x12 matrix
-# 4. Q_int_diag is for the error states (Xintegral)
+#    Xintegral = [Int(x_error) , Int(y_error), Int(z_error), Int(q1_error), Int(q2_error), Int(q3_error)]^T
+#    where Int(x) represents the integral of 'x'
+# 3. Q_diag is for Xstate only and must have 12 elements, since Q is a 12x12 matrix
+# 4. Q_integral_diag is for the error states (Xintegral)
 # 3. R_diag must have 8 elements
-enable_LQR_integral: true
+enable_LQR_integral: false
 Q_diag: [400.0, 400.0, 400.0, 100.0, 100.0, 100.0, 1000.0, 1000.0, 1000.0, 100.0, 100.0, 100.0]
-Q_integral_diag: [400.0, 400.0, 400.0, 500.0, 500.0, 500.0]
+Q_diag_integral: [400.0, 400.0, 400.0, 500.0, 500.0, 500.0]
 R_diag: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
