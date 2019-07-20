@@ -6,8 +6,8 @@
 Fg: 400.7 # Weight in air, [N]
 Fb: 412.0 # Buoyant Force, [N]
 center_of_buoyancy: [0.02, 0.0, -0.03] # CoB location relative to center of mass (X [m], Y [m], Z [m])
-# CoM location relative to some reference point on the vehicle (X [m], Y [m], Z [m]), since it's often easier to measure from a known, well-defined point.
-# If reference point is the CoM itself, then set to all zeroes.
+# CoM location relative to a reference point on the vehicle (X [m], Y [m], Z [m]), since it's often easier to measure from a known, well-defined point.
+# If the reference point is the CoM itself, then set to all zeroes.
 center_of_mass: [0.0, 0.0, 0.0]
 inertia: { # Inertias [kg-m^2]
   Ixx: 1.32,
@@ -29,8 +29,8 @@ thrusters: [
   # Only the first EIGHT thruster blocks will be processed by the guidance controller
   # Pose: (x [m], y [m], z [m], yaw [deg], pitch [deg])
   #     1. X,Y,Z positions are with respect to the reference point.
-  #     2A. For attitude, first orient the thruster such that a positive force exerted BY the thruster points in the vehicle's positive X-direction.
-  #     2B. Then perform yaw, followed by pitch, to come to the thruster's actual orientation with respect to the vehicle's body-frame.
+  #     2A. For attitude, first orient the thruster such that a positive force exerted BY the thruster (ON the vehicle) points in the vehicle's positive X-direction.
+  #     2B. Then perform yaw, followed by pitch, to arrive at the thruster's actual orientation with respect to the vehicle's body-frame.
   # Disble thrusters with care. User is responsible for ensuring the system is fully controllable.
   {
     id: 0,

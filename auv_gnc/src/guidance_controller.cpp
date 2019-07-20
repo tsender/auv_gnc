@@ -159,7 +159,7 @@ void GuidanceController::initAUVModel()
             inactiveThrusterNames_.push_back(name);
     }
 
-    // Each COLUMN contains a thruster's info
+    // Each COLUMN contains a thruster's data (x, y, z, yaw, pitch)
     auv_control::Matrix58d thrusterData;
     thrusterData.setZero();
     int col = 0;
@@ -189,8 +189,8 @@ void GuidanceController::initAUVModel()
     for (int i = 0; i < 12; i++)
     {
         if (i < 8)
-            R(i, i) = fabs(RDiag_[i]);
-        Q(i, i) = fabs(QDiag_[i]);
+            R(i, i) = fabs(Rdiag_[i]);
+        Q(i, i) = fabs(Qdiag_[i]);
     }
 
     if (!enableLQRIntegral_)
@@ -199,12 +199,12 @@ void GuidanceController::initAUVModel()
     }
     else
     {
-        QAug.block<12, 12>(0, 0) = Q;
+        Qaug.block<12, 12>(0, 0) = Q;
         for (int i = 0; i < 6; i++)
         {
-            QAug(12 + i, 12 + i) = fabs(QIntegralDiag_[i]);
+            Qaug(12 + i, 12 + i) = fabs(QdiagIntegral_[i]);
         }
-        auvModel_->setLQRIntegralCostMatrices(QAug, R);
+        auvModel_->setLQRIntegralCostMatrices(Qaug, R);
     }
 }
 

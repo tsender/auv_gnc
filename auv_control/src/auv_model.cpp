@@ -22,17 +22,28 @@ AUVModel::AUVModel(double Fg, double Fb,
 
     // LQR variables
     A_.setZero();
-    AAug_.setZero();
+    augA_.setZero();
     B_.setZero();
+    K_.setZero();
+    augK_.setZero();
+    augB_.setZero();
     Q_.setZero();
-    QAug_.setZero();
+    augQ_.setZero();
     R_.setZero();
+
+    totalThrust_.setZero();
+    lqrThrust_.setZero();
+    qState_.setIdentity();
+    qRef_.setIdentity();
+    qError_.setIdentity();
+    qIntegralError_.setIdentity();
+    
     initLQR_ = false;
     enableLQRIntegral_ = false;
 
     // Initialize arrays
     for (int i = 0; i < maxThrusters_; i++)
-        nominalForces_[i] = 0;
+        nominalThrust_[i] = 0;
 
     for (int i = 0; i < 3; i++)
     {
@@ -51,7 +62,7 @@ AUVModel::AUVModel(double Fg, double Fb,
     problemNominalThrust.AddResidualBlock(
         new ceres::AutoDiffCostFunction<NominalThrustSolver, 6, 8>(new NominalThrustSolver(Fg_, Fb_, CoB_, inertia_, dragCoeffs_, thrustCoeffs_,
                                                                                            quaternion_, uvw_, pqr_, inertialTransAccel_, pqrDot_)),
-        NULL, nominalForces_);
+        NULL, nominalThrust_);
     optionsNominalThrust.max_num_iterations = 100;
     optionsNominalThrust.linear_solver_type = ceres::DENSE_QR;
 }
@@ -91,9 +102,9 @@ void AUVModel::setLQRCostMatrices(const Eigen::Ref<const Matrix12d> &Q, const Ei
  * @param Q LQR state cost matrix, for the augmented matrix (includes integral action)
  * @param R LQR input cost matrix
  */
-void AUVModel::setLQRIntegralCostMatrices(const Eigen::Ref<const Matrix18d> &QAug, const Eigen::Ref<const Matrix8d> &R)
+void AUVModel::setLQRIntegralCostMatrices(const Eigen::Ref<const Matrix18d> &augQ, const Eigen::Ref<const Matrix8d> &R)
 {
-    QAug_ = QAug;
+    augQ_ = augQ_;
     R_ = R;
     initLQR_ = true;
     enableLQRIntegral_ = true;
@@ -101,14 +112,14 @@ void AUVModel::setLQRIntegralCostMatrices(const Eigen::Ref<const Matrix18d> &QAu
 
 /**
  * \param state Reference state for a given time instance
- * \brief Compute the 12x12 Jacobian of the A-matrix
+ * \brief Compute the Jacobian of the 12x12 system matrix
  */
 void AUVModel::setLinearizedSystemMatrix(const Eigen::Ref<const Vector13d> &ref)
 {
     // Variables for Auto Diff.
     size_t n = 12, m = 3;
     ADVectorXd X(n), Xdot(n);
-    std::vector<double> jac(n * n); // Create nxn Jacobian matrix
+    std::vector<double> jac(n * n); // Create nxn elements to represent a Jacobian matrix ()
 
     // MUST set X to contain INDEPENDENT variables
     CppAD::Independent(X); // Begin recording sequence
@@ -117,7 +128,6 @@ void AUVModel::setLinearizedSystemMatrix(const Eigen::Ref<const Vector13d> &ref)
     // So: B-frame vector = quaternion.conjugate() * I-frame vector
     // So: I-frame vector = quaternion * B-frame vector
     Eigen::Quaternion<CppAD::AD<double> > ADquat(ref(auv_core::constants::STATE_Q0), X[auv_core::constants::ESTATE_Q1], X[auv_core::constants::ESTATE_Q2], X[auv_core::constants::ESTATE_Q3]);
-    //std::cout << "ADquat : " << ADquat << std::endl;
 
     // Translational States
     // 1. Time derivatives of: xI, yI, zI (expressed in I-frame)
@@ -160,11 +170,19 @@ void AUVModel::setLinearizedSystemMatrix(const Eigen::Ref<const Vector13d> &ref)
     CppAD::ADFun<double> f(X, Xdot);
     jac = f.Jacobian(x);
 
-    // Put jac elements into matrix format
+    // Put jacobien elements into matrix format from vector
     A_.setZero();
+    augA_.setZero();
     for (int i = 0; i < 12; i++)
+    {
         for (int j = 0; j < 12; j++)
-            A_(i, j) = (float)jac[i * 12 + j];
+        {
+            if (!enableLQRIntegral_)
+                A_(i, j) = (float)jac[i * 12 + j];
+            else
+                augA_(i, j) = (float)jac[i * 12 + j];
+        }
+    }
 }
 
 /**
@@ -172,25 +190,17 @@ void AUVModel::setLinearizedSystemMatrix(const Eigen::Ref<const Vector13d> &ref)
  */
 void AUVModel::setLinearizedInputMatrix()
 {
-    B_.setZero();
-    B_.block<3, 8>(auv_core::constants::ESTATE_U, 0) = thrustCoeffs_.block<3, 8>(0, 0);
-    B_.block<3, 8>(auv_core::constants::ESTATE_P, 0) = inertia_.inverse() * thrustCoeffs_.block<3, 8>(3, 0);
-}
-
-/**
- * \brief Return the current system matrix.
- */
-Matrix12d AUVModel::getLinearizedSystemMatrix()
-{
-    return A_;
-}
-
-/**
- * \brief Return the current control input matrix.
- */
-Matrix12x8d AUVModel::getLinearizedInputMatrix()
-{
-    return B_;
+    if(!enableLQRIntegral_)
+    {
+        B_.block<3, 8>(auv_core::constants::ESTATE_U, 0) = thrustCoeffs_.block<3, 8>(0, 0); // Force contributions
+        B_.block<3, 8>(auv_core::constants::ESTATE_P, 0) = inertia_.inverse() * thrustCoeffs_.block<3, 8>(3, 0); // Moment contributions
+    }
+    else
+    {
+        augB_.block<3, 8>(auv_core::constants::ESTATE_U, 0) = thrustCoeffs_.block<3, 8>(0, 0); // Force contributions
+        augB_.block<3, 8>(auv_core::constants::ESTATE_P, 0) = inertia_.inverse() * thrustCoeffs_.block<3, 8>(3, 0); // Moment contributions
+    }
+    
 }
 
 // Get total thruster forces/moments as expressed in the B-frame
@@ -211,8 +221,12 @@ Vector8d AUVModel::computeLQRThrust(const Eigen::Ref<const Vector13d> &state,
                                     const Eigen::Ref<const Vector13d> &ref,
                                     const Eigen::Ref<const Vector6d> &accel)
 {
-    Vector8d totalThrust;
-    totalThrust.setZero();
+    lqrThrust_.setZero();
+    totalThrust_.setZero();
+
+    qState_ = Eigen::Quaterniond(state(auv_core::constants::STATE_Q0), state(auv_core::constants::STATE_Q1), state(auv_core::constants::STATE_Q2), state(auv_core::constants::STATE_Q3));
+    qRef_ = Eigen::Quaterniond(ref(auv_core::constants::STATE_Q0), ref(auv_core::constants::STATE_Q1), ref(auv_core::constants::STATE_Q2), ref(auv_core::constants::STATE_Q3));
+    qError_ = qRef_ * qState_.conjugate(); //qState * qRef.conjugate(); // Want quaternion error relative to Inertial-frame (is it qRef * qState.conjugate()?)
 
     // Set variables for nominal thrust solver
     quaternion_[0] = ref(auv_core::constants::STATE_Q0);;
@@ -227,34 +241,31 @@ Vector8d AUVModel::computeLQRThrust(const Eigen::Ref<const Vector13d> &state,
 
     // Initialize nominal forces to zero (this doesn't make too much of a difference)
     for (int i = 0; i < maxThrusters_; i++)
-        nominalForces_[i] = 0;
+        nominalThrust_[i] = 0;
 
     if (initLQR_)
     {
         ceres::Solve(optionsNominalThrust, &problemNominalThrust, &summaryNominalThrust);
-        Eigen::Map<Vector8d> nominalThrust(nominalForces_);
+        Eigen::Map<Vector8d> nominalThrust(nominalThrust_);
         AUVModel::setLinearizedSystemMatrix(ref);
-
-        Eigen::Quaterniond qState(state(auv_core::constants::STATE_Q0), state(auv_core::constants::STATE_Q1), state(auv_core::constants::STATE_Q2), state(auv_core::constants::STATE_Q3));
-        Eigen::Quaterniond qRef(ref(auv_core::constants::STATE_Q0), ref(auv_core::constants::STATE_Q1), ref(auv_core::constants::STATE_Q2), ref(auv_core::constants::STATE_Q3));
-        Eigen::Quaterniond qError = qState * qRef.conjugate(); // Want quaternion error relative to Inertial-frame (is it qRef * qState.conjugate()?)
-        
-        Vector8d lqrThrust;
-        lqrThrust.setZero();
 
         if (!enableLQRIntegral_)
         {
-            Vector12d error;
-            error.head<6>() = state.head<6>() - ref.head<6>();
-            error.tail<6>() = state.tail<6>() - ref.tail<6>();
-            error.segment<3>(auv_core::constants::ESTATE_Q1) = qError.vec(); // Set quaternion error
+            error_.head<6>() = state.head<6>() - ref.head<6>();
+            error_.tail<6>() = state.tail<6>() - ref.tail<6>();
+            error_.segment<3>(auv_core::constants::ESTATE_Q1) = -qError_.vec(); // Set quaternion error, negate vector part for calculation of input vector
             //std::cout << "LQR error: " << error << std::endl;
             lqrSolver_.compute(Q_, R_, A_, B_, K_);
-            lqrThrust = -K_ * error; // U = -K*(state-ref)
+            lqrThrust_ = -K_ * error_; // U = -K*(state-ref)
+        }
         else
         {
-            lqrAugSolver_.compute(QAug_, R_, AAug_, B_, K_);
-            // FINISH !!!!!!!!!!!
+            augError_.head<6>() = state.head<6>() - ref.head<6>();
+            augError_.segment<6>(6) = state.tail<6>() - ref.tail<6>();
+            augError_.segment<3>(auv_core::constants::ESTATE_Q1) = -qError_.vec(); // Set quaternion error, negate vector part for calculation of input vector
+            lqrAugSolver_.compute(augQ_, R_, augA_, augB_, augK_);
+            lqrThrust_ = -augK_ * augError_; // U = -K*(state-ref)
+            // Add integral error !!!!!!!!!!!
         }
             
         //std::cout << "Solve LQR, A matrix: " << std::endl << A_ << std::endl;
@@ -263,10 +274,10 @@ Vector8d AUVModel::computeLQRThrust(const Eigen::Ref<const Vector13d> &state,
         //std::cout << "Accel state: " << std::endl << accel << std::endl;
         //std::cout << "LQR gain K: " << K_ << std::endl;
         //std::cout << "Nominal Thrust: " << std::endl << nominalThrust << std::endl;
-        std::cout << "LQR thrust: " << lqrThrust << std::endl;
+        std::cout << "LQR thrust: " << lqrThrust_ << std::endl;
 
-        totalThrust = nominalThrust + lqrThrust;
+        totalThrust_ = nominalThrust + lqrThrust_;
     }
-    return totalThrust;
+    return totalThrust_;
 }
 } // namespace auv_control
