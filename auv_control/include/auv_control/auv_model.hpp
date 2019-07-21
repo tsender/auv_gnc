@@ -85,7 +85,7 @@ private:
   Vector8d lqrThrust_;
   Vector12d error_;
   Vector18d augError_;
-  Eigen::Vector3d positionError_, positionIntegralError_;
+  Eigen::Vector3d positionIntegralError_;
   Eigen::Quaterniond qState_, qRef_, qError_, qIntegralError_;
 
   // Ceres Problem
@@ -123,7 +123,7 @@ public:
   void setLQRIntegralCostMatrices(const Eigen::Ref<const Matrix18d> &augQ, const Eigen::Ref<const Matrix8d> &R);
 
   Vector6d getTotalThrustLoad(const Eigen::Ref<const Vector8d> &thrusts);
-  Vector8d computeLQRThrust(double dt, const Eigen::Ref<const Vector13d> &state,
+  Vector8d computeLQRThrust(const Eigen::Ref<const Vector13d> &state,
                             const Eigen::Ref<const Vector13d> &ref,
                             const Eigen::Ref<const Vector6d> &accel);
 };

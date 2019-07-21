@@ -52,7 +52,7 @@ private:
   Eigen::Quaterniond quaternion_;
   int tgenType_;
   bool tgenInit_, newTrajectory_;
-  ros::Time timeStart_;
+  ros::Time startTime_;
   auv_control::Vector8d thrust_;
 
   // ROS Parameters

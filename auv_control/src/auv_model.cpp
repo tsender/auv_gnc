@@ -37,6 +37,7 @@ AUVModel::AUVModel(double Fg, double Fb,
     qRef_.setIdentity();
     qError_.setIdentity();
     qIntegralError_.setIdentity();
+    positionIntegralError_.setZero();
     
     initLQR_ = false;
     enableLQRIntegral_ = false;
@@ -104,7 +105,7 @@ void AUVModel::setLQRCostMatrices(const Eigen::Ref<const Matrix12d> &Q, const Ei
  */
 void AUVModel::setLQRIntegralCostMatrices(const Eigen::Ref<const Matrix18d> &augQ, const Eigen::Ref<const Matrix8d> &R)
 {
-    augQ_ = augQ_;
+    augQ_ = augQ;
     R_ = R;
     initLQR_ = true;
     enableLQRIntegral_ = true;
@@ -200,7 +201,6 @@ void AUVModel::setLinearizedInputMatrix()
         augB_.block<3, 8>(auv_core::constants::ESTATE_U, 0) = thrustCoeffs_.block<3, 8>(0, 0); // Force contributions
         augB_.block<3, 8>(auv_core::constants::ESTATE_P, 0) = inertia_.inverse() * thrustCoeffs_.block<3, 8>(3, 0); // Moment contributions
     }
-    
 }
 
 // Get total thruster forces/moments as expressed in the B-frame
@@ -229,7 +229,7 @@ Vector8d AUVModel::computeLQRThrust(const Eigen::Ref<const Vector13d> &state,
     qError_ = qRef_ * qState_.conjugate(); //qState * qRef.conjugate(); // Want quaternion error relative to Inertial-frame (is it qRef * qState.conjugate()?)
 
     // Set variables for nominal thrust solver
-    quaternion_[0] = ref(auv_core::constants::STATE_Q0);;
+    quaternion_[0] = ref(auv_core::constants::STATE_Q0);
     quaternion_[1] = ref(auv_core::constants::STATE_Q1);
     quaternion_[2] = ref(auv_core::constants::STATE_Q2);
     quaternion_[3] = ref(auv_core::constants::STATE_Q3);
@@ -263,6 +263,11 @@ Vector8d AUVModel::computeLQRThrust(const Eigen::Ref<const Vector13d> &state,
             augError_.head<6>() = state.head<6>() - ref.head<6>();
             augError_.segment<6>(6) = state.tail<6>() - ref.tail<6>();
             augError_.segment<3>(auv_core::constants::ESTATE_Q1) = -qError_.vec(); // Set quaternion error, negate vector part for calculation of input vector
+            qIntegralError_ = qIntegralError_ * qError_; // Treat integral error of quaternion as another quaternion
+            positionIntegralError_ = positionIntegralError_ + augError_.segment<3>(auv_core::constants::ESTATE_XI);
+            augError_.segment<3>(12) = positionIntegralError_;
+            augError_.segment<3>(15) = -qIntegralError_.vec();
+
             lqrAugSolver_.compute(augQ_, R_, augA_, augB_, augK_);
             lqrThrust_ = -augK_ * augError_; // U = -K*(state-ref)
             // Add integral error !!!!!!!!!!!

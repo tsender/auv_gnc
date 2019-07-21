@@ -13,7 +13,7 @@ BasicTrajectory::BasicTrajectory(Waypoint *wStart, Waypoint *wEnd, TGenLimits *t
     wEnd_ = wEnd;
     tGenLimits_ = tGenLimits;
 
-    qStop_ = Eigen::Quaterniond::Identity();
+    qStop_.setIdentity();
     deltaVec_.setZero();
     unitVec_.setZero();
     maxVelocityVec_.setZero();

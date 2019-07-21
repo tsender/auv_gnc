@@ -70,7 +70,7 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
     accel_.setZero();
     linearAccel_.setZero();
     thrust_.setZero();
-    quaternion_ = Eigen::Quaterniond::Identity();
+    quaternion_.setIdentity();
 
     tgenType_ = 0;
     tgenInit_ = false;
@@ -305,20 +305,18 @@ void GuidanceController::runController()
     }
     else
     {
-        
-
-        double dt = ros::Time::now().toSec() - timeStart_.toSec();
+        double evalTime = ros::Time::now().toSec() - startTime_.toSec();
 
         if (tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ || tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ)
         {
-            ref = basicTrajectory_->computeState(dt);
-            accel = basicTrajectory_->computeAccel(dt);
+            ref_ = basicTrajectory_->computeState(evalTime);
+            accel_ = basicTrajectory_->computeAccel(evalTime);
             //ROS_INFO("Time in Trajectory: %f", dt);
             //std::cout << "Reference state: " << std::endl << ref << std::endl; // Debug
             //std::cout << "Accel state: " << std::endl << accel << std::endl; // Debug
         }
 
-        if (dt > trajectoryDuration_ && !resultMessageSent_)
+        if (evalTime > trajectoryDuration_ && !resultMessageSent_)
         {
             resultMessageSent_ = true;
             auv_msgs::TrajectoryGeneratorResult result;
@@ -326,7 +324,7 @@ void GuidanceController::runController()
             tgenActionServer_->setSucceeded(result);
         }
 
-        thrust_ = auvModel_->computeLQRThrust(dt, state_, ref, accel);
+        thrust_ = auvModel_->computeLQRThrust(state_, ref_, accel_);
         GuidanceController::publishThrustMessage();
     }
 }
@@ -338,7 +336,7 @@ void GuidanceController::initNewTrajectory()
 {
     ROS_INFO("GuidanceController: Initializing new trajectory.");
     newTrajectory_ = false;
-    timeStart_ = ros::Time::now();
+    startTime_ = ros::Time::now();
 
     Eigen::Vector3d zero3d = Eigen::Vector3d::Zero();
     Eigen::Vector3d posIStart = zero3d;

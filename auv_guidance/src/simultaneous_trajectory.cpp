@@ -13,7 +13,7 @@ SimultaneousTrajectory::SimultaneousTrajectory(Waypoint *start, Waypoint *end, d
     wEnd_ = end;
     totalDuration_ = duration;
 
-    qDiff_ = Eigen::Quaterniond::Identity();
+    qDiff_.setIdentity();
     xState_.setZero();
     yState_.setZero();
     zState_.setZero();
