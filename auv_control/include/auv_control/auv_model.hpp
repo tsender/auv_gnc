@@ -70,23 +70,23 @@ private:
   Eigen::Vector3d CoB_; // Center of buoyancy position relative to CoM
   
   // LQR Matrices
-  Matrix12d A_;         // Linearized system matrix
-  Matrix18d augA_;      // Linearized, augmented system matrix
-  Matrix12x8d B_;       // Linearized control input matrix
-  Matrix18x8d augB_;    // Linearized control input matrix
+  Matrix12d A_;         // (Linearized) system matrix
+  Matrix18d augA_;      // (Linearized) augmented system matrix
+  Matrix12x8d B_;       // Control input matrix
+  Matrix18x8d augB_;    // Augmented control input matrix
   Matrix8x12d K_;       // Gain matrix
-  Matrix8x18d augK_;    // Augmented Gain matrix
+  Matrix8x18d augK_;    // Augmented gain matrix
   Matrix12d Q_;         // State cost matrix
   Matrix18d augQ_;      // Augmented state cost matrix
   Matrix8d R_;          // Input cost matrix
 
-  // LQR Variables for Computing the Error
+  // LQR Variables
   Vector8d totalThrust_;
   Vector8d lqrThrust_;
   Vector12d error_;
   Vector18d augError_;
+  Eigen::Vector3d positionError_, positionIntegralError_;
   Eigen::Quaterniond qState_, qRef_, qError_, qIntegralError_;
-
 
   // Ceres Problem
   ceres::Problem problemNominalThrust;
@@ -123,7 +123,7 @@ public:
   void setLQRIntegralCostMatrices(const Eigen::Ref<const Matrix18d> &augQ, const Eigen::Ref<const Matrix8d> &R);
 
   Vector6d getTotalThrustLoad(const Eigen::Ref<const Vector8d> &thrusts);
-  Vector8d computeLQRThrust(const Eigen::Ref<const Vector13d> &state,
+  Vector8d computeLQRThrust(double dt, const Eigen::Ref<const Vector13d> &state,
                             const Eigen::Ref<const Vector13d> &ref,
                             const Eigen::Ref<const Vector6d> &accel);
 };

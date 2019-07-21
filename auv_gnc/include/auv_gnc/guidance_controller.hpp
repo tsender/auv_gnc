@@ -42,17 +42,18 @@ private:
 
   // Trajectory Generator Parameters
   auv_msgs::Trajectory desiredTrajectory_;
-  int tgenType_;
-  bool tgenInit_, newTrajectory_;
-  Eigen::Quaterniond quaternion_;
-  ros::Time timeStart_;
-  auv_control::Vector8d thrust_;
-
   auv_guidance::TGenLimits *tgenLimits_;
-  auv_guidance::Vector13d state_;
-  Eigen::Vector3d linearAccel_;
   auv_guidance::Waypoint *startWaypoint_, *endWaypoint_;
   auv_guidance::BasicTrajectory *basicTrajectory_;
+  auv_guidance::Vector13d state_;
+  auv_guidance::Vector13d ref_;
+  auv_guidance::Vector6d accel_;
+  Eigen::Vector3d linearAccel_;
+  Eigen::Quaterniond quaternion_;
+  int tgenType_;
+  bool tgenInit_, newTrajectory_;
+  ros::Time timeStart_;
+  auv_control::Vector8d thrust_;
 
   // ROS Parameters
   ros::NodeHandle nh_;

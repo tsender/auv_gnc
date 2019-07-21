@@ -66,6 +66,8 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
 
     // Initialize variables
     state_.setZero();
+    ref_.setZero();
+    accel_.setZero();
     linearAccel_.setZero();
     thrust_.setZero();
     quaternion_ = Eigen::Quaterniond::Identity();
@@ -303,10 +305,7 @@ void GuidanceController::runController()
     }
     else
     {
-        auv_guidance::Vector13d ref;
-        auv_guidance::Vector6d accel;
-        ref.setZero();
-        accel.setZero();
+        
 
         double dt = ros::Time::now().toSec() - timeStart_.toSec();
 
@@ -327,7 +326,7 @@ void GuidanceController::runController()
             tgenActionServer_->setSucceeded(result);
         }
 
-        thrust_ = auvModel_->computeLQRThrust(state_, ref, accel);
+        thrust_ = auvModel_->computeLQRThrust(dt, state_, ref, accel);
         GuidanceController::publishThrustMessage();
     }
 }
