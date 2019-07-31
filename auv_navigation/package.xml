@@ -12,6 +12,9 @@
   <build_depend>eigen</build_depend>
   <build_depend>auv_core</build_depend>
   <depend>roscpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>tf</depend>
+  <depend>eigen_conversions</depend>
 
   <export>
   </export>

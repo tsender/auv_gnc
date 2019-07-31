@@ -7,20 +7,29 @@ action_name: /auv_gnc/guidance_controller/check_for_trajectory
 max_xy_distance: 3.0 # [m]
 max_z_distance: 1.0 # [m]
 
-# Velocity/Accel Limits
-max_xy_velocity: 0.75 # [m/s]
-max_xy_accel: 0.4 # [m/s^2]
-max_z_velocity: 0.3 # [m/s]
-max_z_accel: 0.2 # [m/s^2]
-max_rotational_velocity: 1.57 # [rad/s] = 90 deg/s
-max_rotational_accel: 3.14 # [rad/s^2] = 180 deg/s^2
+# Set heading towards destination when path inclination is less than this angle
+max_path_inclination: 1.40 # [rad]
 
-# Jerk Limits
-closing_tolerance: 0.1 # When within this many units away from endpoint, use higher jerk
-xyz_jerk: 0.4 # [m/s^3]
-xyz_closing_jerk: 1.0 # [m/s^3] Uses this value when within closing tolerance
-rotational_jerk: 5 # [rad/s^3]
-rotational_closing_jerk: 6 # [rad/s^3]
+closing_tolerance: # When within this many units away from endpoint, use the closing jerk to close the gap faster
+  xyz: 0.1 # [m]
+  rotational: 0.1 # [rad]
 
-# Change heading towards endpoint when path inclination is less than this angle
-max_path_inclination: 80 # [deg]
+# Velocity/Accel/Jerk Limits
+max_velocity:
+  x: 0.75 # [m/s]
+  y: 0.4 # [m/s]
+  Z: 0.3 # [m/s]
+  rotational: 1.57 # [rad/s]
+max_accel:
+  x: 0.4 # [m/^2s]
+  y: 0.4 # [m/s^2]
+  Z: 0.2 # [m/s^2]
+  rotational: 3.14 # [rad/s^2]
+jerk:
+  xyz:
+    nominal: 0.4 # [m/s^3]
+    closing: 1.0 # [m/s^3]
+  rotational:
+    nominal: 5.0 # [rad/s^3]
+    closing: 6.0 # [rad/s^3]
+

@@ -29,6 +29,7 @@ private:
   static constexpr double GRAVITY = 9.80665;
 
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   NominalThrustSolver(double Fg, double Fb, const Eigen::Ref<const Eigen::Vector3d> &CoB, const Eigen::Ref<const Eigen::Matrix3d> &inertia,
                       const Eigen::Ref<const Matrix62d> &dragCoeffs, const Eigen::Ref<const Matrix68d> &thrustCoeffs,
                       double *quaternion, double *uvw, double *pqr, double *inertialTransAccel, double *pqrDot)
@@ -71,8 +72,9 @@ public:
 
     // Map ceres parameters and residuals to Eigen object with Jet type
     typedef Eigen::Matrix<T, 8, 1> Vector8T;
+    typedef Eigen::Matrix<T, 6, 1> Vector6T;
     Eigen::Map<const Vector8T> nominalForcesT(nominalForces);
-    Eigen::Map<Vector8T> residualsT(residuals);
+    Eigen::Map<Vector6T> residualsT(residuals);
 
     // Compute quaternion
     // Using Eigen::Quaternion: quaternion * vector = rotates vector by the described axis-angle

@@ -2,91 +2,111 @@
 
 namespace auv_guidance
 {
-TGenLimits::TGenLimits(double maxXYDistance, double maxZDistance, double maxXYVelocity, double maxXYAccel,
-                       double maxZVelocity, double maxZAccel, double maxRotVelocity, double maxRotAccel,
-                       double xyzJerk, double xyzClosingJerk, double rotJerk, double rotClosingJerk,
-                       double closingTolerance, double maxPathInclination)
+TGenLimits::TGenLimits(double maxXYDistance, double maxZDistance, double maxPathInclination, double closingTolXYZ,
+                       double closingTolRot, double maxXVel, double maxYVel, double maxZVel, double maxRotVel,
+                       double maxXAccel, double maxYAccel, double maxZAccel, double maxRotAccel, double xyzJerk,
+                       double xyzClosingJerk, double rotJerk, double rotClosingJerk)
 {
-    maxXYDistance_ = maxXYDistance;
-    maxZDistance_ = maxZDistance;
-    maxXYVelocity_ = fabs(maxXYVelocity_);
-    maxXYAccel_ = fabs(maxXYAccel);
-    maxZVelocity_ = fabs(maxZVelocity_);
-    maxZAccel_ = fabs(maxZAccel);
-    maxRotVelocity_ = fabs(maxRotVelocity);
-    maxRotAccel_ = fabs(maxRotAccel);
+  maxXYDistance_ = fabs(maxXYDistance);
+  maxZDistance_ = fabs(maxZDistance);
+  closingTolXYZ_ = fabs(closingTolXYZ);
+  closingTolRot_ = fabs(closingTolRot);
 
-    xyzJerk_ = fabs(xyzJerk);
-    xyzClosingJerk_ = fabs(xyzClosingJerk);
-    rotJerk_ = fabs(rotJerk);
-    rotClosingJerk_ = fabs(rotClosingJerk);
-    closingTolerance_ = fabs(closingTolerance);
+  maxXVel_ = fabs(maxXVel);
+  maxYVel_ = fabs(maxYVel);
+  maxZVel_ = fabs(maxZVel);
+  maxRotVel_ = fabs(maxRotVel);
 
-    maxPathInclination_ = fabs(maxPathInclination);
-    if (maxPathInclination_ > 90.0)
-    {
-        maxPathInclination_ = 90.0;
-    }
-    maxPathInclination_ *= M_PI / 180.0; // Convert to radians
+  maxXAccel_ = fabs(maxXAccel);
+  maxYAccel_ = fabs(maxYAccel);
+  maxZAccel_ = fabs(maxZAccel);
+  maxRotAccel_ = fabs(maxRotAccel);
+
+  xyzJerk_ = fabs(xyzJerk);
+  xyzClosingJerk_ = fabs(xyzClosingJerk);
+  rotJerk_ = fabs(rotJerk);
+  rotClosingJerk_ = fabs(rotClosingJerk);
+
+  maxPathInclination_ = fabs(maxPathInclination);
+  if (maxPathInclination_ > M_PI / 2.0)
+  {
+    maxPathInclination_ = M_PI / 2.0;
+  }
 }
 
 double TGenLimits::maxXYDistance()
 {
-    return maxXYDistance_;
+  return maxXYDistance_;
 }
 
 double TGenLimits::maxZDistance()
 {
-    return maxZDistance_;
+  return maxZDistance_;
 }
 
-double TGenLimits::maxXYVel()
+double TGenLimits::closingTolXYZ()
 {
-    return maxXYVelocity_;
+  return closingTolXYZ_;
 }
 
-double TGenLimits::maxXYAccel()
+double TGenLimits::closingTolRot()
 {
-    return maxXYAccel_;
-}
-
-double TGenLimits::maxZVel()
-{
-    return maxZVelocity_;
-}
-
-double TGenLimits::maxZAccel()
-{
-    return maxZAccel_;
-}
-
-double TGenLimits::maxRotVel()
-{
-    return maxRotVelocity_;
-}
-
-double TGenLimits::maxRotAccel()
-{
-    return maxRotAccel_;
-}
-
-double TGenLimits::xyzJerk(double distance)
-{
-    return (distance < closingTolerance_) ? xyzJerk_ : xyzClosingJerk_;
-}
-
-double TGenLimits::rotJerk(double distance)
-{
-    return (distance < closingTolerance_) ? rotJerk_ : rotClosingJerk_;
-}
-
-double TGenLimits::closingTol()
-{
-    return closingTolerance_;
+  return closingTolRot_;
 }
 
 double TGenLimits::maxPathInclination()
 {
-    return maxPathInclination_;
+  return maxPathInclination_;
 }
-} // namespace auv_guidance
+
+double TGenLimits::maxXVel()
+{
+  return maxXVel_;
+}
+
+double TGenLimits::maxYVel()
+{
+  return maxYVel_;
+}
+
+double TGenLimits::maxZVel()
+{
+  return maxZVel_;
+}
+
+double TGenLimits::maxRotVel()
+{
+  return maxRotVel_;
+}
+
+double TGenLimits::maxXAccel()
+{
+  return maxXAccel_;
+}
+
+double TGenLimits::maxYAccel()
+{
+  return maxYAccel_;
+}
+
+double TGenLimits::maxZAccel()
+{
+  return maxZAccel_;
+}
+
+double TGenLimits::maxRotAccel()
+{
+  return maxRotAccel_;
+}
+
+double TGenLimits::xyzJerk(double distance)
+{
+  return (distance > closingTolXYZ_) ? xyzJerk_ : xyzClosingJerk_;
+}
+
+double TGenLimits::rotJerk(double distance)
+{
+  return (distance > closingTolRot_) ? rotJerk_ : rotClosingJerk_;
+}
+
+}  // namespace auv_guidance

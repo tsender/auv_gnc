@@ -6,12 +6,15 @@ add_compile_options(-std=c++11)
 
 
 find_package(catkin REQUIRED COMPONENTS
+  actionlib
   auv_core  
   auv_guidance
   auv_navigation
   auv_control
   auv_msgs
   roscpp
+  tf
+  eigen_conversions
 )
 
 find_package(Eigen3 REQUIRED)

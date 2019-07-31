@@ -13,16 +13,13 @@ SimultaneousTrajectory::SimultaneousTrajectory(Waypoint *start, Waypoint *end, d
     wEnd_ = end;
     totalDuration_ = duration;
 
-    qDiff_.w() = 1;
-    qDiff_.x() = 0;
-    qDiff_.y() = 0;
-    qDiff_.z() = 0;
-    
+    qDiff_.setIdentity();
     xState_.setZero();
     yState_.setZero();
     zState_.setZero();
     angleState_.setZero();
     rotationAxis_.setZero();
+    noRotation_ = false;
 
     SimultaneousTrajectory::initTrajectory();
 }
@@ -35,11 +32,14 @@ void SimultaneousTrajectory::initTrajectory()
     qStart_ = wStart_->quaternion().normalized();
     qEnd_ = wEnd_->quaternion().normalized();
     qDiff_ = qStart_.conjugate() * qEnd_; // Error quaternion wrt B-frame (q2 * q1.conjugate is wrt I-frame)
-    
+
     Eigen::Vector4d angleAxis = auv_core::math_lib::quaternion2AngleAxis(qDiff_);
+    if (angleAxis.isApprox(Eigen::Vector4d::Zero()))
+        noRotation_ = true;
+    
     angularDistance_ = angleAxis(0);
-    double angVel = wStart_->angVelB().squaredNorm();
-    rotationAxis_ = angleAxis.tail<3>(); // Get axis relative to Body-frame
+    rotationAxis_ = angleAxis.tail<3>(); // Get axis relative to Body-frame at starting position
+    double angVel = wStart_->angVelB().norm();
 
     Eigen::Vector3d angleStart = Eigen::Vector3d::Zero(); 
     Eigen::Vector3d angleEnd = Eigen::Vector3d::Zero();
@@ -61,9 +61,9 @@ double SimultaneousTrajectory::getTime()
  * @param time Time to compute the state at
  * Computes the trajectory state at the specified time
  */
-Vector12d SimultaneousTrajectory::computeState(double time)
+Vector13d SimultaneousTrajectory::computeState(double time)
 {
-    Vector12d state;
+    Vector13d state;
     state.setZero();
 
     xState_ = mjtX_->computeState(time);
@@ -87,9 +87,13 @@ Vector12d SimultaneousTrajectory::computeState(double time)
 
     // Rotational Components
     Eigen::Vector3d pqr = Eigen::Vector3d::Zero();
-    Eigen::Vector4d q = Eigen::Vector4d::Zero();
+    Eigen::Vector4d quat = Eigen::Vector4d::Zero();
 
-    if (time >= 0 && time <= totalDuration_)
+    if (noRotation_)
+    {
+        qSlerp_ = qStart_;
+    }
+    else if (time >= 0 && time <= totalDuration_)
     {
         double frac = time / totalDuration_;
         qSlerp_ = qStart_.slerp(frac, qEnd_); // Attitude wrt I-frame
@@ -106,15 +110,15 @@ Vector12d SimultaneousTrajectory::computeState(double time)
     
     uvw = qSlerp_.conjugate() * uvw; // Inertial velocity expressed in B-frame
 
-    pqr = rotationAxis_ * angleState_(0); // Angular velocity expressed in B-frame
-    q(0) = qSlerp_.w();
-    q(1) = qSlerp_.x();
-    q(2) = qSlerp_.y();
-    q(3) = qSlerp_.z();
+    pqr = rotationAxis_ * angleState_(1); // Angular velocity expressed in B-frame
+    quat(0) = qSlerp_.w();
+    quat(1) = qSlerp_.x();
+    quat(2) = qSlerp_.y();
+    quat(3) = qSlerp_.z();
 
     state.segment<3>(auv_core::constants::STATE_XI) = xyz;
     state.segment<3>(auv_core::constants::STATE_U) = uvw;
-    state.segment<3>(auv_core::constants::STATE_Q1) = q.tail<3>();
+    state.segment<4>(auv_core::constants::STATE_Q0) = quat;
     state.segment<3>(auv_core::constants::STATE_P) = pqr;
     return state;
 }
@@ -136,7 +140,7 @@ Vector6d SimultaneousTrajectory::computeAccel(double time)
     inertialTransAccel = qSlerp_.conjugate() * inertialTransAccel;
 
     Eigen::Vector3d pqrDot = Eigen::Vector3d::Zero();
-    pqrDot = rotationAxis_ * angleState_(1);
+    pqrDot = rotationAxis_ * angleState_(2);
 
     accel << inertialTransAccel, pqrDot; // Both expressed in B-frame
     return accel;

@@ -40,7 +40,7 @@ class LongTrajectory : public Trajectory
     void initSimultaneousTrajectories();
     double computeRotationTime(Eigen::Quaterniond qDiff);
     double getTime();
-    Vector12d computeState(double time);
+    Vector13d computeState(double time);
     Vector6d computeAccel(double time);
 };
 } // namespace auv_guidance

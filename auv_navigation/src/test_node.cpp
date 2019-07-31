@@ -277,6 +277,14 @@ TestNode::TestNode() : nh("~")
     cout << "qSlerp " << endl << qSlerp.w() << endl << qSlerp.vec() << endl;
     qSlerp = q1.slerp(1.5, q2);
     cout << "qSlerp " << endl << qSlerp.w() << endl << qSlerp.vec() << endl;
+
+    Eigen::Vector3d tfVec = Eigen::Vector3d::Zero();
+    geometry_msgs::Vector3 gmVec3;
+    gmVec3.x = 1.5;
+    gmVec3.y = 24.98;
+    gmVec3.z = 420;
+    tf::vectorMsgToEigen(gmVec3, tfVec);
+    cout << "tf conversion: " << endl << tfVec << endl;
 }
 
 void TestNode::copy(const Eigen::Ref<const Eigen::MatrixXf> &m)

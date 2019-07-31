@@ -1,7 +1,7 @@
 <launch>
-  <arg name="config_file" default="$(find auv_gnc)/cfg/trans_ekf.yaml"/>
+  <arg name="ekf_config_path" default="$(find auv_gnc)/cfg/trans_ekf.yaml"/>
 
   <node pkg="auv_gnc" ns="auv_gnc" type="trans_ekf" name="trans_ekf" output="screen">
-    <rosparam command="load" file="$(arg config_file)"/>
+    <rosparam command="load" file="$(arg ekf_config_path)"/>
   </node>
 </launch>
