@@ -9,7 +9,7 @@ mkdir eigen/build_dir
 cd eigen/build_dir
 cmake ..
 sudo make install
-cd ../..
+cd ../../
 rm -rf eigen/ $eigen_version.tar.bz2
 
 # Install Ceres
