@@ -20,6 +20,7 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME} SHARED
   src/math_lib.cpp
+  src/rot3d.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

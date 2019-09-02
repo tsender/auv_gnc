@@ -24,7 +24,7 @@ rm $ceres_version.tar.gz
 mkdir ceres-bin
 cd ceres-bin
 cmake ../$ceres_version
-make -j4
+make
 sudo make install
 cd ..
 rm -rf $ceres_version/ ceres-bin/
@@ -34,7 +34,7 @@ git clone https://github.com/coin-or/CppAD.git cppad
 cd cppad
 mkdir build
 cd build/
-cmake ../
+cmake ..
 sudo make install
 cd ../../
 rm -rf cppad/
