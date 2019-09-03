@@ -9,7 +9,7 @@ Finding an opensource "GNC-like" library for AUVs used to be a struggle, until n
 
 **Author: [Ted Sender](https://github.com/tsender) (tsender@umich.edu)**
 
-**Former Affiliation: The Ohio State University's [Underwater Robotics Team](https://uwrt.engineering.osu.edu/), AUVSI [RoboSub](https://www.robonation.org/competition/robosub)**
+**Former Affiliation: [The Ohio State University's Underwater Robotics Team](https://uwrt.engineering.osu.edu/), [AUVSI Robonation's RoboSub competition](https://www.robonation.org/competition/robosub)**
 
 ## Building/Installation
 This library has been tested on Ubuntu 16.04 with ROS Kinetic Kame.
@@ -46,15 +46,9 @@ The suggested way to build/install this library is with [Catkin tools](https://c
     catkin init
     catkin config --install
 
-After initializing the install space, you should see a line indicating that the install space is merged. Then build the `auv_gnc` package
+After initializing the install space, you should see a line indicating that the install space is merged. FInally, build the `auv_gnc` package (this will automatically build all of its dependent catkin/cmake packages).
 
     catkin build auv_gnc
-
-The `auv_gnc` package is the main ROS-related packaged inside the library, and it will automatically build all of its dependent catkin/cmake packages. Please note, while you may also build the entire repo with the command
-
-    catkin build
-  
-it is unnecessary to build all of the Control Toolbox packages since `auv_gnc` is only dependent on `ct_core` and `ct_optcon`. Building the entire AUV GNC repo actually takes quite a while due to all the overhead in the Control Toolbox, namely due to the `ct_models` package. Further, the `ct_doc` package from the Control Toolbox does not build for some reason. If you build the entire repo, you will see an error message saying that there is "no target to make ct_doc" - it's just a doc package, so don't worry about it.
 
 ### Installing to /opt/ros/kinetic
 If you wish to install AUV GNC to the same location as where ROS Kinetic is installed to minimize the number of setup.bash files that need to be sourced, then you can run these commands. Before doing so, you must have your catkin workspace configured to use the install space as detailed above. Note, it is prefferred to build the repo normally and simply install it in root.
@@ -65,3 +59,8 @@ If you wish to install AUV GNC to the same location as where ROS Kinetic is inst
     source /opt/ros/kinetic/setup.bash
     catkin build auv_gnc --cmake-args -DCMAKE_INSTALL_PREFIX=/opt/ros/kinetic
     exit
+
+### Notes
+While you may also build the entire repo with the command `catkin build`, it is unnecessary to build all of the Control Toolbox packages since `auv_gnc` is only dependent on `ct_core` and `ct_optcon`. 
+
+Building the entire AUV GNC repo can also take a while due to some of the additional overhead in the Control Toolbox. Further, the `ct_doc` package from the Control Toolbox does not build for some reason. If you build the entire repo, you will see an error message saying that there is "no target to make ct_doc" - it's just a doc package, so don't worry about it.
