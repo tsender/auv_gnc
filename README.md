@@ -7,25 +7,25 @@ Guidance, Navigation, and Control (GNC) are three of the biggest challenges that
 
 Finding an opensource "GNC-like" library for AUVs used to be a struggle, until now. AUVs are becomming increasingly popular, yet there never seemed to exist a solid GNC platform from which anyone can build off of. The purpose of this library is to do just that. AUV GNC is a C++ library containing (almost) all of the needed GNC-related code needed to start working with an AUV.
 
-**Author: [Ted Sender](https://github.com/tsender) (sender.9@osu.edu)**
+**Author: [Ted Sender](https://github.com/tsender) (tsender@umich.edu)**
 
 **Former Affiliation: The Ohio State University's [Underwater Robotics Team](https://uwrt.engineering.osu.edu/), AUVSI [RoboSub](https://www.robonation.org/competition/robosub)**
 
 ## Building/Installation
-### System Dependencies
-AUV GNC is currently targeted towards the Robot Operating System ([ROS](https://www.ros.org/)), which must be installed to build the library as is. The library contains the following system dependencies, and must be installed in the order shown:
-* [Ceres Solver](http://ceres-solver.org/) (C++ non-linear solver developed by Google)
-    * Ceres is installed with its own version of Eigen, so it must be installed first
+This library has been tested on Ubuntu 16.04 with ROS Kinetic Kame.
+
+### Dependencies
+AUV GNC is currently targeted towards the Robot Operating System ([ROS](https://www.ros.org/)), which must be installed to build the library as is. The system dependencies are listed below. It is recommended that you install these via the install script provided (see Building).
 * [Eigen](https://eigen.tuxfamily.org/dox/GettingStarted.html)  (C++ linear algebra library).
     * Minimum version 3.3, but repo has only been tested with Eigen 3.3.7
+* [Ceres Solver](http://ceres-solver.org/) (C++ non-linear solver developed by Google)
+    * Ceres is installed with its own version of Eigen, so it must be installed first
 * [CppAD](https://coin-or.github.io/CppAD/doc/cppad.htm) (C++ automatic differentiation library)
 
-### Included System Dependencies
-This library has two other dependencies, but these are included in the repo for your convenience:
+### Included Libraries
+AUV GNC has two other dependencies listed below, but these libraries are included in the repo for your convenience. AUV GNC only relies on the Control Toolbox for optimal control solvers, however, because the Control Toolbox depends on Kindr, both libraries are included.
 * [Control Toolbox](https://github.com/ethz-adrl/control-toolbox) (C++ optimized control library developed by researchers at ETH Zurich's Agile & Dexterous Robotics Lab)
 * [Kindr](https://github.com/ANYbotics/kindr) (C++ robotics library, only included because the Control Toolbox depends on it)
-
-AUV GNC only relies on the Control Toolbox for optimal control solvers, but because the Control Toolbox depends on Kindr, both libraries are included.
 
 ### Building
 To get started, first setup a catkin workspace and clone the library into it
@@ -35,6 +35,11 @@ To get started, first setup a catkin workspace and clone the library into it
     git clone --recursive https://github.com/tsender/auv_gnc.git
     cd ..
 
+For FIRST TIME users, please run the following to install the required dependencies:
+
+    cd ~/catkin_ws/src/installation/
+    ./install_deps.sh
+   
 The suggested way to build/install this library is with [Catkin tools](https://catkin-tools.readthedocs.io/en/latest/installing.html). It is preferred that catkin be configured with the install space as follows
 
     cd ~/catkin_ws/
