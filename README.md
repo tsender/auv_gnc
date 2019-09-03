@@ -28,16 +28,14 @@ AUV GNC has two other dependencies listed below, but these libraries are include
 * [Kindr](https://github.com/ANYbotics/kindr) (C++ robotics library, only included because the Control Toolbox depends on it)
 
 ### Building
-To get started, first setup a catkin workspace and clone the library into it
+To get started, clone this library into a catkin workspace.
 
-    mkdir -p ~/catkin_ws/src
     cd ~/catkin_ws/src
     git clone --recursive https://github.com/tsender/auv_gnc.git
-    cd ..
 
 For FIRST TIME users, please run the following to install the required dependencies:
 
-    cd ~/catkin_ws/src/installation/
+    cd ~/catkin_ws/src/auv_gnc/installation/
     ./install_deps.sh
    
 The suggested way to build/install this library is with [Catkin tools](https://catkin-tools.readthedocs.io/en/latest/installing.html). It is preferred that catkin be configured with the install space as follows
