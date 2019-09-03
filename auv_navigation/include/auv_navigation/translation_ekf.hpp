@@ -23,28 +23,28 @@ typedef Eigen::Matrix<double, 9, 9> Matrix9d;
 class TranslationEKF
 {
 private:
-  KalmanFilter *ekf_;
-  Vector9d Xhat_;
-  Eigen::Vector3i posMask_;
-  Eigen::Matrix3i fullMsmtMask_;
-  Eigen::Matrix3d Rvel_, Raccel_;
-  Eigen::MatrixXd Rpos_;
-  Matrix9d Q_;
-  bool init_;
-  int n_; // Size of A matrix (nxn = 9x9)
+   KalmanFilter *ekf_;
+   Vector9d Xhat_;
+   Eigen::Vector3i posMask_;
+   Eigen::Matrix3i fullMsmtMask_;
+   Eigen::Matrix3d Rvel_, Raccel_;
+   Eigen::MatrixXd Rpos_;
+   Matrix9d Q_;
+   bool init_;
+   int n_; // Size of A matrix (nxn = 9x9)
 
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  TranslationEKF(const Eigen::Ref<const Eigen::Vector3i> &posMask,
-                 const Eigen::Ref<const Eigen::MatrixXd> &Rpos,
-                 const Eigen::Ref<const Eigen::Matrix3d> &Rvel,
-                 const Eigen::Ref<const Eigen::Matrix3d> &Raccel,
-                 const Eigen::Ref<const Matrix9d> &Q);
-  void init(const Eigen::Ref<const Vector9d> &Xo);
-  Vector9d update(double dt, const Eigen::Ref<const Eigen::Vector3i> &sensorMask,
-                  const Eigen::Ref<const Eigen::Matrix3d> &Zmat);
+   TranslationEKF(const Eigen::Ref<const Eigen::Vector3i> &posMask,
+                  const Eigen::Ref<const Eigen::MatrixXd> &Rpos,
+                  const Eigen::Ref<const Eigen::Matrix3d> &Rvel,
+                  const Eigen::Ref<const Eigen::Matrix3d> &Raccel,
+                  const Eigen::Ref<const Matrix9d> &Q);
+   void init(const Eigen::Ref<const Vector9d> &Xo);
+   Vector9d update(double dt, const Eigen::Ref<const Eigen::Vector3i> &sensorMask,
+                   const Eigen::Ref<const Eigen::Matrix3d> &Zmat);
 };
-} // namespace AUVNavigation
+} // namespace auv_navigation
 
 #endif

@@ -258,14 +258,14 @@ TestNode::TestNode() : nh("~")
     // The correct format: I-frame --(q2)--> Frame 2 --(q1)--> B-frame (quaternions are left multiplied)
     // Eigen does local frame composition, as in q2 is applied FROM q1
 
-    q1 = auv_core::math_lib::toQuaternion(45.0 * M_PI / 180, 0, 0);
-    q2 = auv_core::math_lib::toQuaternion(-45.0 * M_PI / 180, 0, 0);
+    q1 = auv_core::rot3d::rpy2Quat(0, 0, 45.0 * M_PI / 180);
+    q2 = auv_core::rot3d::rpy2Quat(0, 0, -45.0 * M_PI / 180);
     cout << "q1 " << endl << q1.w() << endl << q1.vec() << endl;
-    cout << " q1 to euler " << endl << auv_core::math_lib::toEulerAngle(q1) << endl;
+    cout << " q1 to euler " << endl << auv_core::rot3d::quat2RPY(q1) << endl;
     cout << "q2 " << endl << q2.w() << endl << q2.vec() << endl;
-    cout << " q2 to euler " << endl << auv_core::math_lib::toEulerAngle(q2) << endl;
+    cout << " q2 to euler " << endl << auv_core::rot3d::quat2RPY(q2) << endl;
     Eigen::Quaterniond qDiff = q1.conjugate() * q2;
-    Eigen::Vector4d angleAxis = auv_core::math_lib::quaternion2AngleAxis(qDiff);
+    Eigen::Vector4d angleAxis = auv_core::rot3d::quat2AngleAxis(qDiff);
     cout << "qdiff " << endl << qDiff.w() << endl << qDiff.vec() << endl;
     cout << "angle axis" << endl << angleAxis << endl;
 
@@ -303,7 +303,7 @@ Eigen::Matrix4f TestNode::quaternionMatrix(Eigen::Vector4f q)
     Eigen::Matrix4f Q, diag;
     Q.setZero(), diag.setIdentity();
     diag = diag * q(0);
-    Q.block<3, 3>(1, 1) = -auv_core::math_lib::skewSym(q.tail<3>());
+    Q.block<3, 3>(1, 1) = -auv_core::rot3d::skewSym(q.tail<3>());
     Q.block<1, 3>(0, 1) = -q.tail<3>().transpose();
     Q.block<3, 1>(1, 0) = q.tail<3>();
     return (Q + diag);

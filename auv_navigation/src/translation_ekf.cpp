@@ -9,45 +9,45 @@ TranslationEKF::TranslationEKF(const Eigen::Ref<const Eigen::Vector3i> &posMask,
                                const Eigen::Ref<const Eigen::Matrix3d> &Raccel,
                                const Eigen::Ref<const Matrix9d> &Q)
 {
-    n_ = 9;
-    init_ = false;
-    Xhat_.setZero();
-    posMask_ = posMask;
-    fullMsmtMask_.setOnes(); // Mask of all measurements that the provided sensors measure
-    fullMsmtMask_.col(0) = posMask_;
+   n_ = 9;
+   init_ = false;
+   Xhat_.setZero();
+   posMask_ = posMask;
+   fullMsmtMask_.setOnes(); // Mask of all measurements that the provided sensors measure
+   fullMsmtMask_.col(0) = posMask_;
 
-    Rpos_ = Rpos;
-    Rvel_ = Rvel;
-    Raccel_ = Raccel;
-    Q_ = Q;
+   Rpos_ = Rpos;
+   Rvel_ = Rvel;
+   Raccel_ = Raccel;
+   Q_ = Q;
 
-    // Initialize the EKF using generic matrices, as they will be overridden with each update call
-    Matrix9d A;
-    A.setIdentity();
+   // Initialize the EKF using generic matrices, as they will be overridden with each update call
+   Matrix9d A;
+   A.setIdentity();
 
-    int m = fullMsmtMask_.sum();
-    Eigen::MatrixXd H(m, n_);
-    H.setZero();
+   int m = fullMsmtMask_.sum();
+   Eigen::MatrixXd H(m, n_);
+   H.setZero();
 
-    Eigen::MatrixXd R(m, m);
-    R.setIdentity();
+   Eigen::MatrixXd R(m, m);
+   R.setIdentity();
 
-    ekf_ = new KalmanFilter(A, H, Q_, R);
+   ekf_ = new KalmanFilter(A, H, Q_, R);
 }
 
 void TranslationEKF::init(const Eigen::Ref<const Vector9d> &Xo)
 {
-    // Verify Parameter Dimensions
-    int Xorows = Xo.rows();
-    if (Xorows != n_)
-    {
-        std::stringstream ss;
-        ss << "Dimension mismatch in call to EKFTranslation::Init(...): Param 'Xo' row_size(" << Xorows << ") does not match expected row_size(" << n_ << ")" << std::endl;
-        throw std::runtime_error(ss.str());
-    }
+   // Verify Parameter Dimensions
+   int Xorows = Xo.rows();
+   if (Xorows != n_)
+   {
+      std::stringstream ss;
+      ss << "Dimension mismatch in call to EKFTranslation::Init(...): Param 'Xo' row_size(" << Xorows << ") does not match expected row_size(" << n_ << ")" << std::endl;
+      throw std::runtime_error(ss.str());
+   }
 
-    Xhat_ = Xo;
-    init_ = true;
+   Xhat_ = Xo;
+   init_ = true;
 }
 
 // Inertial Measurement Update - sensor readings are from inertial sensors
@@ -58,76 +58,76 @@ void TranslationEKF::init(const Eigen::Ref<const Vector9d> &Xo)
 Vector9d TranslationEKF::update(double dt, const Eigen::Ref<const Eigen::Vector3i> &sensorMask,
                                 const Eigen::Ref<const Eigen::Matrix3d> &Zmat)
 {
-    // Check for initialization of KF
-    // If not, default is to leave Xhat as the zero vector
-    if (!init_)
-        init_ = true;
+   // Check for initialization of KF
+   // If not, default is to leave Xhat as the zero vector
+   if (!init_)
+      init_ = true;
 
-    // Create A (state transition matrix)
-    // Using kinematic relationships in a constant acceleration model
-    Matrix9d A;
-    A.setIdentity();
+   // Create A (state transition matrix)
+   // Using kinematic relationships in a constant acceleration model
+   Matrix9d A;
+   A.setIdentity();
 
-    Eigen::Vector3d dtVector;
-    dtVector << dt, dt, dt;
-    Eigen::Matrix3d dtMat = dtVector.asDiagonal(); // Diagonal matrix of dt
-    Eigen::Matrix3d dt2Mat = dtMat * dtMat;
+   Eigen::Vector3d dtVector;
+   dtVector << dt, dt, dt;
+   Eigen::Matrix3d dtMat = dtVector.asDiagonal(); // Diagonal matrix of dt
+   Eigen::Matrix3d dt2Mat = dtMat * dtMat;
 
-    // Rotation matrix from B-frame to I-frame
-    //Eigen::Matrix3f Rotb2i = auv_math_lib::getEulerRotationMat(attitude).transpose();
+   // Rotation matrix from B-frame to I-frame
+   //Eigen::Matrix3f Rotb2i = auv_math_lib::getEulerRotationMat(attitude).transpose();
 
-    // Constant Acceleration model:
-    // x = x_prev + dt*v + (0.5*dt^2)*a
-    // v = v_prev + dt*a
-    // a = a_prev
-    A.block<3, 3>(0, 3) = dtMat;  //dt * Rotb2i;
-    A.block<3, 3>(0, 6) = dt2Mat; //0.5 * pow(dt, 2) * Rotb2i;
-    A.block<3, 3>(3, 6) = dtMat;
+   // Constant Acceleration model:
+   // x = x_prev + dt*v + (0.5*dt^2)*a
+   // v = v_prev + dt*a
+   // a = a_prev
+   A.block<3, 3>(0, 3) = dtMat;  //dt * Rotb2i;
+   A.block<3, 3>(0, 6) = dt2Mat; //0.5 * pow(dt, 2) * Rotb2i;
+   A.block<3, 3>(3, 6) = dtMat;
 
-    // Get mask for which data fields are present
-    // diag(sensorMask) acts as a filter on fullmsmtMask to provide the dataMask
-    Eigen::Matrix3i dataMask = fullMsmtMask_ * sensorMask.asDiagonal();
-    int m = dataMask.sum(); // Number of msmts in this iteration
+   // Get mask for which data fields are present
+   // diag(sensorMask) acts as a filter on fullmsmtMask to provide the dataMask
+   Eigen::Matrix3i dataMask = fullMsmtMask_ * sensorMask.asDiagonal();
+   int m = dataMask.sum(); // Number of msmts in this iteration
 
-    // Create H (observation/measurement matrix) and Z (measurement vector)
-    Eigen::MatrixXd H(m, n_);
-    Eigen::VectorXd Z(m, 1);
-    H.setZero();
-    Z.setZero();
-    int i = 0;
+   // Create H (observation/measurement matrix) and Z (measurement vector)
+   Eigen::MatrixXd H(m, n_);
+   Eigen::VectorXd Z(m, 1);
+   H.setZero();
+   Z.setZero();
+   int i = 0;
 
-    // Fill in H matrix based on dataMask, fill in Z vector
-    for (int k = 0; k < 3; k++) // Traverse across cols
-    {
-        for (int j = 0; j < 3; j++) // Traverse down rows
-        {
-            if (dataMask(j, k))
-            {
-                H(i, (3 * k + j)) = 1;
-                Z(i) = Zmat(j, k);
-                i++;
-            }
-        }
-    }
+   // Fill in H matrix based on dataMask, fill in Z vector
+   for (int k = 0; k < 3; k++) // Traverse across cols
+   {
+      for (int j = 0; j < 3; j++) // Traverse down rows
+      {
+         if (dataMask(j, k))
+         {
+            H(i, (3 * k + j)) = 1;
+            Z(i) = Zmat(j, k);
+            i++;
+         }
+      }
+   }
 
-    // Create R (measurement noise covariance matrix) with help from dataMask
-    Eigen::MatrixXd R(m, m);
-    R.setZero();
-    int p = dataMask.col(0).sum();
-    int v = dataMask.col(1).sum();
-    int a = dataMask.col(2).sum();
-    if (p > 0)
-        R.block(0, 0, p, p) = Rpos_;
-    if (v > 0)
-        R.block(p, p, v, v) = Rvel_;
-    if (a > 0)
-        R.block(p + v, p + v, a, a) = Raccel_;
+   // Create R (measurement noise covariance matrix) with help from dataMask
+   Eigen::MatrixXd R(m, m);
+   R.setZero();
+   int p = dataMask.col(0).sum();
+   int v = dataMask.col(1).sum();
+   int a = dataMask.col(2).sum();
+   if (p > 0)
+      R.block(0, 0, p, p) = Rpos_;
+   if (v > 0)
+      R.block(p, p, v, v) = Rvel_;
+   if (a > 0)
+      R.block(p + v, p + v, a, a) = Raccel_;
 
-    // Populate Xpredict vector
-    Vector9d Xpredict = A * Xhat_;
+   // Populate Xpredict vector
+   Vector9d Xpredict = A * Xhat_;
 
-    // Run update step
-    Xhat_ = ekf_->updateEKF(A, H, R, Xpredict, Z);
-    return Xhat_;
+   // Run update step
+   Xhat_ = ekf_->updateEKF(A, H, R, Xpredict, Z);
+   return Xhat_;
 }
 } // namespace auv_navigation

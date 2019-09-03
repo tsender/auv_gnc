@@ -14,9 +14,9 @@ typedef Eigen::Matrix<double, 6, 1> Vector6d;
  */
 class Trajectory
 {
-  public:
-    virtual Vector13d computeState(double time) = 0;
-    virtual Vector6d computeAccel(double time) = 0;
+public:
+   virtual Vector13d computeState(double time) = 0;
+   virtual Vector6d computeAccel(double time) = 0;
 };
 } // namespace auv_guidance
 

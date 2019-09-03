@@ -16,19 +16,19 @@ namespace auv_guidance
 class MonotonicTrajectory
 {
 private:
-  std::vector<MonotonicTrajectoryBase*> mtbList_;
-  std::vector<double> mtbTimes_;
+   std::vector<MonotonicTrajectoryBase *> mtbList_;
+   std::vector<double> mtbTimes_;
 
-  Vector4d start_, end_;
-  double totalTime_;
+   Vector4d start_, end_;
+   double totalTime_;
 
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  
-  MonotonicTrajectory(const Ref<const Vector4d> &start, const Ref<const Vector4d> &end, double maxAccel);
-  double getTime();
-  Vector3d computeState(double time);
-  double getMiddleVelocity();
+   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+   MonotonicTrajectory(const Ref<const Vector4d> &start, const Ref<const Vector4d> &end, double maxAccel);
+   double getTime();
+   Vector3d computeState(double time);
+   double getMiddleVelocity();
 };
 } // namespace auv_guidance
 
