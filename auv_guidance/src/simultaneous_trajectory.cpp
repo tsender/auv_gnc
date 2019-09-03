@@ -33,7 +33,7 @@ void SimultaneousTrajectory::initTrajectory()
     qEnd_ = wEnd_->quaternion().normalized();
     qDiff_ = qStart_.conjugate() * qEnd_; // Error quaternion wrt B-frame (q2 * q1.conjugate is wrt I-frame)
 
-    Eigen::Vector4d angleAxis = auv_core::math_lib::quaternion2AngleAxis(qDiff_);
+    Eigen::Vector4d angleAxis = auv_core::rot3d::quat2AngleAxis(qDiff_);
     if (angleAxis.isApprox(Eigen::Vector4d::Zero()))
         noRotation_ = true;
     

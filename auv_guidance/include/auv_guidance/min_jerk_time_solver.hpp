@@ -12,18 +12,18 @@ namespace auv_guidance
 class MinJerkTimeSolver
 {
 private:
-  // Ceres Problem
-  ceres::Problem problemMTTS_;
-  ceres::Solver::Options optionsMTTS_;
-  ceres::Solver::Summary summaryMTTS_;
-  double minTime_;
+   // Ceres Problem
+   ceres::Problem problemMTTS_;
+   ceres::Solver::Options optionsMTTS_;
+   ceres::Solver::Summary summaryMTTS_;
+   double minTime_;
 
-  MinJerkTrajectory *mjt_;
+   MinJerkTrajectory *mjt_;
 
 public:
-  MinJerkTimeSolver(const Eigen::Ref<const Eigen::Vector4d> &start, const Eigen::Ref<const Eigen::Vector4d> &end);
-  double getTime();
-  double getMiddleVelocity();
+   MinJerkTimeSolver(const Eigen::Ref<const Eigen::Vector4d> &start, const Eigen::Ref<const Eigen::Vector4d> &end);
+   double getTime();
+   double getMiddleVelocity();
 };
 } // namespace auv_guidance
 
