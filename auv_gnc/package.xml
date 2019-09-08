@@ -17,8 +17,6 @@
   <build_depend>yaml-cpp</build_depend>
   <depend>actionlib</depend>
   <depend>roscpp</depend>
-  <depend>tf</depend>
-  <depend>eigen_conversions</depend>
   <exec_depend>auv_msgs</exec_depend>
 
   <export>

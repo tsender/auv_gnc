@@ -1,6 +1,7 @@
 #ifndef TRANS_EKF
 #define TRANS_EKF
 
+#include "auv_core/eigen_ros.hpp"
 #include "auv_navigation/translation_ekf.hpp"
 #include "auv_msgs/SixDoF.h"
 #include <ros/ros.h>
