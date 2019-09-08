@@ -13,8 +13,6 @@ find_package(catkin REQUIRED COMPONENTS
   auv_control
   auv_msgs
   roscpp
-  tf
-  eigen_conversions
 )
 
 find_package(Eigen3 REQUIRED)

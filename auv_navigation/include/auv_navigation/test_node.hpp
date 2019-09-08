@@ -23,15 +23,15 @@ class TestNode
 {
 private:
   ros::NodeHandle nh;
-  Eigen::Matrix3f mat;
+  Eigen::Matrix3d mat;
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   TestNode();
-  void copy(const Eigen::Ref<const Eigen::MatrixXf> &m);
-  Eigen::Vector4f multiplyQuaternions(Eigen::Vector4f q1, Eigen::Vector4f q2);
-  Eigen::Matrix4f quaternionMatrix(Eigen::Vector4f q);
+  void copy(const Eigen::Ref<const Eigen::MatrixXd> &m);
+  Eigen::Vector4d multiplyQuaternions(Eigen::Vector4d q1, Eigen::Vector4d q2);
+  Eigen::Matrix4d quaternionMatrix(Eigen::Vector4d q);
 };
 } // namespace auv_navigation
 

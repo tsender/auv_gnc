@@ -102,10 +102,10 @@ Eigen::Vector3d quat2RPY(const Eigen::Quaterniond &quaternion)
  * @param angle Angle of rotation in [rad]
  * \brief Get rotation matrix about specified axis
  */
-Eigen::Matrix3f getRotationMat(int axis, float angle)
+Eigen::Matrix3d getRotationMat(int axis, double angle)
 {
-   Eigen::Matrix3f R = Eigen::Matrix3f::Zero();
-   Eigen::RowVector3f row1, row2, row3;
+   Eigen::Matrix3d R = Eigen::Matrix3d::Zero();
+   Eigen::RowVector3d row1, row2, row3;
 
    if (axis == 1) // X Axis
    {
@@ -140,9 +140,9 @@ Eigen::Matrix3f getRotationMat(int axis, float angle)
  * @param rpy Attitude vector of (roll, pitch, yaw) in [rad] using the 3-2-1 rotation sequence
  * \brief Get rotation matrix from world-frame to body-frame. Ex. Vb = R * Vw, where Vb is expressed in the B-frame ad Vw is expressed in the W-frame. 
  */
-Eigen::Matrix3f getEulerRotationMat(const Eigen::Ref<const Eigen::Vector3f> &rpy)
+Eigen::Matrix3d getEulerRotationMat(const Eigen::Ref<const Eigen::Vector3d> &rpy)
 {
-   Eigen::Matrix3f R = Eigen::Matrix3f::Identity();
+   Eigen::Matrix3d R = Eigen::Matrix3d::Identity();
 
    int axis = 1;
    for (int i = 0; i < 3; i++)
@@ -155,10 +155,10 @@ Eigen::Matrix3f getEulerRotationMat(const Eigen::Ref<const Eigen::Vector3f> &rpy
  * @param v 3D input vector
  * \brief Get the skew-symmetric matrix from input vector
  */
-Eigen::Matrix3f skewSym(const Eigen::Ref<const Eigen::Vector3f> &v)
+Eigen::Matrix3d skewSym(const Eigen::Ref<const Eigen::Vector3d> &v)
 {
-   Eigen::Matrix3f skew = Eigen::Matrix3f::Zero();
-   Eigen::RowVector3f row1, row2, row3;
+   Eigen::Matrix3d skew = Eigen::Matrix3d::Zero();
+   Eigen::RowVector3d row1, row2, row3;
 
    row1 << 0, -v(2), v(1);
    row2 << v(2), 0, -v(0);
@@ -213,9 +213,9 @@ float mapPitch(float x)
  * @param rpy Attitude vector of (roll, pitch, yaw) in [rad] using the 3-2-1 rotation sequence
  * \brief Constrains roll/yaw to [-pi,pi] in [rad] and pitch to [-pi/2,+pi/2] in [rad]
  */
-Eigen::Vector3f getConstrainedRPY(const Eigen::Ref<const Eigen::Vector3f> rpy)
+Eigen::Vector3d getConstrainedRPY(const Eigen::Ref<const Eigen::Vector3d> rpy)
 {
-   Eigen::Vector3f constrainedRPY = Eigen::Vector3f::Zero();
+   Eigen::Vector3d constrainedRPY = Eigen::Vector3d::Zero();
    constrainedRPY(0) = rot3d::mapRollYaw(rpy(0));
    constrainedRPY(1) = rot3d::mapPitch(rpy(1));
    constrainedRPY(2) = rot3d::mapRollYaw(rpy(2));
@@ -227,15 +227,15 @@ Eigen::Vector3f getConstrainedRPY(const Eigen::Ref<const Eigen::Vector3f> rpy)
  * @param pqr Angular velocity about body-frame x,y,z axes in [rad/s] or [deg/s]
  * \brief Returns the instantaneous time-derivative of rpy in the same units as pqr
  */
-Eigen::Vector3f pqr2RPYDot(const Eigen::Ref<const Eigen::Vector3f> rpy, const Eigen::Ref<const Eigen::Vector3f> pqr)
+Eigen::Vector3d pqr2RPYDot(const Eigen::Ref<const Eigen::Vector3d> rpy, const Eigen::Ref<const Eigen::Vector3d> pqr)
 {
    float cosr = cos(rpy(0));
    float sinr = sin(rpy(0));
    float cosp = cos(rpy(1));
    float tanp = tan(rpy(1));
 
-   Eigen::Matrix3f mat = Eigen::Matrix3f::Zero();
-   Eigen::RowVector3f row1, row2, row3;
+   Eigen::Matrix3d mat = Eigen::Matrix3d::Zero();
+   Eigen::RowVector3d row1, row2, row3;
 
    row1 << 1, sinr * tanp, cosr * tanp;
    row2 << 0, cosr, -sinr;
@@ -250,15 +250,15 @@ Eigen::Vector3f pqr2RPYDot(const Eigen::Ref<const Eigen::Vector3f> rpy, const Ei
  * @param rpyDot Time-derivative of rpy [rad/s] or [deg/s]
  * \brief Returns angular velocity about body-frame x,y,z axes with same units as rpyDot
  */
-Eigen::Vector3f rpyDot2PQR(const Eigen::Ref<const Eigen::Vector3f> rpy, const Eigen::Ref<const Eigen::Vector3f> rpyDot)
+Eigen::Vector3d rpyDot2PQR(const Eigen::Ref<const Eigen::Vector3d> rpy, const Eigen::Ref<const Eigen::Vector3d> rpyDot)
 {
    float cosr = cos(rpy(0));
    float sinr = sin(rpy(0));
    float cosp = cos(rpy(1));
    float sinp = sin(rpy(1));
 
-   Eigen::Matrix3f mat = Eigen::Matrix3f::Zero();
-   Eigen::RowVector3f row1, row2, row3;
+   Eigen::Matrix3d mat = Eigen::Matrix3d::Zero();
+   Eigen::RowVector3d row1, row2, row3;
 
    row1 << 1, 0, -sinp;
    row2 << 0, cosr, sinr * cosp;

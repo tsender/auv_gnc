@@ -4,7 +4,10 @@ project(auv_core)
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+   geometry_msgs
+   std_msgs
+)
 find_package(Eigen3 REQUIRED)
 
 ###########
@@ -21,6 +24,7 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS})
 add_library(${PROJECT_NAME} SHARED
   src/math_lib.cpp
   src/rot3d.cpp
+  src/eigen_ros.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

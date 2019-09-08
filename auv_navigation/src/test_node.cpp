@@ -179,7 +179,7 @@ TestNode::TestNode() : nh("~")
     test1 << 1, 2, 3;
     test2 << 2, 4, 6;
     test = test1.cwiseProduct(test2);
-    cout << "test: " << test << endl;*/
+    cout << "test: " << test << endl;
 
     double array[4] = {2, 0, 1, -3};
     double *aPtr = array;
@@ -284,23 +284,23 @@ TestNode::TestNode() : nh("~")
     gmVec3.y = 24.98;
     gmVec3.z = 420;
     tf::vectorMsgToEigen(gmVec3, tfVec);
-    cout << "tf conversion: " << endl << tfVec << endl;
+    cout << "tf conversion: " << endl << tfVec << endl;*/
 }
 
-void TestNode::copy(const Eigen::Ref<const Eigen::MatrixXf> &m)
+void TestNode::copy(const Eigen::Ref<const Eigen::MatrixXd> &m)
 {
     mat = m;
 }
 
 // Multiplies quaternions wrt the WORLD frame
-Eigen::Vector4f TestNode::multiplyQuaternions(Eigen::Vector4f q1, Eigen::Vector4f q2)
+Eigen::Vector4d TestNode::multiplyQuaternions(Eigen::Vector4d q1, Eigen::Vector4d q2)
 {
     return (TestNode::quaternionMatrix(q1) * q2);
 }
 
-Eigen::Matrix4f TestNode::quaternionMatrix(Eigen::Vector4f q)
+Eigen::Matrix4d TestNode::quaternionMatrix(Eigen::Vector4d q)
 {
-    Eigen::Matrix4f Q, diag;
+    Eigen::Matrix4d Q, diag;
     Q.setZero(), diag.setIdentity();
     diag = diag * q(0);
     Q.block<3, 3>(1, 1) = -auv_core::rot3d::skewSym(q.tail<3>());

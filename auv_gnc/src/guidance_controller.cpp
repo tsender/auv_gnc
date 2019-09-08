@@ -220,7 +220,7 @@ void GuidanceController::sixDofCB(const auv_msgs::SixDoF::ConstPtr &state)
     state_(acc::STATE_YI) = state->pose.position.y;
     state_(acc::STATE_ZI) = state->pose.position.z;
 
-    tf::quaternionMsgToEigen(state->pose.orientation, quaternion_);
+    auv_core::eigen_ros::quaternionMsgToEigen(state->pose.orientation, quaternion_);
 
     // Inertial Translational Velocity, expressed in Body-frame
     state_(acc::STATE_U) = state->velocity.linear.x;
@@ -239,9 +239,7 @@ void GuidanceController::sixDofCB(const auv_msgs::SixDoF::ConstPtr &state)
     state_(acc::STATE_R) = state->velocity.angular.z;
 
     // Inertial Translational Acceleration, expressed in Body-frame
-    linearAccel_(0) = state->linear_accel.x;
-    linearAccel_(1) = state->linear_accel.y;
-    linearAccel_(2) = state->linear_accel.z;
+    auv_core::eigen_ros::vectorMsgToEigen(state->linear_accel, linearAccel_);
 }
 
 void GuidanceController::tgenActionGoalCB()
@@ -355,8 +353,8 @@ void GuidanceController::initNewTrajectory()
         Eigen::Vector3d posIEnd = zero3d;
         Eigen::Quaterniond quatEnd;
 
-        tf::pointMsgToEigen(desiredTrajectory_.pose.position, posIEnd);
-        tf::quaternionMsgToEigen(desiredTrajectory_.pose.orientation, quatEnd);
+        auv_core::eigen_ros::pointMsgToEigen(desiredTrajectory_.pose.position, posIEnd);
+        auv_core::eigen_ros::quaternionMsgToEigen(desiredTrajectory_.pose.orientation, quatEnd);
 
         if (tgenType_ == auv_msgs::Trajectory::BASIC_REL_XYZ)
             posIEnd = (quaternion_ * posIStart) + posIEnd;
