@@ -96,7 +96,7 @@ private:
    double quaternion_[4], uvw_[3], pqr_[3], inertialTransAccel_[3], pqrDot_[3];
 
    // LQR Setup
-   // The ct_optcon LQR solver requires these sizes be defined at compile time (unfortunately)
+   // The ct_optcon LQR solver requires these sizes be defined at compile time
    static const size_t state_dim = 12;
    static const size_t state_dim_aug = 18;
    static const size_t control_dim = 8;
