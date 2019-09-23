@@ -4,6 +4,7 @@
 #include "auv_control/auv_model.hpp"
 #include "auv_core/constants.hpp"
 #include "auv_core/eigen_ros.hpp"
+#include "auv_core/auv_model.hpp"
 #include "auv_guidance/basic_trajectory.hpp"
 #include "auv_guidance/tgen_limits.hpp"
 #include "auv_guidance/waypoint.hpp"
@@ -33,7 +34,8 @@ private:
   std::vector<std::string> activeThrusterNames_, inactiveThrusterNames_;
   std::string auvConfigFile_;
   YAML::Node auvConfig_;
-  auv_control::AUVModel *auvModel_;
+  auv_core::auvModel *auv_;
+  auv_control::AUVLQR *auvLQR_;
 
   // LQR Parameters
   std::vector<double> Qdiag_, QdiagIntegral_, Rdiag_;

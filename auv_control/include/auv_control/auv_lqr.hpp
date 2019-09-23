@@ -1,12 +1,13 @@
-#ifndef AUV_MODEL
-#define AUV_MODEL
+#ifndef AUV_LQR
+#define AUV_LQR
 
 #include <ct/optcon/optcon.h>
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"
-#include "auv_control/nominal_thrust_solver.hpp"
-#include "auv_core/math_lib.hpp"
 #include "auv_core/constants.hpp"
+#include "auv_core/math_lib.hpp"
+#include "auv_core/auv_model.hpp"
+#include "auv_control/nominal_thrust_solver.hpp"
 #include <cppad/cppad.hpp>
 #include "math.h"
 #include <algorithm>
@@ -54,15 +55,17 @@ typedef Eigen::Matrix<double, 6, 1> Vector6d;
 // AUV Model
 // Contains information about an AUV's attributes: mass, volume inertia, drag, and thruster properties
 // Used to compute any jacobians and state vectors required by TransEKF and LQR
-class AUVModel
+class AUVLQR
 {
    typedef Eigen::Matrix<CppAD::AD<double>, 3, 3> ADMatrix3d;
    typedef Eigen::Matrix<CppAD::AD<double>, Eigen::Dynamic, 1> ADVectorXd;
    typedef Eigen::Matrix<CppAD::AD<double>, 3, 1> ADVector3d;
 
 private:
-   double mass_, Fg_, Fb_;
+   auv_core::auvModel *auv_;
    int numThrusters_, maxThrusters_;
+   
+   double mass_, Fg_, Fb_;
    Eigen::Matrix3d inertia_; // Inertia 3x3 matrix
    Matrix62d dragCoeffs_;
    Matrix58d thrusterData_;
@@ -111,12 +114,7 @@ private:
 public:
    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-   AUVModel(double Fg, double Fb,
-            const Eigen::Ref<const Eigen::Vector3d> &CoB,
-            const Eigen::Ref<const Eigen::Matrix3d> &inertia,
-            const Eigen::Ref<const Matrix62d> &dragCoeffs,
-            const Eigen::Ref<const Matrix58d> &thrusterData,
-            int numThrusters);
+   AUVLQR(auv_core::auvModel *model);
 
    void setLQRCostMatrices(const Eigen::Ref<const Matrix12d> &Q, const Eigen::Ref<const Matrix8d> &R);
    void setLQRIntegralCostMatrices(const Eigen::Ref<const Matrix18d> &augQ, const Eigen::Ref<const Matrix8d> &R);

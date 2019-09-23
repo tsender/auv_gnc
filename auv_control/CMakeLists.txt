@@ -34,7 +34,7 @@ include_directories(include
 )
 
 add_library(${PROJECT_NAME} SHARED
-    src/auv_model.cpp
+    src/auv_lqr.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

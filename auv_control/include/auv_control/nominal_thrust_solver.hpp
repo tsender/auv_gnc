@@ -4,8 +4,9 @@
 #include "ceres/ceres.h"
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Core"
-#include "auv_core/math_lib.hpp"
 #include "auv_core/constants.hpp"
+#include "auv_core/math_lib.hpp"
+#include "auv_core/auv_model.hpp"
 
 namespace auv_control
 {
@@ -30,16 +31,18 @@ private:
 
 public:
    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-   NominalThrustSolver(double Fg, double Fb, const Eigen::Ref<const Eigen::Vector3d> &CoB, const Eigen::Ref<const Eigen::Matrix3d> &inertia,
+   /*NominalThrustSolver(double Fg, double Fb, const Eigen::Ref<const Eigen::Vector3d> &CoB, const Eigen::Ref<const Eigen::Matrix3d> &inertia,
                        const Eigen::Ref<const Matrix62d> &dragCoeffs, const Eigen::Ref<const Matrix68d> &thrustCoeffs,
+                       double *quaternion, double *uvw, double *pqr, double *inertialTransAccel, double *pqrDot)*/
+   NominalThrustSolver(auv_core::auvModel *model, const Eigen::Ref<const Matrix68d> &thrustCoeffs,
                        double *quaternion, double *uvw, double *pqr, double *inertialTransAccel, double *pqrDot)
    {
-      Fg_ = Fg;
-      Fb_ = Fb;
-      mass_ = Fg_ / auv_core::constants::GRAVITY;
-      CoB_ = CoB;
-      inertia_ = inertia;
-      dragCoeffs_ = dragCoeffs;
+      mass_ = model->mass;
+      Fg_ = mass_ * auv_core::constants::GRAVITY;
+      Fb_ = model->Fb;
+      CoB_ = model->cob;
+      inertia_ = model->inertia;
+      dragCoeffs_ = model->dragCoeffs;
       thrustCoeffs_ = thrustCoeffs;
       quaternion_ = quaternion;
       uvw_ = uvw;

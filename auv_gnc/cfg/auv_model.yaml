@@ -3,8 +3,8 @@
 #                 Positive X points forward (through the nose)
 #                 Positve Y points in the starboard direction
 #                 Positive Z points down (to the ground)
-Fg: 400.7 # Weight in air, [N]
-Fb: 412.0 # Buoyant Force, [N]
+mass: 40.84 # Mass, [kg]
+Fb: 412.0   # Buoyant Force, [N]
 center_of_buoyancy: [0.02, 0.0, -0.03] # CoB location relative to center of mass (X [m], Y [m], Z [m])
 # CoM location relative to a reference point on the vehicle (X [m], Y [m], Z [m]), since it's often easier to measure from a known, well-defined point.
 # If the reference point is the CoM itself, then set to all zeroes.
@@ -26,7 +26,7 @@ rotational_drag: { # In the order of X, Y, Z axes
   quadratic: [10.0, 20.0, 20.0] # Tdrag = -C*sign(Xdot)*Xdot^2 [Nm], where c = drag coeff
 }
 thrusters: [
-  # Only the first EIGHT thruster blocks will be processed by the guidance controller
+  # At most EIGHT thrusters allowed
   # Pose: (x [m], y [m], z [m], yaw [deg], pitch [deg])
   #     1. X,Y,Z positions are with respect to the reference point.
   #     2A. For attitude, first orient the thruster such that a positive force exerted BY the thruster (ON the vehicle) points in the vehicle's positive X-direction.

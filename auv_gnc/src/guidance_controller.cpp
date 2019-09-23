@@ -93,7 +93,7 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
 void GuidanceController::initAUVModel()
 {
     // Fg and Fb
-    double Fg = fabs(auvConfig_["Fg"].as<double>());
+    double mass = fabs(auvConfig_["mass"].as<double>());
     double Fb = fabs(auvConfig_["Fb"].as<double>());
 
     // Center of Buoyancy (relative to the center of mass)
