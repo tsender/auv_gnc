@@ -6,7 +6,7 @@
 #include "eigen3/Eigen/Core"
 #include "auv_core/constants.hpp"
 #include "auv_core/math_lib.hpp"
-#include "auv_core/auv_model.hpp"
+#include "auv_core/auv_structs.hpp"
 #include "auv_control/nominal_thrust_solver.hpp"
 #include <cppad/cppad.hpp>
 #include "math.h"
@@ -62,25 +62,25 @@ class AUVLQR
    typedef Eigen::Matrix<CppAD::AD<double>, 3, 1> ADVector3d;
 
 private:
-   auv_core::auvModel *auv_;
+   auv_core::auvParameters *auvParams_;
    int numThrusters_, maxThrusters_;
-   
-   double mass_, Fg_, Fb_;
-   Eigen::Matrix3d inertia_; // Inertia 3x3 matrix
-   Matrix62d dragCoeffs_;
-   Matrix58d thrusterData_;
    Matrix68d thrustCoeffs_;
-   Eigen::Vector3d CoB_; // Center of buoyancy position relative to CoM
+   
+   // double mass_, Fg_, Fb_;
+   // Eigen::Matrix3d inertia_; // Inertia 3x3 matrix
+   // Matrix62d dragCoeffs_;
+   // Matrix58d thrusterData_;
+   // Eigen::Vector3d CoB_; // Center of buoyancy position relative to CoM
 
    // LQR Matrices
    Matrix12d A_;      // (Linearized) system matrix
-   Matrix18d augA_;   // (Linearized) augmented system matrix
+   Matrix18d A_Aug_;   // (Linearized) augmented system matrix
    Matrix12x8d B_;    // Control input matrix
-   Matrix18x8d augB_; // Augmented control input matrix
+   Matrix18x8d B_Aug_; // Augmented control input matrix
    Matrix8x12d K_;    // Gain matrix
-   Matrix8x18d augK_; // Augmented gain matrix
+   Matrix8x18d K_Aug_; // Augmented gain matrix
    Matrix12d Q_;      // State cost matrix
-   Matrix18d augQ_;   // Augmented state cost matrix
+   Matrix18d Q_Aug_;   // Augmented state cost matrix
    Matrix8d R_;       // Input cost matrix
 
    // LQR Variables
@@ -114,10 +114,10 @@ private:
 public:
    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-   AUVLQR(auv_core::auvModel *model);
+   AUVLQR(auv_core::auvParameters *auvParams);
 
    void setLQRCostMatrices(const Eigen::Ref<const Matrix12d> &Q, const Eigen::Ref<const Matrix8d> &R);
-   void setLQRIntegralCostMatrices(const Eigen::Ref<const Matrix18d> &augQ, const Eigen::Ref<const Matrix8d> &R);
+   void setLQRIntegralCostMatrices(const Eigen::Ref<const Matrix18d> &Q_Aug, const Eigen::Ref<const Matrix8d> &R);
 
    Vector6d getTotalThrustLoad(const Eigen::Ref<const Vector8d> &thrusts);
    Vector8d computeLQRThrust(const Eigen::Ref<const Vector13d> &state,
