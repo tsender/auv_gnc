@@ -176,7 +176,7 @@ double LongTrajectory::getTime()
  * @param time Time to compute the state at
  * Computes the trajectory state at the specified time
  */
-Vector13d LongTrajectory::computeState(double time)
+auv_core::Vector13d LongTrajectory::computeState(double time)
 {
     if (time < 0)
         return stList_.front()->computeState(time);
@@ -194,7 +194,7 @@ Vector13d LongTrajectory::computeState(double time)
     }
 }
 
-Vector6d LongTrajectory::computeAccel(double time)
+auv_core::Vector6d LongTrajectory::computeAccel(double time)
 {
     if (time < 0)
         return stList_.front()->computeAccel(time);

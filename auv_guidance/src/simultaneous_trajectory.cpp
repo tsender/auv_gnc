@@ -61,7 +61,7 @@ double SimultaneousTrajectory::getTime()
  * @param time Time to compute the state at
  * Computes the trajectory state at the specified time
  */
-Vector13d SimultaneousTrajectory::computeState(double time)
+auv_core::Vector13d SimultaneousTrajectory::computeState(double time)
 {
     Vector13d state;
     state.setZero();
@@ -128,7 +128,7 @@ Vector13d SimultaneousTrajectory::computeState(double time)
  * Compute inertial translational acceleration and time-derivative of angular veocity, 
  * both expressed in B-frame, at specified time
  */
-Vector6d SimultaneousTrajectory::computeAccel(double time)
+auv_core::Vector6d SimultaneousTrajectory::computeAccel(double time)
 {
     Vector6d accel;
     accel.setZero();

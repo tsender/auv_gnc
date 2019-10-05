@@ -1,17 +1,11 @@
 #ifndef NOMINAL_THRUST_SOLVER
 #define NOMINAL_THRUST_SOLVER
 
+#include "auv_core/auv_core_headers.hpp"
 #include "ceres/ceres.h"
-#include "eigen3/Eigen/Dense"
-#include "eigen3/Eigen/Core"
-#include "auv_core/constants.hpp"
-#include "auv_core/math_lib.hpp"
-#include "auv_core/auv_structs.hpp"
 
 namespace auv_control
 {
-typedef Eigen::Matrix<double, 6, 1> Vector6d;
-
 class NominalThrustSolver
 {
 private:

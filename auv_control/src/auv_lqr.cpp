@@ -7,7 +7,6 @@ AUVLQR::AUVLQR(auv_core::auvParameters *auvParams)
    // Vehicle Properties
    auvParams_ = auvParams;
    maxThrusters_ = 8;
-   double numThrusters = auvParams_->numThrusters;
    numThrusters_ = std::min(auvParams_->numThrusters, maxThrusters_);
 
    /*Fg_ = Fg;                                   // [N]
@@ -17,7 +16,6 @@ AUVLQR::AUVLQR(auv_core::auvParameters *auvParams)
    inertia_ = inertia;                         // 3x3 inertia matrix [kg-m^2]
    dragCoeffs = dragCoeffs;
    thrusterData_ = thrusterData;*/
-   
 
    // LQR variables
    A_.setZero();
@@ -41,7 +39,7 @@ AUVLQR::AUVLQR(auv_core::auvParameters *auvParams)
    positionIntegralError_.setZero();
 
    initLQR_ = false;
-   enableLQRIntegral_ = false;
+   enableIntegrator_ = false;
 
    // Initialize arrays
    for (int i = 0; i < maxThrusters_; i++)
@@ -57,8 +55,8 @@ AUVLQR::AUVLQR(auv_core::auvParameters *auvParams)
    }
    quaternion_[3] = 0;
 
-   AUVLQR::setThrustCoeffs();
-   AUVLQR::setLinearizedInputMatrix();
+   AUVLQR::computeThrustCoeffs();
+   AUVLQR::computeLinearizedInputMatrix();
 
    // Initialize ceres problem
    problemNominalThrust.AddResidualBlock(
@@ -75,7 +73,7 @@ AUVLQR::AUVLQR(auv_core::auvParameters *auvParams)
  * Rows 1,2,3: Force contribution in the body-frame X, Y, and Z axes, respectively (as a fraction)
  * Rows 4,5,6: Effective moment arms about body-frame the X, Y, and Z axes, respectively
  */
-void AUVLQR::setThrustCoeffs()
+void AUVLQR::computeThrustCoeffs()
 {
    thrustCoeffs_.setZero();
 
@@ -96,30 +94,29 @@ void AUVLQR::setThrustCoeffs()
  * @param Q LQR state cost matrix
  * @param R LQR input cost matrix
  */
-void AUVLQR::setLQRCostMatrices(const Eigen::Ref<const Matrix12d> &Q, const Eigen::Ref<const Matrix8d> &R)
+void AUVLQR::setCostMatrices(const Eigen::Ref<const auv_core::Matrix12d> &Q,
+                             const Eigen::Ref<const auv_core::Matrix18d> &Q_Aug, 
+                             const Eigen::Ref<const auv_core::Matrix8d> &R)
 {
    Q_ = Q;
+   Q_Aug_ = Q_Aug;
    R_ = R;
    initLQR_ = true;
 }
 
 /**
- * @param Q LQR state cost matrix, for the augmented matrix (includes integral action)
- * @param R LQR input cost matrix
+ * @param enable Enable/disable LQR integral action
  */
-void AUVLQR::setLQRIntegralCostMatrices(const Eigen::Ref<const Matrix18d> &Q_Aug, const Eigen::Ref<const Matrix8d> &R)
+void AUVLQR::setIntegralAction(bool enable)
 {
-   Q_Aug_ = Q_Aug;
-   R_ = R;
-   initLQR_ = true;
-   enableLQRIntegral_ = true;
+   enableIntegrator_ = enable;
 }
 
 /**
  * @param state Reference state for a given time instance
  * \brief Compute the Jacobian of the 12x12 system matrix
  */
-void AUVLQR::setLinearizedSystemMatrix(const Eigen::Ref<const Vector13d> &ref)
+void AUVLQR::computeLinearizedSystemMatrix(const Eigen::Ref<const auv_core::Vector13d> &ref)
 {
    // Variables for Auto Diff.
    size_t n = 12, m = 3;
@@ -164,7 +161,7 @@ void AUVLQR::setLinearizedSystemMatrix(const Eigen::Ref<const Vector13d> &ref)
    Xdot.segment<3>(auv_core::constants::RSTATE_P) = auvParams_->inertia.inverse() * (auvParams_->cob.cross(ADquat.conjugate() * forceBuoyancy) - rotDrag - X.segment<3>(auv_core::constants::RSTATE_P).cross(auvParams_->inertia * X.segment<3>(auv_core::constants::RSTATE_P)));
 
    // Reduced state (excludes q0)
-   Vector12d reducedState;
+   auv_core::Vector12d reducedState;
    reducedState.head<6>() = reducedState.head<6>();
    reducedState.tail<6>() = reducedState.tail<6>();
 
@@ -182,7 +179,7 @@ void AUVLQR::setLinearizedSystemMatrix(const Eigen::Ref<const Vector13d> &ref)
    {
       for (int j = 0; j < 12; j++)
       {
-         if (!enableLQRIntegral_)
+         if (!enableIntegrator_)
             A_(i, j) = (double)jac[i * 12 + j];
          else
             A_Aug_(i, j) = (double)jac[i * 12 + j];
@@ -193,26 +190,20 @@ void AUVLQR::setLinearizedSystemMatrix(const Eigen::Ref<const Vector13d> &ref)
 /**
  * \brief Set the control input matrix.
  */
-void AUVLQR::setLinearizedInputMatrix()
+void AUVLQR::computeLinearizedInputMatrix()
 {
-   if (!enableLQRIntegral_)
-   {
-      B_.block<3, 8>(auv_core::constants::RSTATE_U, 0) = thrustCoeffs_.block<3, 8>(0, 0);                      // Force contributions
-      B_.block<3, 8>(auv_core::constants::RSTATE_P, 0) = auvParams_->inertia.inverse() * thrustCoeffs_.block<3, 8>(3, 0); // Moment contributions
-   }
-   else
-   {
-      B_Aug_.block<3, 8>(auv_core::constants::RSTATE_U, 0) = thrustCoeffs_.block<3, 8>(0, 0);                      // Force contributions
-      B_Aug_.block<3, 8>(auv_core::constants::RSTATE_P, 0) = auvParams_->inertia.inverse() * thrustCoeffs_.block<3, 8>(3, 0); // Moment contributions
-   }
+   B_.block<3, 8>(auv_core::constants::RSTATE_U, 0) = thrustCoeffs_.block<3, 8>(0, 0);                                     // Force contributions
+   B_.block<3, 8>(auv_core::constants::RSTATE_P, 0) = auvParams_->inertia.inverse() * thrustCoeffs_.block<3, 8>(3, 0);     // Moment contributions
+   B_Aug_.block<3, 8>(auv_core::constants::RSTATE_U, 0) = thrustCoeffs_.block<3, 8>(0, 0);                                 // Force contributions
+   B_Aug_.block<3, 8>(auv_core::constants::RSTATE_P, 0) = auvParams_->inertia.inverse() * thrustCoeffs_.block<3, 8>(3, 0); // Moment contributions
 }
 
 // Get total thruster forces/moments as expressed in the B-frame
 // Parameters:
 //      thrusts = VectorXf of force exerted on vehicle by each thruster
-Vector6d AUVLQR::getTotalThrustLoad(const Eigen::Ref<const Vector8d> &thrusts)
+auv_core::Vector6d AUVLQR::getTotalThrustLoad(const Eigen::Ref<const auv_core::Vector8d> &thrusts)
 {
-   Vector6d thrustLoad;
+   auv_core::Vector6d thrustLoad;
    thrustLoad.setZero();
 
    for (int i = 0; i < numThrusters_; i++)
@@ -221,9 +212,9 @@ Vector6d AUVLQR::getTotalThrustLoad(const Eigen::Ref<const Vector8d> &thrusts)
    return thrustLoad;
 }
 
-Vector8d AUVLQR::computeLQRThrust(const Eigen::Ref<const Vector13d> &state,
-                                  const Eigen::Ref<const Vector13d> &ref,
-                                  const Eigen::Ref<const Vector6d> &accel)
+auv_core::Vector8d AUVLQR::computeThrust(const Eigen::Ref<const auv_core::Vector13d> &state,
+                               const Eigen::Ref<const auv_core::Vector13d> &ref,
+                               const Eigen::Ref<const auv_core::Vector6d> &accel)
 {
    lqrThrust_.setZero();
    totalThrust_.setZero();
@@ -250,10 +241,10 @@ Vector8d AUVLQR::computeLQRThrust(const Eigen::Ref<const Vector13d> &state,
    if (initLQR_)
    {
       ceres::Solve(optionsNominalThrust, &problemNominalThrust, &summaryNominalThrust);
-      Eigen::Map<Vector8d> nominalThrust(nominalThrust_);
-      AUVLQR::setLinearizedSystemMatrix(ref);
+      Eigen::Map<auv_core::Vector8d> nominalThrust(nominalThrust_);
+      AUVLQR::computeLinearizedSystemMatrix(ref);
 
-      if (!enableLQRIntegral_)
+      if (!enableIntegrator_)
       {
          error_.head<6>() = state.head<6>() - ref.head<6>();
          error_.tail<6>() = state.tail<6>() - ref.tail<6>();
@@ -274,7 +265,7 @@ Vector8d AUVLQR::computeLQRThrust(const Eigen::Ref<const Vector13d> &state,
 
          lqrAugSolver_.compute(Q_Aug_, R_, A_Aug_, B_Aug_, K_Aug_);
          lqrThrust_ = -K_Aug_ * augError_; // U = -K*(state-ref)
-                                          // Add integral error !!!!!!!!!!!
+                                           // Add integral error !!!!!!!!!!!
       }
 
       //std::cout << "Solve LQR, A matrix: " << std::endl << A_ << std::endl;

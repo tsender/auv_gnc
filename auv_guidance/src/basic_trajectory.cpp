@@ -205,7 +205,7 @@ double BasicTrajectory::getTime()
  * @param time Time to compute the state at
  * Computes the trajectory state at the specified time
  */
-Vector13d BasicTrajectory::computeState(double time)
+auv_core::Vector13d BasicTrajectory::computeState(double time)
 {
     if (time <= stopDuration_)
     {
@@ -228,7 +228,7 @@ Vector13d BasicTrajectory::computeState(double time)
  * Compute inertial translational acceleration and time-derivative of angular veocity, 
  * both expressed in B-frame, at specified time
  */
-Vector6d BasicTrajectory::computeAccel(double time)
+auv_core::Vector6d BasicTrajectory::computeAccel(double time)
 {
     if (time <= stopDuration_)
     {

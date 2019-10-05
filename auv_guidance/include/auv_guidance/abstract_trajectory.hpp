@@ -1,7 +1,7 @@
 #ifndef ABSTRACT_TRAJECTORY
 #define ABSTRACT_TRAJECTORY
 
-#include "eigen3/Eigen/Dense"
+#include "auv_core/eigen_typedefs.hpp"
 
 namespace auv_guidance
 {
@@ -15,8 +15,8 @@ typedef Eigen::Matrix<double, 6, 1> Vector6d;
 class Trajectory
 {
 public:
-   virtual Vector13d computeState(double time) = 0;
-   virtual Vector6d computeAccel(double time) = 0;
+   virtual auv_core::Vector13d computeState(double time) = 0;
+   virtual auv_core::Vector6d computeAccel(double time) = 0;
 };
 } // namespace auv_guidance
 

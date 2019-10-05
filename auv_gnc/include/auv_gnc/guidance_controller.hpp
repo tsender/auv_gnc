@@ -1,13 +1,15 @@
 #ifndef GUIDANCE_CONTROLLER
 #define GUIDANCE_CONTROLLER
 
-#include "auv_control/auv_model.hpp"
 #include "auv_core/constants.hpp"
 #include "auv_core/eigen_ros.hpp"
-#include "auv_core/auv_model.hpp"
+#include "auv_core/auv_structs.hpp"
+#include "auv_control/auv_model.hpp"
+
 #include "auv_guidance/basic_trajectory.hpp"
 #include "auv_guidance/tgen_limits.hpp"
 #include "auv_guidance/waypoint.hpp"
+
 #include "auv_msgs/SixDoF.h"
 #include "auv_msgs/Thrust.h"
 #include "auv_msgs/Trajectory.h"

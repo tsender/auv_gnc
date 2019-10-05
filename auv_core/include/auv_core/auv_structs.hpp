@@ -1,14 +1,10 @@
 #ifndef AUV_STRUCTS
 #define AUV_STRUCTS
 
-#include "eigen3/Eigen/Dense"
-#include "eigen3/Eigen/Core"
+#include "auv_core/eigen_typedefs.hpp"
 
 namespace auv_core
 {
-typedef Eigen::Matrix<double, 6, 2> Matrix62d;
-typedef Eigen::Matrix<double, 5, 8> Matrix58d;
-typedef Eigen::Matrix<double, 6, 8> Matrix68d;
 
 /**
  * AUV model parameters
@@ -21,9 +17,9 @@ typedef struct
    double Fb;               // [N]
    Eigen::Vector3d cob;     // Center of buoyancy relative to center of mass (X [m], Y [m], Z [m])
    Eigen::Matrix3d inertia; // 3x3 inertia matrix [kg-m^2]
-   Matrix62d dragCoeffs;    // Drag coefficients (col 0: linear coeffs, col 1: quadratic coeffs, rows 0-2: translational, rows 3-5: rotational)
+   auv_core::Matrix62d dragCoeffs;    // Drag coefficients (col 0: linear coeffs, col 1: quadratic coeffs, rows 0-2: translational, rows 3-5: rotational)
    int numThrusters;
-   Matrix58d thrusterData; // Pose of thruster relative to CoM
+   auv_core::Matrix58d thrusterData; // Pose of thruster relative to CoM
 } auvParameters;
 
 /**

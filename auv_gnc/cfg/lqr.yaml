@@ -6,14 +6,15 @@
 # Initial first guess: Ri = 1 / (max_input_deviation_i)^2
 
 # NOTES: 
-# 1. Xstate is the original 12-state vector
-#    Xstate = [xI, yI, zI, U, V, W, q1, q2, q3, wx, wy, wz]^T
+# 1. Xstate is a reduced 12-state vector
+#    Xstate = [xI, yI, zI, u, v, w, q1, q2, q3, p, q, r]^T
 # 2. Xintegral is the integral state vector, appended to Xstate forming an augmented state vector Xaug = [Xstate, Xintegral]^T
 #    Xintegral = [Int(x_error) , Int(y_error), Int(z_error), Int(q1_error), Int(q2_error), Int(q3_error)]^T
 #    where Int(x) represents the integral of 'x'
 # 3. Q_diag is for Xstate only and must have 12 elements, since Q is a 12x12 matrix
 # 4. Q_integral_diag is for the error states (Xintegral)
-# 3. R_diag must have 8 elements
+# 5. R_diag must have 8 elements
+# 6. Enabling LQR integral action requires the Q-diag_integral matrices be filled in.
 enable_LQR_integral: false
 Q_diag: [400.0, 400.0, 400.0, 100.0, 100.0, 100.0, 1000.0, 1000.0, 1000.0, 100.0, 100.0, 100.0]
 Q_diag_integral: [400.0, 400.0, 400.0, 500.0, 500.0, 500.0]

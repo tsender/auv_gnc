@@ -1,6 +1,7 @@
 #ifndef BASIC_TRAJECTORY
 #define BASIC_TRAJECTORY
 
+#include "auv_core/auv_core_headers.hpp"
 #include "auv_guidance/abstract_trajectory.hpp"
 #include "auv_guidance/waypoint.hpp"
 #include "auv_guidance/min_jerk_time_solver.hpp"
@@ -8,11 +9,7 @@
 #include "auv_guidance/simultaneous_trajectory.hpp"
 #include "auv_guidance/long_trajectory.hpp"
 #include "auv_guidance/tgen_limits.hpp"
-#include "auv_control/auv_model.hpp"
-#include "auv_core/rot3d.hpp"
 
-#include "eigen3/Eigen/Dense"
-#include "eigen3/Eigen/Core"
 #include "math.h"
 #include <algorithm>
 
@@ -43,8 +40,8 @@ public:
    void computeSimultaneousTime();
    void setPrimaryTrajectory();
    double getTime();
-   Vector13d computeState(double time);
-   Vector6d computeAccel(double time);
+   auv_core::Vector13d computeState(double time);
+   auv_core::Vector6d computeAccel(double time);
 };
 } // namespace auv_guidance
 
