@@ -41,6 +41,7 @@ private:
    auv_core::Matrix68d thrustCoeffs_;
    int numThrusters_;
    int maxThrusters_;
+   double dt_;
 
    // LQR Matrices
    auv_core::Matrix12d A_;       // (Linearized) system matrix
@@ -58,8 +59,8 @@ private:
    auv_core::Vector8d lqrThrust_;
    auv_core::Vector12d error_;
    auv_core::Vector18d augError_;
-   Eigen::Vector3d positionIntegralError_;
-   Eigen::Quaterniond qState_, qRef_, qError_, qIntegralError_;
+   Eigen::Vector3d posIntegratorError_;
+   Eigen::Quaterniond qState_, qRef_, qError_, qIntegratorError_;
    bool initLQR_, enableIntegrator_;
 
    // Ceres Problem
@@ -85,13 +86,13 @@ private:
 public:
    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-   AUVLQR(auv_core::auvParameters *auvParams);
+   AUVLQR(auv_core::auvParameters *auvParams, double dt);
 
    void setCostMatrices(const Eigen::Ref<const auv_core::Matrix12d> &Q,
                         const Eigen::Ref<const auv_core::Matrix18d> &Q_Aug,
                         const Eigen::Ref<const auv_core::Matrix8d> &R);
 
-   void setIntegralAction(bool enable);
+   void setIntegratorStatus(bool enable);
 
    auv_core::Vector6d getTotalThrustLoad(const Eigen::Ref<const auv_core::Vector8d> &thrusts);
    auv_core::Vector8d computeThrust(const Eigen::Ref<const auv_core::Vector13d> &state,

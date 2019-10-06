@@ -36,21 +36,22 @@ private:
   std::vector<std::string> activeThrusterNames_, inactiveThrusterNames_;
   std::string auvConfigFile_;
   YAML::Node auvConfig_;
-  auv_core::auvModel *auv_;
-  auv_control::AUVLQR *auvLQR_;
+  auv_core::auvModelParams *auvParams_;
 
   // LQR Parameters
-  std::vector<double> Qdiag_, QdiagIntegral_, Rdiag_;
-  bool enableLQRIntegral_;
+  auv_control::AUVLQR *auvLQR_;
+  std::vector<double> Q_Diag_, Q_DiagIntegrator_, R_Diag_;
+  bool enableLQRIntegrator_;
+  int loopRate_;
 
   // Trajectory Generator Parameters
   auv_msgs::Trajectory desiredTrajectory_;
   auv_guidance::TGenLimits *tgenLimits_;
   auv_guidance::Waypoint *startWaypoint_, *endWaypoint_;
   auv_guidance::BasicTrajectory *basicTrajectory_;
-  auv_guidance::Vector13d state_;
-  auv_guidance::Vector13d ref_;
-  auv_guidance::Vector6d accel_;
+  auv_core::Vector13d state_;
+  auv_core::Vector13d ref_;
+  auv_core::Vector6d accel_;
   Eigen::Vector3d linearAccel_;
   Eigen::Quaterniond quaternion_;
   int tgenType_;
@@ -71,7 +72,8 @@ private:
   TGenActionServerPtr tgenActionServer_;
 
   // Private Methods
-  void initAUVModel();
+  void collectAUVParams();
+  void initLQR();
   void sixDofCB(const auv_msgs::SixDoF::ConstPtr &state);
   void tgenActionGoalCB();
   void tgenActionPreemptCB();

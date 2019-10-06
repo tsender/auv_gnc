@@ -2,20 +2,13 @@
 
 namespace auv_control
 {
-AUVLQR::AUVLQR(auv_core::auvParameters *auvParams)
+AUVLQR::AUVLQR(auv_core::auvParameters *auvParams, double dt)
 {
    // Vehicle Properties
+   dt_ = dt;
    auvParams_ = auvParams;
    maxThrusters_ = 8;
    numThrusters_ = std::min(auvParams_->numThrusters, maxThrusters_);
-
-   /*Fg_ = Fg;                                   // [N]
-   Fb_ = Fb;                                   // [N]
-   mass_ = Fg_ / auv_core::constants::GRAVITY; // [kg]
-   CoB_ = CoB;                                 // Center of buoyancy relative to center of mass (X [m], Y [m], Z [m])
-   inertia_ = inertia;                         // 3x3 inertia matrix [kg-m^2]
-   dragCoeffs = dragCoeffs;
-   thrusterData_ = thrusterData;*/
 
    // LQR variables
    A_.setZero();
@@ -28,6 +21,10 @@ AUVLQR::AUVLQR(auv_core::auvParameters *auvParams)
    Q_Aug_.setZero();
    R_.setZero();
 
+   // Initialize static part of Q_Aug_
+   Q_Aug_.block<3, 3>(auv_core::constants::RSTATE_XI_INT, auv_core::constants::RSTATE_XI) = -Eigen::Matrix3d::Identity();
+   Q_Aug_.block<3, 3>(auv_core::constants::RSTATE_Q1_INT, auv_core::constants::RSTATE_Q1) = -Eigen::Matrix3d::Identity();
+
    totalThrust_.setZero();
    lqrThrust_.setZero();
    error_.setZero();
@@ -35,8 +32,8 @@ AUVLQR::AUVLQR(auv_core::auvParameters *auvParams)
    qState_.setIdentity();
    qRef_.setIdentity();
    qError_.setIdentity();
-   qIntegralError_.setIdentity();
-   positionIntegralError_.setZero();
+   qIntegratorError_.setIdentity();
+   posIntegratorError_.setZero();
 
    initLQR_ = false;
    enableIntegrator_ = false;
@@ -95,7 +92,7 @@ void AUVLQR::computeThrustCoeffs()
  * @param R LQR input cost matrix
  */
 void AUVLQR::setCostMatrices(const Eigen::Ref<const auv_core::Matrix12d> &Q,
-                             const Eigen::Ref<const auv_core::Matrix18d> &Q_Aug, 
+                             const Eigen::Ref<const auv_core::Matrix18d> &Q_Aug,
                              const Eigen::Ref<const auv_core::Matrix8d> &R)
 {
    Q_ = Q;
@@ -107,9 +104,15 @@ void AUVLQR::setCostMatrices(const Eigen::Ref<const auv_core::Matrix12d> &Q,
 /**
  * @param enable Enable/disable LQR integral action
  */
-void AUVLQR::setIntegralAction(bool enable)
+void AUVLQR::setIntegratorStatus(bool enable)
 {
    enableIntegrator_ = enable;
+
+   if (!enableIntegrator_)
+   {
+      posIntegratorError_.setZero();
+      qIntegratorError_.setIdentity();
+   }
 }
 
 /**
@@ -174,21 +177,16 @@ void AUVLQR::computeLinearizedSystemMatrix(const Eigen::Ref<const auv_core::Vect
 
    // Put jacobien elements into matrix format from vector
    A_.setZero();
-   A_Aug_.setZero();
    for (int i = 0; i < 12; i++)
-   {
       for (int j = 0; j < 12; j++)
-      {
-         if (!enableIntegrator_)
-            A_(i, j) = (double)jac[i * 12 + j];
-         else
-            A_Aug_(i, j) = (double)jac[i * 12 + j];
-      }
-   }
+         A_(i, j) = (double)jac[i * 12 + j];
+
+   if (enableIntegrator_)
+      A_Aug_.block<12, 12>(0, 0) = A_;
 }
 
 /**
- * \brief Set the control input matrix.
+ * \brief Compute the control input matrix.
  */
 void AUVLQR::computeLinearizedInputMatrix()
 {
@@ -213,15 +211,11 @@ auv_core::Vector6d AUVLQR::getTotalThrustLoad(const Eigen::Ref<const auv_core::V
 }
 
 auv_core::Vector8d AUVLQR::computeThrust(const Eigen::Ref<const auv_core::Vector13d> &state,
-                               const Eigen::Ref<const auv_core::Vector13d> &ref,
-                               const Eigen::Ref<const auv_core::Vector6d> &accel)
+                                         const Eigen::Ref<const auv_core::Vector13d> &ref,
+                                         const Eigen::Ref<const auv_core::Vector6d> &accel)
 {
    lqrThrust_.setZero();
    totalThrust_.setZero();
-
-   qState_ = Eigen::Quaterniond(state(auv_core::constants::STATE_Q0), state(auv_core::constants::STATE_Q1), state(auv_core::constants::STATE_Q2), state(auv_core::constants::STATE_Q3));
-   qRef_ = Eigen::Quaterniond(ref(auv_core::constants::STATE_Q0), ref(auv_core::constants::STATE_Q1), ref(auv_core::constants::STATE_Q2), ref(auv_core::constants::STATE_Q3));
-   qError_ = qRef_ * qState_.conjugate(); //qState * qRef.conjugate(); // Want quaternion error relative to Inertial-frame (is it qRef * qState.conjugate()?)
 
    // Set variables for nominal thrust solver
    quaternion_[0] = ref(auv_core::constants::STATE_Q0);
@@ -244,24 +238,27 @@ auv_core::Vector8d AUVLQR::computeThrust(const Eigen::Ref<const auv_core::Vector
       Eigen::Map<auv_core::Vector8d> nominalThrust(nominalThrust_);
       AUVLQR::computeLinearizedSystemMatrix(ref);
 
+      qState_ = Eigen::Quaterniond(state(auv_core::constants::STATE_Q0), state(auv_core::constants::STATE_Q1), state(auv_core::constants::STATE_Q2), state(auv_core::constants::STATE_Q3));
+      qRef_ = Eigen::Quaterniond(ref(auv_core::constants::STATE_Q0), ref(auv_core::constants::STATE_Q1), ref(auv_core::constants::STATE_Q2), ref(auv_core::constants::STATE_Q3));
+      qError_ = qRef_ * qState_.conjugate(); //qState * qRef.conjugate(); // Want quaternion error relative to Inertial-frame (is it qRef * qState.conjugate()?)
+
+      error_.head<6>() = state.head<6>() - ref.head<6>();
+      error_.tail<6>() = state.tail<6>() - ref.tail<6>();
+      error_.segment<3>(auv_core::constants::RSTATE_Q1) = -qError_.vec(); // Set quaternion error, negate vector part for calculation of input vector
+
       if (!enableIntegrator_)
       {
-         error_.head<6>() = state.head<6>() - ref.head<6>();
-         error_.tail<6>() = state.tail<6>() - ref.tail<6>();
-         error_.segment<3>(auv_core::constants::RSTATE_Q1) = -qError_.vec(); // Set quaternion error, negate vector part for calculation of input vector
          //std::cout << "LQR error: " << error << std::endl;
          lqrSolver_.compute(Q_, R_, A_, B_, K_);
          lqrThrust_ = -K_ * error_; // U = -K*(state-ref)
       }
       else
-      {
-         augError_.head<6>() = state.head<6>() - ref.head<6>();
-         augError_.segment<6>(6) = state.tail<6>() - ref.tail<6>();
-         augError_.segment<3>(auv_core::constants::RSTATE_Q1) = -qError_.vec(); // Set quaternion error, negate vector part for calculation of input vector
-         qIntegralError_ = qIntegralError_ * qError_;                           // Treat integral error of quaternion as another quaternion
-         positionIntegralError_ = positionIntegralError_ + augError_.segment<3>(auv_core::constants::RSTATE_XI);
-         augError_.segment<3>(12) = positionIntegralError_;
-         augError_.segment<3>(15) = -qIntegralError_.vec();
+      { // TODO: Verify quaternion error calculation, or improve if not correct
+         augError_.head<12>() = error_;
+         qIntegratorError_ = qIntegratorError_ * qError_; // Regard integral error of quaternion as another quaternion
+         posIntegratorError_ = positionIntegratorError_ + dt_ * augError_.segment<3>(auv_core::constants::RSTATE_XI);
+         augError_.segment<3>(auv_core::constants::RSTATE_XI_INT) = posIntegratorError_;
+         augError_.segment<3>(auv_core::constants::RSTATE_Q1_INT) = -qIntegratorError_.vec();
 
          lqrAugSolver_.compute(Q_Aug_, R_, A_Aug_, B_Aug_, K_Aug_);
          lqrThrust_ = -K_Aug_ * augError_; // U = -K*(state-ref)

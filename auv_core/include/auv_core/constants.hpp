@@ -38,6 +38,12 @@ static const int RSTATE_Q3 = 8; // Quaternion (I->B Frame) k-component
 static const int RSTATE_P = 9;  // Inertial X angular velocity , expressed in B-frame
 static const int RSTATE_Q = 10; // Inertial Y angular velocity , expressed in B-frame
 static const int RSTATE_R = 11; // Inertial Z angular velocity , expressed in B-frame
+static const int RSTATE_XI_INT = 12; // Integrator for STATE_XI
+static const int RSTATE_YI_INT = 13; // Integrator for STATE_YI
+static const int RSTATE_ZI_INT = 14; // Integrator for STATE_ZI
+static const int RSTATE_Q1_INT = 15; // Integrator for STATE_Q1
+static const int RSTATE_Q2_INT = 16; // Integrator for STATE_Q2
+static const int RSTATE_Q3_INT = 17; // Integrator for STATE_Q3
 } // namespace constants
 } // namespace auv_core
 
