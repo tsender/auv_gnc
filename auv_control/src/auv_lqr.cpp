@@ -104,7 +104,7 @@ void AUVLQR::setCostMatrices(const Eigen::Ref<const auv_core::Matrix12d> &Q,
 /**
  * @param enable Enable/disable LQR integral action
  */
-void AUVLQR::setIntegratorStatus(bool enable)
+void AUVLQR::setIntegrator(bool enable)
 {
    enableIntegrator_ = enable;
 

@@ -18,7 +18,7 @@ namespace auv_guidance
 class BasicTrajectory : public Trajectory
 {
 private:
-   TGenLimits *tGenLimits_;
+   auv_core::auvConstraints *auvConstraints_;
    SimultaneousTrajectory *stStop_, *stPrimary_;
    LongTrajectory *ltPrimary_;
    MinJerkTrajectory *mjtHelper_;
@@ -34,7 +34,7 @@ private:
 public:
    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-   BasicTrajectory(Waypoint *wStart, Waypoint *wEnd, TGenLimits *tGenLimits);
+   BasicTrajectory(auv_core::auvConstraints *constraints, Waypoint *wStart, Waypoint *wEnd);
    void setStopTrajectory();
    void computeMaxVelocity();
    void computeSimultaneousTime();

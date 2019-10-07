@@ -14,49 +14,11 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
       ros::shutdown();
    }
    auvConfig_ = YAML::LoadFile(auvConfigFile_);
-
-   // LQR Variables
-   nh_.param("Q_diag", Q_Diag_, std::vector<double>(0));
-   nh_.param("Q_diag_integral", Q_DiagIntegrator_, std::vector<double>(0));
-   nh_.param("R_diag", R_Diag_, std::vector<double>(0));
-   nh_.param("enable_LQR_integrator", enableLQRIntegrator_, false);
    nh_.param("loop_rate", loopRate_, 50.0);
 
-   GuidanceController::collectAUVParams();
-   GuidanceController::initLQR();
-
-   // Trajectory Generator Limits
-   double maxXYDistance, maxZDistance, maxPathInclination;
-   double maxXVel, maxYVel, maxZVel, maxRotVel;
-   double maxXAccel, maxYAccel, maxZAccel, maxRotAccel;
-   double xyzJerk, xyzClosingJerk;
-   double rotJerk, rotClosingJerk;
-   double closingTolXYZ, closingTolRot;
-
-   nh_.param("max_xy_distance", maxXYDistance, 3.0);              // [m]
-   nh_.param("max_z_distance", maxZDistance, 1.0);                // [m]
-   nh_.param("max_path_inclination", maxPathInclination, 1.40);   // [rad]
-   nh_.param("closing_tolerance/xyz", closingTolXYZ, 0.1);        // [m]
-   nh_.param("closing_tolerance/rotational", closingTolRot, 6.0); // [rad]
-
-   nh_.param("max_velocity/x", maxXVel, 0.75);            // [m/s]
-   nh_.param("max_velocity/y", maxYVel, 0.5);             // [m/s]
-   nh_.param("max_velocity/z", maxZVel, 0.3);             // [m/s]
-   nh_.param("max_velocity/rotational", maxRotVel, 1.57); // [rad/s]
-
-   nh_.param("max_accel/x", maxXAccel, 0.4);             // [m/s^2]
-   nh_.param("max_accel/y", maxYAccel, 0.4);             // [m/s^2]
-   nh_.param("max_accel/z", maxZAccel, 0.2);             // [m/s^2]
-   nh_.param("max_accel/rotational", maxRotAccel, 3.14); // [rad/s^2]
-
-   nh_.param("jerk/xyz/nominal", xyzJerk, 0.4);               // [m/s^3]
-   nh_.param("jerk/xyz/closing", xyzClosingJerk, 1.0);        // [m/s^3]
-   nh_.param("jerk/rotational/nominal", rotJerk, 5.0);        // [rad/s^3]
-   nh_.param("jerk/rotational/closing", rotClosingJerk, 6.0); // [rad/s^3]
-
-   tgenLimits_ = new auv_guidance::TGenLimits(maxXYDistance, maxZDistance, maxPathInclination, closingTolXYZ, closingTolRot,
-                                              maxXVel, maxYVel, maxZVel, maxRotVel, maxXAccel, maxYAccel, maxZAccel, maxRotAccel,
-                                              xyzJerk, xyzClosingJerk, rotJerk, rotClosingJerk);
+   GuidanceController::loadAUVParams();
+   GuidanceController::loadAUVConstraints();
+   GuidanceController::loadAUVLQR();
 
    // Pubs, Subs, and Action Servers
    nh_.param("subscriber_topic", subTopic_, std::string("/auv_gnc/trans_ekf/six_dof"));
@@ -92,33 +54,33 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
 /**
  * \brief Collect AUV parameters
  */
-void GuidanceController::collectAUVParams()
+void GuidanceController::loadAUVModel()
 {
    // Mass and Fb
-   auvParams_->mass = fabs(auvConfig_["mass"].as<double>());
-   auvParams_->Fb = fabs(auvConfig_["Fb"].as<double>());
+   auvParams_->mass = fabs(auvConfig_["model"]["mass"].as<double>());
+   auvParams_->Fb = fabs(auvConfig_["model"]["Fb"].as<double>());
 
    // Center of Buoyancy (relative to the center of mass)
    Eigen::Vector3d CoB = Eigen::Vector3d::Zero();
-   CoB[0] = auvConfig_["center_of_buoyancy"][0].as<double>(); // X
-   CoB[1] = auvConfig_["center_of_buoyancy"][1].as<double>(); // Y
-   CoB[2] = auvConfig_["center_of_buoyancy"][2].as<double>(); // Z
+   CoB[0] = auvConfig_["model"]["center_of_buoyancy"][0].as<double>(); // X
+   CoB[1] = auvConfig_["model"]["center_of_buoyancy"][1].as<double>(); // Y
+   CoB[2] = auvConfig_["model"]["center_of_buoyancy"][2].as<double>(); // Z
    auvParams_->cob = CoB;
 
    // Center of Mass (relative to the reference point)
    Eigen::Vector3d CoM = Eigen::Vector3d::Zero();
-   CoM[0] = auvConfig_["center_of_mass"][0].as<double>(); // X
-   CoM[1] = auvConfig_["center_of_mass"][1].as<double>(); // Y
-   CoM[2] = auvConfig_["center_of_mass"][2].as<double>(); // Z
+   CoM[0] = auvConfig_["model"]["center_of_mass"][0].as<double>(); // X
+   CoM[1] = auvConfig_["model"]["center_of_mass"][1].as<double>(); // Y
+   CoM[2] = auvConfig_["model"]["center_of_mass"][2].as<double>(); // Z
 
    // Inertia
    Eigen::Matrix3d inertia = Eigen::Matrix3d::Zero();
-   double ixx = fabs(auvConfig_["inertia"]["Ixx"].as<double>());
-   double iyy = fabs(auvConfig_["inertia"]["Iyy"].as<double>());
-   double izz = fabs(auvConfig_["inertia"]["Izz"].as<double>());
-   double ixy = auvConfig_["inertia"]["Ixy"].as<double>();
-   double ixz = auvConfig_["inertia"]["Ixz"].as<double>();
-   double iyz = auvConfig_["inertia"]["Iyz"].as<double>();
+   double ixx = fabs(auvConfig_["model"]["inertia"]["Ixx"].as<double>());
+   double iyy = fabs(auvConfig_["model"]["inertia"]["Iyy"].as<double>());
+   double izz = fabs(auvConfig_["model"]["inertia"]["Izz"].as<double>());
+   double ixy = auvConfig_["model"]["inertia"]["Ixy"].as<double>();
+   double ixz = auvConfig_["model"]["inertia"]["Ixz"].as<double>();
+   double iyz = auvConfig_["model"]["inertia"]["Iyz"].as<double>();
    inertia(0, 0) = ixx;
    inertia(0, 1) = -ixy;
    inertia(0, 2) = -ixz;
@@ -135,10 +97,10 @@ void GuidanceController::collectAUVParams()
    dragCoeffs.setZero();
    for (int i = 0; i < 3; i++)
    {
-      dragCoeffs(i, 0) = fabs(auvConfig_["translational_drag"]["linear"][i].as<double>());
-      dragCoeffs(i + 3, 0) = fabs(auvConfig_["translational_drag"]["quadratic"][i].as<double>());
-      dragCoeffs(i, 1) = fabs(auvConfig_["rotational_drag"]["linear"][i].as<double>());
-      dragCoeffs(i + 3, 1) = fabs(auvConfig_["rotational_drag"]["quadratic"][i].as<double>());
+      dragCoeffs(i, 0) = fabs(auvConfig_["model"]["translational_drag"]["linear"][i].as<double>());
+      dragCoeffs(i + 3, 0) = fabs(auvConfig_["model"]["translational_drag"]["quadratic"][i].as<double>());
+      dragCoeffs(i, 1) = fabs(auvConfig_["model"]["rotational_drag"]["linear"][i].as<double>());
+      dragCoeffs(i + 3, 1) = fabs(auvConfig_["model"]["rotational_drag"]["quadratic"][i].as<double>());
    }
    auvParams_->dragCoeffs = dragCoeffs;
 
@@ -147,16 +109,16 @@ void GuidanceController::collectAUVParams()
    activeThrusterNames_.clear();
    inactiveThrusterNames_.clear();
 
-   int numThrusters = auvConfig_["thrusters"].size();
+   int numThrusters = auvConfig_["model"]["thrusters"].size();
    numThrusters = std::max(numThrusters, 8); // Cap thrusters at 8
    std::vector<bool> thrustersEnabled;
    thrustersEnabled.clear();
 
    for (int i = 0; i < numThrusters; i++)
    {
-      bool enabled = auvConfig_["thrusters"][i]["enable"].as<bool>();
+      bool enabled = auvConfig_["model"]["thrusters"][i]["enable"].as<bool>();
       thrustersEnabled.push_back(enabled);
-      std::string name = auvConfig_["thrusters"][i]["name"].as<std::string>();
+      std::string name = auvConfig_["model"]["thrusters"][i]["name"].as<std::string>();
       if (enabled)
       {
          numActiveThrusters_++;
@@ -176,9 +138,9 @@ void GuidanceController::collectAUVParams()
       {
          for (int j = 0; j < 5; j++)
             if (j < 3)
-               thrusterData(j, col) = auvConfig_["thrusters"][i]["pose"][j].as<double>() - CoM(j);
+               thrusterData(j, col) = auvConfig_["model"]["thrusters"][i]["pose"][j].as<double>() - CoM(j);
             else
-               thrusterData(j, col) = auvConfig_["thrusters"][i]["pose"][j].as<double>();
+               thrusterData(j, col) = auvConfig_["model"]["thrusters"][i]["pose"][j].as<double>();
          col++;
       }
    }
@@ -188,33 +150,53 @@ void GuidanceController::collectAUVParams()
 }
 
 /**
- * \brief Initialize AUV LQR controller
+ * \brief Load AUV constraints
  */
-void GuidanceController::initLQR()
+void GuidanceController::loadAUVConstraints()
 {
-   auvLQR_ = new auv_control::AUVLQR(auvParams_, 1/loopRate_);
+   auvConstraints_->maxXYDistance = auvConfig_["constraints"]["simultaneous_trajectory_threshold"]["max_xy_distance"].as<double>();
+   auvConstraints_->maxZDistance = auvConfig_["constraints"]["simultaneous_trajectory_threshold"]["max_z_distance"].as<double>();
+   auvConstraints_->maxAlignInclination = auvConfig_["constraints"]["max_align_inclination"].as<double>();
 
+   Eigen::Vector3d maxTransVel = Eigen::Vector3d::Zero();
+   auvConstraints_->maxTransVel(0) = auvConfig_["constraints"]["max_velocity"]["x"].as<double>();
+   auvConstraints_->maxTransVel(1) = auvConfig_["constraints"]["max_velocity"]["y"].as<double>();
+   auvConstraints_->maxTransVel(2) = auvConfig_["constraints"]["max_velocity"]["z"].as<double>();
+   auvConstraints_->maxRotVel = auvConfig_["constraints"]["max_velocity"]["rot"].as<double>();
+
+   Eigen::Vector3d maxTransAccel = Eigen::Vector3d::Zero();
+   auvConstraints_->maxTransAccel(0) = auvConfig_["constraints"]["max_accel"]["x"].as<double>();
+   auvConstraints_->maxTransAccel(0) = auvConfig_["constraints"]["max_accel"]["y"].as<double>();
+   auvConstraints_->maxTransAccel(0) = auvConfig_["constraints"]["max_accel"]["z"].as<double>();
+   auvConstraints_->maxRotAccel = auvConfig_["constraints"]["max_accel"]["rot"].as<double>();
+
+   auvConstraints_->transJerk = auvConfig_["constraints"]["jerk"]["trans"].as<double>();
+   auvConstraints_->rotJerk = auvConfig_["constraints"]["jerk"]["rot"].as<double>();
+}
+
+/**
+ * \brief Load AUV LQR parameters
+ */
+void GuidanceController::loadAUVLQR()
+{
    // LQR Cost Matrices
-   auv_core::Matrix12d Q;
    auv_core::Matrix18d Q_Aug;
    auv_core::Matrix8d R;
-   Q.setZero();
    Q_Aug.setZero();
    R.setZero();
 
+   bool enableLQRIntegrator = auvConfig_["LQR"]["enable_integrator"].as<bool>();
    for (int i = 0; i < 12; i++)
    {
       if (i < 8)
          R(i, i) = fabs(Rdiag_[i]);
-      Q(i, i) = fabs(Qdiag_[i]);
+      Q_Aug(i, i) = fabs(auvConfig_["LQR"]["Q_diag"][i].as<double>());
+      Q_Aug(i+12, i+12) = fabs(auvConfig_["LQR"]["Q_diag_integral"][i].as<double>());
    }
 
-   Q_Aug.block<12, 12>(0, 0) = Q;
-   for (int i = 0; i < 6; i++)
-   {
-      Q_Aug(12 + i, 12 + i) = fabs(Q_DiagIntegrator_[i]);
-   }
-   auvLQR_->setCostMatrices(Q, Q_Aug, R);
+   auvLQR_ = new auv_control::AUVLQR(auvParams_, 1/loopRate_);
+   auvLQR_->setCostMatrices(Q_Aug.block<12,12>(0,0), Q_Aug, R);
+   auvLQR_->setIntegrator(enableLQRIntegrator);
 }
 
 /**
@@ -367,7 +349,7 @@ void GuidanceController::initNewTrajectory()
          posIEnd = (quaternion_ * posIStart) + posIEnd;
 
       endWaypoint_ = new auv_guidance::Waypoint(posIEnd, zero3d, zero3d, quatEnd, zero3d);
-      basicTrajectory_ = new auv_guidance::BasicTrajectory(startWaypoint_, endWaypoint_, tgenLimits_);
+      basicTrajectory_ = new auv_guidance::BasicTrajectory(auvConstraints_, startWaypoint_, endWaypoint_);
       trajectoryDuration_ = basicTrajectory_->getTime();
    }
 }

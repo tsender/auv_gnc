@@ -1,0 +1,140 @@
+model: {
+  # NOTE: ALL x,y,z positions are assumed to be using the North-East-Down (NED) convention
+  # NED convention: (Assuming the vehicle is resting upright and level on a horizontal plane) 
+  #                 Positive X points forward (through the nose)
+  #                 Positve Y points in the starboard direction
+  #                 Positive Z points down (to the ground)
+  mass: 40.84, # Mass, [kg]
+  Fb: 412.0,   # Buoyant Force, [N]
+  center_of_buoyancy: [0.02, 0.0, -0.03], # CoB location relative to center of mass (X [m], Y [m], Z [m])
+  # CoM location relative to a reference point on the vehicle (X [m], Y [m], Z [m]), since it's often easier to measure from a known, well-defined point.
+  # If the reference point is the CoM itself, then set to all zeroes.
+  center_of_mass: [0.0, 0.0, 0.0],
+  inertia: { # Inertias [kg-m^2], Note: products of inertias will be negated in the inertia matrix
+    Ixx: 1.32,
+    Iyy: 2.84,
+    Izz: 3.65,
+    Ixy: 0.0,
+    Ixz: 0.0,
+    Iyz: 0.0  
+  },
+  translational_drag: { # In the order of X, Y, Z axes
+    linear: [17.0, 44.0, 44.0], # Fdrag = -c*Xdot [N], where c = drag coeff
+    quadratic: [171.0, 444.0, 444.0] # Fdrag = -c*sign(Xdot)*Xdot^2 [N], where c = drag coeff
+  },
+  rotational_drag: { # In the order of X, Y, Z axes
+    linear: [5.0, 10.0, 10.0], # Tdrag = -C*Xdot [Nm], where c = drag coeff
+    quadratic: [10.0, 20.0, 20.0] # Tdrag = -C*sign(Xdot)*Xdot^2 [Nm], where c = drag coeff
+  },
+  thrusters: [
+    # At most EIGHT thrusters allowed
+    # Pose: (x [m], y [m], z [m], yaw [deg], pitch [deg])
+    #     1. X,Y,Z positions are with respect to the reference point.
+    #     2A. For attitude, first orient the thruster such that a positive force exerted BY the thruster (ON the vehicle) points in the vehicle's positive X-direction.
+    #     2B. Then perform yaw, followed by pitch, to arrive at the thruster's actual orientation with respect to the vehicle's body-frame.
+    # Disble thrusters with care. User is responsible for ensuring the system is fully controllable.
+    {
+      id: 0,
+      name: "HPF",
+      enable: true,
+      pose: [0.37273, -0.18946, 0.01509, 0.0, 90.0]
+    },
+    {
+      id: 1,
+      name: "HPA",
+      enable: true,
+      pose: [-0.37273, -0.18946, 0.01509, 0.0, 90.0]
+    },
+    {
+      id: 2,
+      name: "HSF",
+      enable: true,
+      pose: [0.37273, 0.18946, 0.01509, 0.0, 90.0]
+    },
+    {
+      id: 3,
+      name: "HSA",
+      enable: true,
+      pose: [-0.37273, 0.18946, 0.01509, 0.0, 90.0]
+    },
+    {
+      id: 4,
+      name: "VPF",
+      enable: true,
+      pose: [0.398, -0.29921, -0.10615, -135.0, 0.0]
+    },
+    {
+      id: 5,
+      name: "VPA",
+      enable: true,
+      pose: [-0.398, -0.29921, -0.10615, -45.0, 0.0]
+    },
+    {
+      id: 6,
+      name: "VSF",
+      enable: true,
+      pose: [0.398, 0.29921, -0.10615, 135.0, 0.0]
+    },
+    {
+      id: 7,
+      name: "VSA",
+      enable: true,
+      pose: [-0.398, 0.29921, -0.10615, 45.0, 0.0]
+    }
+  ]
+}
+constraints: # Note: Some constraints are for trajectory limits
+{
+  # Trajectory Generator (TGen) Limits
+  # Distance Limits (for simltaneous trajectories)
+  simultaneous_trajectory_threshold:
+  {
+    max_xy_distance: 3.0, # [m]
+    max_z_distance: 1.0, # [m]
+  },
+  # Set heading towards destination when path inclination is less than this value
+  max_alignment_inclination: 1.40, # [rad]
+  max_velocity:
+  {
+    x: 0.75, # [m/s]
+    y: 0.4, # [m/s]
+    Z: 0.3, # [m/s]
+    rot: 1.57, # [rad/s]
+  },
+  max_accel:
+  {
+    x: 0.4, # [m/^2s]
+    y: 0.4, # [m/s^2]
+    Z: 0.2, # [m/s^2]
+    rot: 3.14, # [rad/s^2]
+  },
+  jerk:
+  {
+    trans: 1.0, # [m/s^3]
+    rot: 6.0
+  }
+}
+LQR:
+{
+  # Tuning values for Q and R matrices:
+  # Since the guidance controller provides feed-forward inputs, these values should roughly correspond to the maximum
+  # deviations allowed from the REFERENCE trajectory.
+  # Initial first guess: Qi = 1 / (max_state_deviation_i)^2
+  # Initial first guess: Ri = 1 / (max_input_deviation_i)^2
+
+  # NOTES: 
+  # 1. Xstate is the reduced 12-state vector (notice q0 from quaternion is not used)
+  #    Xstate = [xI, yI, zI, u, v, w, q1, q2, q3, p, q, r]^T
+  # 2. Xintegral is the integral state vector, appended to Xstate forming an augmented state vector Xaug = [Xstate, Xintegral]^T
+  #    Xintegral = [Int(x_error) , Int(y_error), Int(z_error), Int(q1_error), Int(q2_error), Int(q3_error)]^T
+  #    where Int(x) represents the integral of 'x'
+  # 3. Q and R are DIAGONAL cost matrices (for simplicity)
+  #   1. Q_diag is for Xstate only and must have 12 elements,
+  #   2. Q_integral_diag is for the error states (Xintegral), must be of size 6x6
+  #   3. R_diag must have 8 elements
+  # 4. Q_diag_integral MUST be filled in, even if you don't plan on using it
+  enable_integrator: false,
+  Q_diag: [400.0, 400.0, 400.0, 100.0, 100.0, 100.0, 1000.0, 1000.0, 1000.0, 100.0, 100.0, 100.0],
+  Q_diag_integral: [400.0, 400.0, 400.0, 500.0, 500.0, 500.0],
+  R_diag: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
+}

@@ -92,7 +92,7 @@ public:
                         const Eigen::Ref<const auv_core::Matrix18d> &Q_Aug,
                         const Eigen::Ref<const auv_core::Matrix8d> &R);
 
-   void setIntegratorStatus(bool enable);
+   void setIntegrator(bool enable);
 
    auv_core::Vector6d getTotalThrustLoad(const Eigen::Ref<const auv_core::Vector8d> &thrusts);
    auv_core::Vector8d computeThrust(const Eigen::Ref<const auv_core::Vector13d> &state,
