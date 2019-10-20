@@ -78,7 +78,6 @@ private:
    ct::optcon::LQR<state_dim, control_dim> lqrSolver_;
    ct::optcon::LQR<state_dim_aug, control_dim> lqrAugSolver_;
    
-
    void computeThrustCoeffs();
    void computeLinearizedSystemMatrix(const Eigen::Ref<const auv_core::Vector13d> &ref);
    void computeLinearizedInputMatrix();

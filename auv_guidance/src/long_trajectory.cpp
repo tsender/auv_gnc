@@ -10,11 +10,11 @@ namespace auv_guidance
  * @param cruiseRatio Indicates what fraction of the total distance is to be traveled while cruising
  * @param cruiseSpeed Vehicle speed while cruising
  */
-LongTrajectory::LongTrajectory(Waypoint *wStart, Waypoint *wEnd, TGenLimits *tGenLimits, double cruiseRatio, double cruiseSpeed)
+LongTrajectory::LongTrajectory(Waypoint *wStart, Waypoint *wEnd, auv_core::auvConstraints *constraints, double cruiseRatio, double cruiseSpeed)
 {
     wStart_ = wStart;
     wEnd_ = wEnd;
-    tGenLimits_ = tGenLimits;
+    auvConstraints_ = constraints;
 
     totalDuration_ = 0;
     rotationDuration1_ = 0;
@@ -56,7 +56,7 @@ void LongTrajectory::initTrajectory()
     double xyDistance = sqrt(dx * dx + dy * dy);
     double travelHeading = 0;
 
-    if ((xyDistance != 0) && (atan(fabs(dz) / xyDistance) < tGenLimits_->maxPathInclination()))
+    if ((xyDistance != 0) && (atan(fabs(dz) / xyDistance) < auvConstraints_->maxAlignInclination))
     { // Trajectory pitch is ok
         travelHeading = atan2(dy, dx); // Radians
         qCruise_ = auv_core::rot3d::rpy2Quat(0.0, 0.0, travelHeading);
@@ -81,8 +81,8 @@ void LongTrajectory::initWaypoints()
     // Calculate accel duration
     Eigen::Vector4d transStart = Eigen::Vector4d::Zero();
     Eigen::Vector4d transEnd = Eigen::Vector4d::Zero();
-    transStart << 0, 0, 0, tGenLimits_->xyzJerk(accelDistance);
-    transEnd << accelDistance, 0, 0, tGenLimits_->xyzJerk(accelDistance);
+    transStart << 0, 0, 0, auvConstraints_->transJerk;
+    transEnd << accelDistance, 0, 0, auvConstraints_->transJerk;
     MinJerkTimeSolver *mjts;
     mjts = new MinJerkTimeSolver(transStart, transEnd);
     accelDuration_ = mjts->getTime();
@@ -158,8 +158,8 @@ double LongTrajectory::computeRotationTime(Eigen::Quaterniond qDiff)
 
     Eigen::Vector4d rotStart = Eigen::Vector4d::Zero();
     Eigen::Vector4d rotEnd = Eigen::Vector4d::Zero();
-    rotStart << 0, 0, 0, tGenLimits_->rotJerk(angularDistance);
-    rotEnd << angularDistance, 0, 0, tGenLimits_->rotJerk(angularDistance);
+    rotStart << 0, 0, 0, auvConstraints_->rotJerk;
+    rotEnd << angularDistance, 0, 0, auvConstraints_->rotJerk;
 
     MinJerkTimeSolver *mjts;
     mjts = new MinJerkTimeSolver(rotStart, rotEnd);

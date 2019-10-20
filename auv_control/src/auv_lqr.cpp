@@ -256,7 +256,7 @@ auv_core::Vector8d AUVLQR::computeThrust(const Eigen::Ref<const auv_core::Vector
       { // TODO: Verify quaternion error calculation, or improve if not correct
          augError_.head<12>() = error_;
          qIntegratorError_ = qIntegratorError_ * qError_; // Regard integral error of quaternion as another quaternion
-         posIntegratorError_ = positionIntegratorError_ + dt_ * augError_.segment<3>(auv_core::constants::RSTATE_XI);
+         posIntegratorError_ = posIntegratorError_ + dt_ * augError_.segment<3>(auv_core::constants::RSTATE_XI);
          augError_.segment<3>(auv_core::constants::RSTATE_XI_INT) = posIntegratorError_;
          augError_.segment<3>(auv_core::constants::RSTATE_Q1_INT) = -qIntegratorError_.vec();
 

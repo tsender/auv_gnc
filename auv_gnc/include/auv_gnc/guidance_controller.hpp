@@ -6,7 +6,6 @@
 #include "auv_control/auv_lqr.hpp"
 
 #include "auv_guidance/basic_trajectory.hpp"
-#include "auv_guidance/tgen_limits.hpp"
 #include "auv_guidance/waypoint.hpp"
 
 #include "auv_msgs/SixDoF.h"
@@ -35,18 +34,17 @@ private:
    std::vector<std::string> activeThrusterNames_, inactiveThrusterNames_;
    std::string auvConfigFile_;
    YAML::Node auvConfig_;
-   auv_core::auvModelParams *auvParams_;
+   auv_core::auvParameters *auvParams_;
 
    // LQR Parameters
    auv_control::AUVLQR *auvLQR_;
    std::vector<double> Q_Diag_, Q_DiagIntegrator_, R_Diag_;
    bool enableLQRIntegrator_;
-   int loopRate_;
+   double loopRate_;
 
    // Trajectory Generator Parameters
-   auv_core::auvConstraints auvConstraints_;
+   auv_core::auvConstraints *auvConstraints_;
    auv_msgs::Trajectory desiredTrajectory_;
-   auv_guidance::TGenLimits *tgenLimits_;
    auv_guidance::Waypoint *startWaypoint_, *endWaypoint_;
    auv_guidance::BasicTrajectory *basicTrajectory_;
    auv_core::Vector13d state_;
@@ -57,7 +55,7 @@ private:
    int tgenType_;
    bool tgenInit_, newTrajectory_;
    ros::Time startTime_;
-   auv_control::Vector8d thrust_;
+   auv_core::Vector8d thrust_;
 
    // ROS Node Parameters
    ros::NodeHandle nh_;

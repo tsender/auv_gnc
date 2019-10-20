@@ -29,7 +29,7 @@ private:
    double totalDuration_, stopDuration_, simultaneousDuration_, longDuration_;
    double distance_, initialMaxVelocity_, maxVelocity_;
 
-   bool longTrajectory_, simultaneousTrajectory_, exceedsMaxSpeed_;
+   bool isLongTrajectory_, isSimultaneousTrajectory_, exceedsMaxSpeed_;
 
 public:
    EIGEN_MAKE_ALIGNED_OPERATOR_NEW

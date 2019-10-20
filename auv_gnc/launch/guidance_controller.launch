@@ -1,6 +1,6 @@
 <launch>
-   <arg name="auv_config_path" default="$(find auv_gnc)/cfg/auv.yaml"/>
-   <arg name="gc_config_path" default="$(find auv_gnc)/cfg/basic_gc.yaml"/>
+   <arg name="auv_config_path" default="$(find auv_gnc)/cfg/auv_config.yaml"/>
+   <arg name="gc_config_path" default="$(find auv_gnc)/cfg/gc_config.yaml"/> <!-- Loop rate is in this file -->
 
    <node pkg="auv_gnc" ns="auv_gnc" type="guidance_controller" name="guidance_controller" output="screen">
       <param name="auv_config_path" value="$(arg auv_config_path)"/>

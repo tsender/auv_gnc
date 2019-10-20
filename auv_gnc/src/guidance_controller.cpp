@@ -16,6 +16,9 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
    auvConfig_ = YAML::LoadFile(auvConfigFile_);
    nh_.param("loop_rate", loopRate_, 50.0);
 
+   auvParams_ = new auv_core::auvParameters;
+   auvConstraints_ = new auv_core::auvConstraints;
+
    GuidanceController::loadAUVParams();
    GuidanceController::loadAUVConstraints();
    GuidanceController::loadAUVLQR();
@@ -54,7 +57,7 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
 /**
  * \brief Collect AUV parameters
  */
-void GuidanceController::loadAUVModel()
+void GuidanceController::loadAUVParams()
 {
    // Mass and Fb
    auvParams_->mass = fabs(auvConfig_["model"]["mass"].as<double>());
@@ -93,7 +96,7 @@ void GuidanceController::loadAUVModel()
    auvParams_->inertia = inertia;
 
    // Drag
-   auv_control::Matrix62d dragCoeffs;
+   auv_core::Matrix62d dragCoeffs;
    dragCoeffs.setZero();
    for (int i = 0; i < 3; i++)
    {
@@ -129,7 +132,7 @@ void GuidanceController::loadAUVModel()
    }
 
    // Each COLUMN contains a thruster's data (x, y, z, yaw, pitch)
-   auv_control::Matrix58d thrusterData;
+   auv_core::Matrix58d thrusterData;
    thrusterData.setZero();
    int col = 0;
    for (int i = 0; i < numThrusters; i++)
@@ -145,8 +148,9 @@ void GuidanceController::loadAUVModel()
       }
    }
 
-   auvParams_->numThrusters = numActiveThrusters;
+   auvParams_->numThrusters = numActiveThrusters_;
    auvParams_->thrusterData = thrusterData;
+   ROS_INFO("Guidance Controller: Loaded parameters");
 }
 
 /**
@@ -162,16 +166,19 @@ void GuidanceController::loadAUVConstraints()
    auvConstraints_->maxTransVel(0) = auvConfig_["constraints"]["max_velocity"]["x"].as<double>();
    auvConstraints_->maxTransVel(1) = auvConfig_["constraints"]["max_velocity"]["y"].as<double>();
    auvConstraints_->maxTransVel(2) = auvConfig_["constraints"]["max_velocity"]["z"].as<double>();
+   //auvConstraints_->maxTransVel = maxTransVel;
    auvConstraints_->maxRotVel = auvConfig_["constraints"]["max_velocity"]["rot"].as<double>();
 
    Eigen::Vector3d maxTransAccel = Eigen::Vector3d::Zero();
    auvConstraints_->maxTransAccel(0) = auvConfig_["constraints"]["max_accel"]["x"].as<double>();
-   auvConstraints_->maxTransAccel(0) = auvConfig_["constraints"]["max_accel"]["y"].as<double>();
-   auvConstraints_->maxTransAccel(0) = auvConfig_["constraints"]["max_accel"]["z"].as<double>();
+   auvConstraints_->maxTransAccel(1) = auvConfig_["constraints"]["max_accel"]["y"].as<double>();
+   auvConstraints_->maxTransAccel(2) = auvConfig_["constraints"]["max_accel"]["z"].as<double>();
+   //auvConstraints_->maxTransAccel = maxTransAccel;
    auvConstraints_->maxRotAccel = auvConfig_["constraints"]["max_accel"]["rot"].as<double>();
 
    auvConstraints_->transJerk = auvConfig_["constraints"]["jerk"]["trans"].as<double>();
    auvConstraints_->rotJerk = auvConfig_["constraints"]["jerk"]["rot"].as<double>();
+   ROS_INFO("Guidance Controller: Loaded constraints");
 }
 
 /**
@@ -188,15 +195,17 @@ void GuidanceController::loadAUVLQR()
    bool enableLQRIntegrator = auvConfig_["LQR"]["enable_integrator"].as<bool>();
    for (int i = 0; i < 12; i++)
    {
+      if (i < 6)
+         Q_Aug(i+12, i+12) = fabs(auvConfig_["LQR"]["Q_diag_integrator"][i].as<double>());
       if (i < 8)
-         R(i, i) = fabs(Rdiag_[i]);
+         R(i, i) = fabs(auvConfig_["LQR"]["R_diag"][i].as<double>());
       Q_Aug(i, i) = fabs(auvConfig_["LQR"]["Q_diag"][i].as<double>());
-      Q_Aug(i+12, i+12) = fabs(auvConfig_["LQR"]["Q_diag_integral"][i].as<double>());
    }
 
    auvLQR_ = new auv_control::AUVLQR(auvParams_, 1/loopRate_);
    auvLQR_->setCostMatrices(Q_Aug.block<12,12>(0,0), Q_Aug, R);
    auvLQR_->setIntegrator(enableLQRIntegrator);
+   ROS_INFO("Guidance Controller: Initialized LQR controller");
 }
 
 /**
@@ -311,7 +320,7 @@ void GuidanceController::runController()
          tgenActionServer_->setSucceeded(result);
       }
 
-      thrust_ = auvModel_->computeLQRThrust(state_, ref_, accel_);
+      thrust_ = auvLQR_->computeThrust(state_, ref_, accel_);
       GuidanceController::publishThrustMessage();
    }
 }

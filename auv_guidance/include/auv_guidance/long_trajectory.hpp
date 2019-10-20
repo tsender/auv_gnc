@@ -17,7 +17,7 @@ class LongTrajectory : public Trajectory
 {
 private:
    SimultaneousTrajectory *stPreRotation_, *stSpeedUp_, *stCruise_, *stSlowDown_, *stPostRotation_;
-   TGenLimits *tGenLimits_;
+   auv_core::auvConstraints *auvConstraints_;
    std::vector<SimultaneousTrajectory *> stList_;
    std::vector<double> stTimes_;
    Waypoint *wStart_, *wEnd_, *wPreTranslate_, *wCruiseStart_, *wCruiseEnd_, *wPostTranslate_;
@@ -31,7 +31,7 @@ private:
 public:
    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-   LongTrajectory(Waypoint *start, Waypoint *end, TGenLimits *tGenLimits, double cruiseRatio, double cruiseSpeed);
+   LongTrajectory(Waypoint *start, Waypoint *end, auv_core::auvConstraints *constraints, double cruiseRatio, double cruiseSpeed);
    void initTrajectory();
    void initWaypoints();
    void initSimultaneousTrajectories();

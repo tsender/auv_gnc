@@ -1,9 +1,9 @@
-model: {
+model: 
+{
   # NOTE: ALL x,y,z positions are assumed to be using the North-East-Down (NED) convention
-  # NED convention: (Assuming the vehicle is resting upright and level on a horizontal plane) 
-  #                 Positive X points forward (through the nose)
+  # NED convention: Positive X points forward, through the nose
   #                 Positve Y points in the starboard direction
-  #                 Positive Z points down (to the ground)
+  #                 Positive Z will then point through the bottom of the vehicle
   mass: 40.84, # Mass, [kg]
   Fb: 412.0,   # Buoyant Force, [N]
   center_of_buoyancy: [0.02, 0.0, -0.03], # CoB location relative to center of mass (X [m], Y [m], Z [m])
@@ -90,23 +90,23 @@ constraints: # Note: Some constraints are for trajectory limits
   simultaneous_trajectory_threshold:
   {
     max_xy_distance: 3.0, # [m]
-    max_z_distance: 1.0, # [m]
+    max_z_distance: 1.0 # [m]
   },
   # Set heading towards destination when path inclination is less than this value
-  max_alignment_inclination: 1.40, # [rad]
+  max_align_inclination: 1.40, # [rad]
   max_velocity:
   {
     x: 0.75, # [m/s]
     y: 0.4, # [m/s]
-    Z: 0.3, # [m/s]
-    rot: 1.57, # [rad/s]
+    z: 0.3, # [m/s]
+    rot: 1.57 # [rad/s]
   },
   max_accel:
   {
     x: 0.4, # [m/^2s]
     y: 0.4, # [m/s^2]
-    Z: 0.2, # [m/s^2]
-    rot: 3.14, # [rad/s^2]
+    z: 0.2, # [m/s^2]
+    rot: 3.14 # [rad/s^2]
   },
   jerk:
   {
@@ -130,11 +130,12 @@ LQR:
   #    where Int(x) represents the integral of 'x'
   # 3. Q and R are DIAGONAL cost matrices (for simplicity)
   #   1. Q_diag is for Xstate only and must have 12 elements,
-  #   2. Q_integral_diag is for the error states (Xintegral), must be of size 6x6
-  #   3. R_diag must have 8 elements
+  #   2. Q_integrator_diag is for the error states (Xintegral), must be of size 6x6
+  #   3. R_diag MUST have 8 elements
   # 4. Q_diag_integral MUST be filled in, even if you don't plan on using it
   enable_integrator: false,
   Q_diag: [400.0, 400.0, 400.0, 100.0, 100.0, 100.0, 1000.0, 1000.0, 1000.0, 100.0, 100.0, 100.0],
-  Q_diag_integral: [400.0, 400.0, 400.0, 500.0, 500.0, 500.0],
-  R_diag: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
+  Q_diag_integrator: [400.0, 400.0, 400.0, 500.0, 500.0, 500.0],
+  R_diag: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
 }
+# Empy line so yaml-cpp parses properly

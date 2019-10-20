@@ -24,8 +24,8 @@ BasicTrajectory::BasicTrajectory(auv_core::auvConstraints *constraints, Waypoint
    longDuration_ = 0;
    distance_ = 0;
 
-   longTrajectory_ = false;
-   simultaneousTrajectory_ = true;
+   isLongTrajectory_ = false;
+   isSimultaneousTrajectory_ = true;
    exceedsMaxSpeed_ = false;
 
    BasicTrajectory::setStopTrajectory();
@@ -40,15 +40,15 @@ void BasicTrajectory::setStopTrajectory()
    double accel = 0;
    if (fabs(wStart_->velI()(0)) > fabs(wStart_->velI()(1))) // Xvel > Yvel
    {
-      accel = tGenLimits_->maxXAccel();
+      accel = auvConstraints_->maxTransAccel(0);
       if (fabs(wStart_->velI()(2)) > fabs(wStart_->velI()(0))) // Zvel > Xvel
-         accel = tGenLimits_->maxZAccel();
+         accel = auvConstraints_->maxTransAccel(2);
    }
    else
    {
-      accel = tGenLimits_->maxYAccel();
+      accel = auvConstraints_->maxTransAccel(1);
       if (fabs(wStart_->velI()(2)) > fabs(wStart_->velI()(1))) // Zvel > Yvel
-         accel = tGenLimits_->maxZAccel();
+         accel = auvConstraints_->maxTransAccel(2);
    }
    double distance = (2.0 / 3.0) * (transVel * transVel) / accel;
    Eigen::Vector3d restDeltaVec = wStart_->velI().normalized() * distance;
@@ -58,7 +58,7 @@ void BasicTrajectory::setStopTrajectory()
    Eigen::Vector4d angleAxis = Eigen::Vector4d::Zero();
    angleAxis.tail<3>() = wStart_->angVelB().normalized();
    double angVel = wStart_->angVelB().norm(); // Magnitude
-   double angularDistance = (2.0 / 3.0) * (angVel * angVel) / tGenLimits_->maxRotAccel();
+   double angularDistance = (2.0 / 3.0) * (angVel * angVel) / auvConstraints_->maxRotAccel;
    angleAxis(0) = angularDistance;
 
    Eigen::Quaterniond qRotate = auv_core::rot3d::angleAxis2Quat(angleAxis); // Relative to B-frame
@@ -73,10 +73,10 @@ void BasicTrajectory::setStopTrajectory()
    Eigen::Vector4d rotStart = Eigen::Vector4d::Zero();
    Eigen::Vector4d rotEnd = Eigen::Vector4d::Zero();
 
-   transStart << 0, transVel, transAccel, tGenLimits_->xyzJerk(distance);
-   transEnd << distance, 0, 0, tGenLimits_->xyzJerk(distance);
-   rotStart << 0, angVel, 0, tGenLimits_->rotJerk(angularDistance);
-   rotEnd << angularDistance, 0, 0, tGenLimits_->rotJerk(angularDistance);
+   transStart << 0, transVel, transAccel, auvConstraints_->transJerk;
+   transEnd << distance, 0, 0, auvConstraints_->transJerk;
+   rotStart << 0, angVel, 0, auvConstraints_->rotJerk;
+   rotEnd << angularDistance, 0, 0, auvConstraints_->rotJerk;
 
    double timeTrans = 0, timeRot = 0;
    MinJerkTimeSolver *mjts;
@@ -99,15 +99,15 @@ void BasicTrajectory::computeMaxVelocity()
    double distanceZ = fabs(deltaVec_(2));
    distance_ = deltaVec_.norm();
 
-   if (distanceXY > tGenLimits_->maxXYDistance())
+   if (distanceXY > auvConstraints_->maxXYDistance)
    {
-      simultaneousTrajectory_ = false;
-      std::cout << "BT: dixtance XY too large: " << distanceXY << " > " << tGenLimits_->maxXYDistance() << std::endl; // Debug
+      isSimultaneousTrajectory_ = false;
+      std::cout << "BT: dixtance XY too large: " << distanceXY << " > " << auvConstraints_->maxXYDistance << std::endl; // Debug
    }
-   if (distanceZ > tGenLimits_->maxZDistance())
+   if (distanceZ > auvConstraints_->maxZDistance)
    {
-      simultaneousTrajectory_ = false;
-      std::cout << "BT: dixtance Z too large: " << distanceZ << " > " << tGenLimits_->maxZDistance() << std::endl; // Debug
+      isSimultaneousTrajectory_ = false;
+      std::cout << "BT: dixtance Z too large: " << distanceZ << " > " << auvConstraints_->maxZDistance << std::endl; // Debug
    }
 
    BasicTrajectory::computeSimultaneousTime();
@@ -128,8 +128,8 @@ void BasicTrajectory::computeSimultaneousTime()
    // Translation
    Eigen::Vector4d transStart = Eigen::Vector4d::Zero();
    Eigen::Vector4d transEnd = Eigen::Vector4d::Zero();
-   transStart << 0, 0, 0, tGenLimits_->xyzJerk(distance_);
-   transEnd << distance_, 0, 0, tGenLimits_->xyzJerk(distance_);
+   transStart << 0, 0, 0, auvConstraints_->transJerk;
+   transEnd << distance_, 0, 0, auvConstraints_->transJerk;
 
    // Rotation
    qEnd_ = wEnd_->quaternion();
@@ -138,8 +138,8 @@ void BasicTrajectory::computeSimultaneousTime()
 
    Eigen::Vector4d rotStart = Eigen::Vector4d::Zero();
    Eigen::Vector4d rotEnd = Eigen::Vector4d::Zero();
-   rotStart << 0, 0, 0, tGenLimits_->rotJerk(angularDistance);
-   rotEnd << angularDistance, 0, 0, tGenLimits_->rotJerk(angularDistance);
+   rotStart << 0, 0, 0, auvConstraints_->rotJerk;
+   rotEnd << angularDistance, 0, 0, auvConstraints_->rotJerk;
 
    // Compute durations
    double timeTrans = 0, timeRot = 0;
@@ -161,39 +161,39 @@ void BasicTrajectory::setPrimaryTrajectory()
    double maxZVel = fabs(maxVelocityVec_(2));
 
    // Verify XYZ velocities are not violated
-   if (maxXYVel > tGenLimits_->maxXVel())
+   if (maxXYVel > auvConstraints_->maxTransVel(0))
    {
-      simultaneousTrajectory_ = false;
-      std::cout << "BT: max XY velocity too large: " << maxXYVel << " > " << tGenLimits_->maxXVel() << std::endl; // Debug
-      maxXYVel = tGenLimits_->maxXVel();
+      isSimultaneousTrajectory_ = false;
+      std::cout << "BT: max XY velocity too large: " << maxXYVel << " > " << auvConstraints_->maxTransVel(0) << std::endl; // Debug
+      maxXYVel = auvConstraints_->maxTransVel(0);
    }
-   if (maxZVel > tGenLimits_->maxZVel())
+   if (maxZVel > auvConstraints_->maxTransVel(2))
    {
-      simultaneousTrajectory_ = false;
-      std::cout << "BT: max Z velocity too large: " << maxZVel << " > " << tGenLimits_->maxZVel() << std::endl; // Debug
-      maxZVel = tGenLimits_->maxZVel();
+      isSimultaneousTrajectory_ = false;
+      std::cout << "BT: max Z velocity too large: " << maxZVel << " > " << auvConstraints_->maxTransVel(2) << std::endl; // Debug
+      maxZVel = auvConstraints_->maxTransVel(2);
    }
 
    // Update max velocity vector
    maxVelocity_ = sqrt(maxXYVel * maxXYVel + maxZVel * maxZVel);
    maxVelocityVec_ = unitVec_ * maxVelocity_;
 
-   if (!simultaneousTrajectory_) // Execute long trajectory
+   if (!isSimultaneousTrajectory_) // Execute long trajectory
    {
-      longTrajectory_ = true;
+      isLongTrajectory_ = true;
       double cruiseRatio = 1.0 - maxVelocity_ / initialMaxVelocity_;
-      ltPrimary_ = new LongTrajectory(wStop_, wEnd_, tGenLimits_, cruiseRatio, maxVelocity_);
+      ltPrimary_ = new LongTrajectory(wStop_, wEnd_, auvConstraints_, cruiseRatio, maxVelocity_);
       longDuration_ = ltPrimary_->getTime();
       totalDuration_ += longDuration_;
    }
    else // Execute simultaneous trajectory
    {
-      simultaneousTrajectory_ = true;
+      isSimultaneousTrajectory_ = true;
       stPrimary_ = new SimultaneousTrajectory(wStop_, wEnd_, simultaneousDuration_);
       totalDuration_ = simultaneousDuration_;
    }
-   std::cout << "BT long trajectory " << longTrajectory_ << std::endl;                 // Debug
-   std::cout << "BT simultaneous trajectory " << simultaneousTrajectory_ << std::endl; // Debug
+   std::cout << "BT long trajectory " << isLongTrajectory_ << std::endl;                 // Debug
+   std::cout << "BT simultaneous trajectory " << isSimultaneousTrajectory_ << std::endl; // Debug
 }
 
 double BasicTrajectory::getTime()
@@ -212,12 +212,12 @@ auv_core::Vector13d BasicTrajectory::computeState(double time)
       //std::cout << "ST: stop trajectory at time " << time << std::endl;
       return stStop_->computeState(time);
    }
-   else if (simultaneousTrajectory_)
+   else if (isSimultaneousTrajectory_)
    {
       //std::cout << "ST: main trajectory at time " << time - stopDuration_ << std::endl;
       return stPrimary_->computeState(time - stopDuration_);
    }
-   else if (longTrajectory_)
+   else if (isLongTrajectory_)
    {
       return ltPrimary_->computeState(time - stopDuration_);
    }
@@ -234,11 +234,11 @@ auv_core::Vector6d BasicTrajectory::computeAccel(double time)
    {
       return stStop_->computeAccel(time);
    }
-   else if (simultaneousTrajectory_)
+   else if (isSimultaneousTrajectory_)
    {
       return stPrimary_->computeAccel(time - stopDuration_);
    }
-   else if (longTrajectory_)
+   else if (isLongTrajectory_)
    {
       return ltPrimary_->computeAccel(time - stopDuration_);
    }

@@ -1,3 +1,4 @@
+# Basic configuration parameters for the guidance controller
 subscriber_topic: /auv_gnc/trans_ekf/six_dof
 publisher_topic: /auv_gnc/guidance_controller/thrust
 action_name: /auv_gnc/guidance_controller/check_for_trajectory
