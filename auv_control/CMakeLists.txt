@@ -7,17 +7,24 @@ add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   auv_core
+  dynamic_reconfigure
 )
 
 find_package(Eigen3 REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(ct_optcon REQUIRED)
 
+generate_dynamic_reconfigure_options(
+  cfg/LQRGains.cfg
+)
+
 ###########
 ## Build ##
 ###########
 
 catkin_package(
+  CATKIN_DEPENDS
+    dynamic_reconfigure
   INCLUDE_DIRS 
     include 
     ${EIGEN3_INCLUDE_DIR} 
@@ -28,6 +35,7 @@ catkin_package(
 
 include_directories(include 
   ${catkin_INCLUDE_DIRS} 
+  ${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake 
   ${EIGEN3_INCLUDE_DIR} 
   ${CERES_INCLUDE_DIRS}
   ${ct_optcon_INCLUDE_DIRS}

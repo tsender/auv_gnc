@@ -88,17 +88,34 @@ void AUVLQR::computeThrustCoeffs()
 }
 
 /**
- * @param Q LQR state cost matrix
+ * @param Q_Aug LQR state cost matrix
  * @param R LQR input cost matrix
+ * \brief Use this to set cost matrices AND to initialize controller
  */
-void AUVLQR::setCostMatrices(const Eigen::Ref<const auv_core::Matrix12d> &Q,
-                             const Eigen::Ref<const auv_core::Matrix18d> &Q_Aug,
+void AUVLQR::setCostMatrices(const Eigen::Ref<const auv_core::Matrix18d> &Q_Aug,
                              const Eigen::Ref<const auv_core::Matrix8d> &R)
 {
-   Q_ = Q;
+   Q_ = Q_Aug.block<12,12>(0,0);
    Q_Aug_ = Q_Aug;
    R_ = R;
    initLQR_ = true;
+}
+
+/**
+ * @param Q_Aug LQR state cost matrix
+ */
+void AUVLQR::setCostMatrixQ(const Eigen::Ref<const auv_core::Matrix18d> &Q_Aug)
+{
+   Q_ = Q_Aug.block<12,12>(0,0);
+   Q_Aug_ = Q_Aug;
+}
+
+/**
+ * @param R LQR input cost matrix
+ */
+void AUVLQR::setCostMatrixR(const Eigen::Ref<const auv_core::Matrix8d> &R)
+{
+   R_ = R;
 }
 
 /**

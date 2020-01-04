@@ -19,18 +19,6 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
    auvParams_ = new auv_core::auvParameters;
    auvConstraints_ = new auv_core::auvConstraints;
 
-   GuidanceController::loadAUVParams();
-   GuidanceController::loadAUVConstraints();
-   GuidanceController::loadAUVLQR();
-
-   // Pubs, Subs, and Action Servers
-   nh_.param("subscriber_topic", subTopic_, std::string("/auv_gnc/trans_ekf/six_dof"));
-   nh_.param("publisher_topic", pubTopic_, std::string("/auv_gnc/controller/thrust"));
-   nh_.param("action_name", actionName_, std::string("/auv_gnc/controller/check_for_trajectory"));
-
-   sixDofSub_ = nh_.subscribe<auv_msgs::SixDoF>(subTopic_, 1, &GuidanceController::sixDofCB, this);
-   thrustPub_ = nh_.advertise<auv_msgs::Thrust>(pubTopic_, 1, this);
-
    // Initialize variables
    state_.setZero();
    ref_.setZero();
@@ -44,6 +32,23 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
    newTrajectory_ = false;
    resultMessageSent_ = false;
    trajectoryDuration_ = 0;
+
+   // Init dynamic reconfigure
+   dynamicReconfigInit_ = false;
+   initLQR_ = false;
+   GuidanceController::initDynamicReconfigure();
+
+   GuidanceController::loadAUVParams();
+   GuidanceController::loadAUVConstraints();
+   GuidanceController::loadAUVLQR();
+
+   // Pubs, Subs, and Action Servers
+   nh_.param("subscriber_topic", subTopic_, std::string("/auv_gnc/trans_ekf/six_dof"));
+   nh_.param("publisher_topic", pubTopic_, std::string("/auv_gnc/controller/thrust"));
+   nh_.param("action_name", actionName_, std::string("/auv_gnc/controller/check_for_trajectory"));
+
+   sixDofSub_ = nh_.subscribe<auv_msgs::SixDoF>(subTopic_, 1, &GuidanceController::sixDofCB, this);
+   thrustPub_ = nh_.advertise<auv_msgs::Thrust>(pubTopic_, 1, this);
 
    // Initialize action server
    tgenActionServer_.reset(new TGenActionServer(nh_, actionName_, false));
@@ -187,25 +192,125 @@ void GuidanceController::loadAUVConstraints()
 void GuidanceController::loadAUVLQR()
 {
    // LQR Cost Matrices
-   auv_core::Matrix18d Q_Aug;
-   auv_core::Matrix8d R;
-   Q_Aug.setZero();
-   R.setZero();
+   Q_Aug_.setZero();
+   R_.setZero();
 
    bool enableLQRIntegrator = auvConfig_["LQR"]["enable_integrator"].as<bool>();
    for (int i = 0; i < 12; i++)
    {
       if (i < 6)
-         Q_Aug(i+12, i+12) = fabs(auvConfig_["LQR"]["Q_diag_integrator"][i].as<double>());
+         Q_Aug_(i + 12, i + 12) = fabs(auvConfig_["LQR"]["Q_diag_integrator"][i].as<double>());
       if (i < 8)
-         R(i, i) = fabs(auvConfig_["LQR"]["R_diag"][i].as<double>());
-      Q_Aug(i, i) = fabs(auvConfig_["LQR"]["Q_diag"][i].as<double>());
+         R_(i, i) = fabs(auvConfig_["LQR"]["R_diag"][i].as<double>());
+      Q_Aug_(i, i) = fabs(auvConfig_["LQR"]["Q_diag"][i].as<double>());
    }
 
-   auvLQR_ = new auv_control::AUVLQR(auvParams_, 1/loopRate_);
-   auvLQR_->setCostMatrices(Q_Aug.block<12,12>(0,0), Q_Aug, R);
+   auvLQR_ = new auv_control::AUVLQR(auvParams_, 1 / loopRate_);
+   auvLQR_->setCostMatrices(Q_Aug_, R_);
    auvLQR_->setIntegrator(enableLQRIntegrator);
+   initLQR_ = true;
+
+   // Initialize dynamic reconfig values
+   auv_control::LQRGainsConfig config;
+   config.Q_x = Q_Aug_(0, 0);
+   config.Q_y = Q_Aug_(1, 1);
+   config.Q_z = Q_Aug_(2, 2);
+   config.Q_u = Q_Aug_(3, 3);
+   config.Q_v = Q_Aug_(4, 4);
+   config.Q_w = Q_Aug_(5, 5);
+   config.Q_q1 = Q_Aug_(6, 6);
+   config.Q_q2 = Q_Aug_(7, 7);
+   config.Q_q3 = Q_Aug_(8, 8);
+   config.Q_p = Q_Aug_(9, 9);
+   config.Q_q = Q_Aug_(10, 10);
+   config.Q_r = Q_Aug_(11, 11);
+   config.Q_Int_x = Q_Aug_(12, 12);
+   config.Q_Int_y = Q_Aug_(13, 13);
+   config.Q_Int_z = Q_Aug_(14, 14);
+   config.Q_Int_q1 = Q_Aug_(15, 15);
+   config.Q_Int_q2 = Q_Aug_(16, 16);
+   config.Q_Int_q3 = Q_Aug_(17, 17);
+   config.R1 = R_(0, 0);
+   config.R2 = R_(1, 1);
+   config.R3 = R_(2, 2);
+   config.R4 = R_(3, 3);
+   config.R5 = R_(4, 4);
+   config.R6 = R_(5, 5);
+   config.R7 = R_(6, 6);
+   config.R8 = R_(7, 7);
+   GuidanceController::updateDynamicReconfig(config);
+
    ROS_INFO("Guidance Controller: Initialized LQR controller");
+}
+
+/**
+ * \brief Initializes dynamic reconfigure for LQR Q matrix
+ */
+void GuidanceController::initDynamicReconfigure()
+{
+   // Reset server
+   paramReconfigServer_.reset(new DynamicReconfigServer(paramReconfigMutex_, nh_));
+   dynamicReconfigInit_ = true;
+
+   // Now, we set the callback
+   paramReconfigCB_ = boost::bind(&GuidanceController::dynamicReconfigCB, this, _1, _2);
+   paramReconfigServer_->setCallback(paramReconfigCB_);
+   ROS_INFO("GuidanceController: Initialized dynamic reconfigure");
+}
+
+void GuidanceController::updateDynamicReconfig(auv_control::LQRGainsConfig config)
+{
+   // Make sure dynamic reconfigure is initialized
+   if (!dynamicReconfigInit_)
+      return;
+
+   // Set starting values, using a shared mutex with dynamic reconfig
+   paramReconfigMutex_.lock();
+   paramReconfigServer_->updateConfig(config);
+   paramReconfigMutex_.unlock();
+}
+
+// Callback for dynamic reconfigure
+void GuidanceController::dynamicReconfigCB(auv_control::LQRGainsConfig &config, uint32_t levels)
+{
+   if (!initLQR_)
+      return;
+
+   if (levels == 0) // Level 0: State cost matrix
+   {
+      Q_Aug_(0, 0) = config.Q_x;
+      Q_Aug_(1, 1) = config.Q_y;
+      Q_Aug_(2, 2) = config.Q_z;
+      Q_Aug_(3, 3) = config.Q_u;
+      Q_Aug_(4, 4) = config.Q_v;
+      Q_Aug_(5, 5) = config.Q_w;
+      Q_Aug_(6, 6) = config.Q_q1;
+      Q_Aug_(7, 7) = config.Q_q2;
+      Q_Aug_(8, 8) = config.Q_q3;
+      Q_Aug_(9, 9) = config.Q_p;
+      Q_Aug_(10, 10) = config.Q_q;
+      Q_Aug_(11, 11) = config.Q_r;
+
+      Q_Aug_(12, 12) = config.Q_Int_x;
+      Q_Aug_(13, 13) = config.Q_Int_y;
+      Q_Aug_(14, 14) = config.Q_Int_z;
+      Q_Aug_(15, 15) = config.Q_Int_q1;
+      Q_Aug_(16, 16) = config.Q_Int_q2;
+      Q_Aug_(17, 17) = config.Q_Int_q3;
+      auvLQR_->setCostMatrixQ(Q_Aug_);
+   }
+   else // Level 1: Input cost matrix
+   {
+      R_(0, 0) = config.R1;
+      R_(1, 1) = config.R2;
+      R_(2, 2) = config.R3;
+      R_(3, 3) = config.R4;
+      R_(4, 4) = config.R5;
+      R_(5, 5) = config.R6;
+      R_(6, 6) = config.R7;
+      R_(7, 7) = config.R8;
+      auvLQR_->setCostMatrixR(R_);
+   }
 }
 
 /**

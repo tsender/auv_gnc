@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   auv_control
   auv_msgs
   roscpp
+  dynamic_reconfigure
 )
 
 find_package(Eigen3 REQUIRED)
@@ -22,10 +23,15 @@ find_package(Eigen3 REQUIRED)
 ###########
 
 catkin_package(
-  INCLUDE_DIRS include ${EIGEN3_INCLUDE_DIRS}
-  CATKIN_DEPENDS roscpp
+   CATKIN_DEPENDS roscpp dynamic_reconfigure  
+   INCLUDE_DIRS include ${EIGEN3_INCLUDE_DIRS}
 )
-include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
+
+include_directories(include 
+   ${catkin_INCLUDE_DIRS} 
+   ${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake 
+   ${EIGEN3_INCLUDE_DIRS}
+)
 
 add_executable(trans_ekf src/trans_ekf_node.cpp src/trans_ekf.cpp)
 target_link_libraries(trans_ekf ${catkin_LIBRARIES})
@@ -33,7 +39,7 @@ add_dependencies(trans_ekf ${catkin_EXPORTED_TARGETS})
 
 add_executable(guidance_controller src/guidance_controller_node.cpp src/guidance_controller.cpp)
 target_link_libraries(guidance_controller ${catkin_LIBRARIES} yaml-cpp)
-add_dependencies(guidance_controller ${catkin_EXPORTED_TARGETS})
+add_dependencies(guidance_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 install(TARGETS trans_ekf guidance_controller
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

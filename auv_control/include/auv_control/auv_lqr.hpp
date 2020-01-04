@@ -87,9 +87,10 @@ public:
 
    AUVLQR(auv_core::auvParameters *auvParams, double dt);
 
-   void setCostMatrices(const Eigen::Ref<const auv_core::Matrix12d> &Q,
-                        const Eigen::Ref<const auv_core::Matrix18d> &Q_Aug,
+   void setCostMatrices(const Eigen::Ref<const auv_core::Matrix18d> &Q_Aug,
                         const Eigen::Ref<const auv_core::Matrix8d> &R);
+   void setCostMatrixQ(const Eigen::Ref<const auv_core::Matrix18d> &Q_Aug);
+   void setCostMatrixR(const Eigen::Ref<const auv_core::Matrix8d> &R);
 
    void setIntegrator(bool enable);
 

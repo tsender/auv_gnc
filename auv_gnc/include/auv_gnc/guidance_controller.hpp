@@ -15,6 +15,8 @@
 
 #include <actionlib/server/simple_action_server.h>
 #include <ros/ros.h>
+#include <dynamic_reconfigure/server.h>
+#include "auv_control/LQRGainsConfig.h"
 
 #include <yaml-cpp/yaml.h>
 #include <algorithm>
@@ -36,9 +38,19 @@ private:
    YAML::Node auvConfig_;
    auv_core::auvParameters *auvParams_;
 
+   // Dynamic Reconfigure Setup
+   typedef dynamic_reconfigure::Server<auv_control::LQRGainsConfig> DynamicReconfigServer;
+   boost::shared_ptr<DynamicReconfigServer> paramReconfigServer_;
+   DynamicReconfigServer::CallbackType paramReconfigCB_;
+   boost::recursive_mutex paramReconfigMutex_;
+   bool dynamicReconfigInit_;
+
    // LQR Parameters
    auv_control::AUVLQR *auvLQR_;
+   auv_core::Matrix18d Q_Aug_;
+   auv_core::Matrix8d R_;
    std::vector<double> Q_Diag_, Q_DiagIntegrator_, R_Diag_;
+   bool initLQR_;
    bool enableLQRIntegrator_;
    double loopRate_;
 
@@ -73,6 +85,11 @@ private:
    void loadAUVParams();
    void loadAUVConstraints();
    void loadAUVLQR();
+   
+   void initDynamicReconfigure();
+   void updateDynamicReconfig(auv_control::LQRGainsConfig config);
+   void dynamicReconfigCB(auv_control::LQRGainsConfig &config, uint32_t levels);
+
    void sixDofCB(const auv_msgs::SixDoF::ConstPtr &state);
    void tgenActionGoalCB();
    void tgenActionPreemptCB();

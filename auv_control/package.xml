@@ -4,14 +4,17 @@
   <version>0.0.1</version>
   <description>The auv_control package</description>
 
-  <maintainer email="tsende97r@gmail.com">tsender</maintainer>
+  <maintainer email="tsender97@gmail.com">tsender</maintainer>
 
   <license>BSD</license>
 
   <buildtool_depend>catkin</buildtool_depend>
+
   <build_depend>eigen</build_depend>
   <build_depend>libceres-dev</build_depend>
   <build_depend>auv_core</build_depend>
+
+  <depend>dynamic_reconfigure</depend>
   <depend>ct_optcon</depend>
 
   <export>
