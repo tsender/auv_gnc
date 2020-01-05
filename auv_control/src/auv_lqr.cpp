@@ -288,9 +288,10 @@ auv_core::Vector8d AUVLQR::computeThrust(const Eigen::Ref<const auv_core::Vector
       //std::cout << "Accel state: " << std::endl << accel << std::endl;
       //std::cout << "LQR gain K: " << K_ << std::endl;
       //std::cout << "Nominal Thrust: " << std::endl << nominalThrust << std::endl;
-      std::cout << "LQR thrust: " << lqrThrust_ << std::endl;
+      //std::cout << "LQR thrust: " << lqrThrust_ << std::endl;
+      std::cout << "Total thrust: " << (nominalThrust +lqrThrust_) << std::endl;
 
-      totalThrust_ = nominalThrust + lqrThrust_;
+      totalThrust_ = nominalThrust;// + lqrThrust_;
    }
    return totalThrust_;
 }

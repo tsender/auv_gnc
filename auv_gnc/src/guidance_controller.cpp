@@ -105,10 +105,12 @@ void GuidanceController::loadAUVParams()
    dragCoeffs.setZero();
    for (int i = 0; i < 3; i++)
    {
-      dragCoeffs(i, 0) = fabs(auvConfig_["model"]["translational_drag"]["linear"][i].as<double>());
-      dragCoeffs(i + 3, 0) = fabs(auvConfig_["model"]["translational_drag"]["quadratic"][i].as<double>());
-      dragCoeffs(i, 1) = fabs(auvConfig_["model"]["rotational_drag"]["linear"][i].as<double>());
-      dragCoeffs(i + 3, 1) = fabs(auvConfig_["model"]["rotational_drag"]["quadratic"][i].as<double>());
+      // Col 0: translational
+      dragCoeffs(i, 0) = fabs(auvConfig_["model"]["translational_drag"]["linear"][i].as<double>()); // Rows 0-2: linear terms
+      dragCoeffs(i + 3, 0) = fabs(auvConfig_["model"]["translational_drag"]["quadratic"][i].as<double>()); // Rows 3-4: quadratic terms
+      // Col 1: rotational
+      dragCoeffs(i, 1) = fabs(auvConfig_["model"]["rotational_drag"]["linear"][i].as<double>()); // Rows 0-2: linear terms
+      dragCoeffs(i + 3, 1) = fabs(auvConfig_["model"]["rotational_drag"]["quadratic"][i].as<double>()); // Rows 3-4: quadratic terms
    }
    auvParams_->dragCoeffs = dragCoeffs;
 
