@@ -257,7 +257,7 @@ auv_core::Vector8d AUVLQR::computeThrust(const Eigen::Ref<const auv_core::Vector
 
       qState_ = Eigen::Quaterniond(state(auv_core::constants::STATE_Q0), state(auv_core::constants::STATE_Q1), state(auv_core::constants::STATE_Q2), state(auv_core::constants::STATE_Q3));
       qRef_ = Eigen::Quaterniond(ref(auv_core::constants::STATE_Q0), ref(auv_core::constants::STATE_Q1), ref(auv_core::constants::STATE_Q2), ref(auv_core::constants::STATE_Q3));
-      qError_ = qRef_ * qState_.conjugate(); //qState * qRef.conjugate(); // Want quaternion error relative to Inertial-frame (is it qRef * qState.conjugate()?)
+      qError_ = qRef_ * qState_.conjugate(); // Want quaternion error relative to Inertial-frame (is it instead qState * qRef.conjugate?)
 
       error_.head<6>() = state.head<6>() - ref.head<6>();
       error_.tail<6>() = state.tail<6>() - ref.tail<6>();
@@ -282,16 +282,18 @@ auv_core::Vector8d AUVLQR::computeThrust(const Eigen::Ref<const auv_core::Vector
                                            // Add integral error !!!!!!!!!!!
       }
 
+      // Debug print lines
+      //std::cout << "Reference state: " << std::endl << ref << std::endl;
+      //std::cout << "Ref Attitude state: " << std::endl << auv_core::rot3d::quat2RPY(qRef_) * 180 / M_PI << std::endl;
+      //std::cout << "Accel state: " << std::endl << accel << std::endl;
       //std::cout << "Solve LQR, A matrix: " << std::endl << A_ << std::endl;
       //std::cout << "Solve LQR, B matrix: " << std::endl << B_ << std::endl;
-      //std::cout << "Reference state: " << std::endl << ref << std::endl;
-      //std::cout << "Accel state: " << std::endl << accel << std::endl;
       //std::cout << "LQR gain K: " << K_ << std::endl;
       //std::cout << "Nominal Thrust: " << std::endl << nominalThrust << std::endl;
       //std::cout << "LQR thrust: " << lqrThrust_ << std::endl;
-      std::cout << "Total thrust: " << (nominalThrust +lqrThrust_) << std::endl;
+      //std::cout << "Total thrust: " << (nominalThrust +lqrThrust_) << std::endl;
 
-      totalThrust_ = nominalThrust;// + lqrThrust_;
+      totalThrust_ = nominalThrust + lqrThrust_;
    }
    return totalThrust_;
 }

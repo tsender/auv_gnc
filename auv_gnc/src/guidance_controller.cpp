@@ -412,9 +412,10 @@ void GuidanceController::runController()
 
       if (tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ || tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ)
       {
+         //ROS_INFO("Time in Trajectory: %f", evalTime);
          ref_ = basicTrajectory_->computeState(evalTime);
          accel_ = basicTrajectory_->computeAccel(evalTime);
-         //ROS_INFO("Time in Trajectory: %f", dt);
+         
          //std::cout << "Reference state: " << std::endl << ref << std::endl; // Debug
          //std::cout << "Accel state: " << std::endl << accel << std::endl; // Debug
       }

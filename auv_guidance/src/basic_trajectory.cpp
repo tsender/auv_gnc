@@ -3,9 +3,9 @@
 namespace auv_guidance
 {
 /**
+ * @param constraints Pointer to AUV constraints
  * @param start Starting waypoint
  * @param end Ending waypoint
- * @param travelDuration Desired travel duration [s]
  */
 BasicTrajectory::BasicTrajectory(auv_core::auvConstraints *constraints, Waypoint *wStart, Waypoint *wEnd)
 {
@@ -32,6 +32,9 @@ BasicTrajectory::BasicTrajectory(auv_core::auvConstraints *constraints, Waypoint
    BasicTrajectory::setPrimaryTrajectory();
 }
 
+/**
+ * \brief Set the trajectory that brings vehicle to a stop
+ */
 void BasicTrajectory::setStopTrajectory()
 {
    // Get stop position
@@ -90,6 +93,9 @@ void BasicTrajectory::setStopTrajectory()
    totalDuration_ = stopDuration_;
 }
 
+/**
+ * \brief Determine the maximum velocity if using a simultaneous trajectory
+ */
 void BasicTrajectory::computeMaxVelocity()
 {
    deltaVec_ = wEnd_->posI() - wStop_->posI();
@@ -123,6 +129,9 @@ void BasicTrajectory::computeMaxVelocity()
    maxVelocityVec_ = unitVec_ * maxVelocity_;
 }
 
+/**
+ * \brief Find the duration of a simulaneous trajectory from stop point to goal point
+ */
 void BasicTrajectory::computeSimultaneousTime()
 {
    // Translation
@@ -133,7 +142,7 @@ void BasicTrajectory::computeSimultaneousTime()
 
    // Rotation
    qEnd_ = wEnd_->quaternion();
-   Eigen::Quaterniond qDiff = qStop_.conjugate() * qEnd_; // Error quaternion wrt B-frame (q2 * q1.conjugate is wrt I-frame)
+   Eigen::Quaterniond qDiff = qStop_.conjugate() * qEnd_; // Error quaternion wrt B-frame (wrt I-frame: q2 * q1.conjugate)
    double angularDistance = auv_core::rot3d::quat2AngleAxis(qDiff)(0);
 
    Eigen::Vector4d rotStart = Eigen::Vector4d::Zero();
@@ -153,6 +162,9 @@ void BasicTrajectory::computeSimultaneousTime()
    std::cout << "BT: simultaneous duration: " << simultaneousDuration_ << std::endl; // Debug
 }
 
+/**
+ * \brief Set the primary trajectory to use (long or simultaneous)
+ */
 void BasicTrajectory::setPrimaryTrajectory()
 {
    BasicTrajectory::computeMaxVelocity();
@@ -196,6 +208,9 @@ void BasicTrajectory::setPrimaryTrajectory()
    std::cout << "BT simultaneous trajectory " << isSimultaneousTrajectory_ << std::endl; // Debug
 }
 
+/**
+ * \brief Return the total duration
+ */
 double BasicTrajectory::getTime()
 {
    return totalDuration_;
@@ -203,7 +218,7 @@ double BasicTrajectory::getTime()
 
 /**
  * @param time Time to compute the state at
- * Computes the trajectory state at the specified time
+ * \brief Computes the trajectory state at the specified time
  */
 auv_core::Vector13d BasicTrajectory::computeState(double time)
 {
@@ -225,8 +240,8 @@ auv_core::Vector13d BasicTrajectory::computeState(double time)
 
 /**
  * @param time Time to compute accelerations at
- * Compute inertial translational acceleration and time-derivative of angular veocity, 
- * both expressed in B-frame, at specified time
+ * \brief Compute the trajectory acceleration at specified time (inertial translational acceleration and time-derivative of angular velocity), 
+ * both expressed in B-frame.
  */
 auv_core::Vector6d BasicTrajectory::computeAccel(double time)
 {

@@ -13,6 +13,8 @@
 
 namespace auv_guidance
 {
+// Defines a trajectory occuring over a long distance. Contains three travel phases: speed up, cruise, and slow down
+// Speed up and slow down are both mirrored S-curves about the cruise region (assumes vehicle starts and ends at rest)
 class LongTrajectory : public Trajectory
 {
 private:

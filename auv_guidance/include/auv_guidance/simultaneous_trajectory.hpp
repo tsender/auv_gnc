@@ -10,7 +10,7 @@
 
 namespace auv_guidance
 {
-// Must translate along a single (arbitrary) direction
+// Creates a trajectory to perform both translational and rotational motion simultaneously in a specified duration
 class SimultaneousTrajectory : public Trajectory
 {
 private:

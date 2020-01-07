@@ -5,7 +5,7 @@ namespace auv_guidance
 /**
  * @param start Starting waypoint
  * @param end Ending waypoint
- * @param travelDuration Desired travel duration [s]
+ * @param duration Desired travel duration [s]
  */
 SimultaneousTrajectory::SimultaneousTrajectory(Waypoint *start, Waypoint *end, double duration)
 {
@@ -25,7 +25,7 @@ SimultaneousTrajectory::SimultaneousTrajectory(Waypoint *start, Waypoint *end, d
 }
 
 /**
- * Initialize the min jerk trajectories
+ * \brief Initialize the trajectory
  */
 void SimultaneousTrajectory::initTrajectory()
 {
@@ -52,6 +52,9 @@ void SimultaneousTrajectory::initTrajectory()
     mjtAtt_ = new MinJerkTrajectory(angleStart, angleEnd, totalDuration_);
 }
 
+/**
+ * \brief Return total duration
+ */
 double SimultaneousTrajectory::getTime()
 {
     return totalDuration_;
@@ -59,7 +62,7 @@ double SimultaneousTrajectory::getTime()
 
 /**
  * @param time Time to compute the state at
- * Computes the trajectory state at the specified time
+ * \brief Computes the trajectory state at the specified time
  */
 auv_core::Vector13d SimultaneousTrajectory::computeState(double time)
 {
@@ -125,8 +128,8 @@ auv_core::Vector13d SimultaneousTrajectory::computeState(double time)
 
 /**
  * @param time Time to compute accelerations at
- * Compute inertial translational acceleration and time-derivative of angular veocity, 
- * both expressed in B-frame, at specified time
+ * \brief Compute the trajectory acceleration at specified time (inertial translational acceleration and time-derivative of angular velocity), 
+ * both expressed in B-frame.
  */
 auv_core::Vector6d SimultaneousTrajectory::computeAccel(double time)
 {
