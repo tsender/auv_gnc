@@ -18,6 +18,7 @@ BasicTrajectory::BasicTrajectory(auv_core::auvConstraints *constraints, Waypoint
    unitVec_.setZero();
    maxVelocityVec_.setZero();
 
+   maxVelocityST_ = 0;
    maxVelocity_ = 0;
    stopDuration_ = 0;
    simultaneousDuration_ = 0;
@@ -96,25 +97,11 @@ void BasicTrajectory::setStopTrajectory()
 /**
  * \brief Determine the maximum velocity if using a simultaneous trajectory
  */
-void BasicTrajectory::computeMaxVelocity()
+void BasicTrajectory::computeMaxVelocityST()
 {
    deltaVec_ = wEnd_->posI() - wStop_->posI();
    unitVec_ = deltaVec_.normalized();
-
-   double distanceXY = deltaVec_.head<2>().norm();
-   double distanceZ = fabs(deltaVec_(2));
    distance_ = deltaVec_.norm();
-
-   if (distanceXY > auvConstraints_->maxXYDistance)
-   {
-      isSimultaneousTrajectory_ = false;
-      std::cout << "BT: dixtance XY too large: " << distanceXY << " > " << auvConstraints_->maxXYDistance << std::endl; // Debug
-   }
-   if (distanceZ > auvConstraints_->maxZDistance)
-   {
-      isSimultaneousTrajectory_ = false;
-      std::cout << "BT: dixtance Z too large: " << distanceZ << " > " << auvConstraints_->maxZDistance << std::endl; // Debug
-   }
 
    BasicTrajectory::computeSimultaneousTime();
 
@@ -124,8 +111,8 @@ void BasicTrajectory::computeMaxVelocity()
    transEnd(0) = distance_;
    mjtHelper_ = new MinJerkTrajectory(transStart, transEnd, simultaneousDuration_);
 
-   initialMaxVelocity_ = fabs(mjtHelper_->getMiddleVelocity());
-   maxVelocity_ = initialMaxVelocity_;
+   maxVelocityST_ = fabs(mjtHelper_->getMiddleVelocity());
+   maxVelocity_ = maxVelocityST_;
    maxVelocityVec_ = unitVec_ * maxVelocity_;
 }
 
@@ -167,33 +154,53 @@ void BasicTrajectory::computeSimultaneousTime()
  */
 void BasicTrajectory::setPrimaryTrajectory()
 {
-   BasicTrajectory::computeMaxVelocity();
+   BasicTrajectory::computeMaxVelocityST();
 
-   double maxXYVel = maxVelocityVec_.head<2>().norm();
-   double maxZVel = fabs(maxVelocityVec_(2));
+   Eigen::Quaterniond qSlerp = qStop_.slerp(0.5, qEnd_);           // Quaternion at midpoint
+   Eigen::Vector3d maxVelB = qSlerp.conjugate() * maxVelocityVec_; // Max vel xpressed in B-frame
+   Eigen::Vector3d maxVelI = maxVelocityVec_;                      // Max vel Expressed in I-frame
+   double distanceXY = deltaVec_.head<2>().norm();
+   double distanceZ = fabs(deltaVec_(2));
 
-   // Verify XYZ velocities are not violated
-   if (maxXYVel > auvConstraints_->maxTransVel(0))
+   // Determine if XYZ distances are violated
+   if (distanceXY > auvConstraints_->maxXYDistance)
    {
       isSimultaneousTrajectory_ = false;
-      std::cout << "BT: max XY velocity too large: " << maxXYVel << " > " << auvConstraints_->maxTransVel(0) << std::endl; // Debug
-      maxXYVel = auvConstraints_->maxTransVel(0);
+      std::cout << "BT: MAX distance XY: " << distanceXY << " > " << auvConstraints_->maxXYDistance << std::endl; // Debug
    }
-   if (maxZVel > auvConstraints_->maxTransVel(2))
+   if (distanceZ > auvConstraints_->maxZDistance)
    {
       isSimultaneousTrajectory_ = false;
-      std::cout << "BT: max Z velocity too large: " << maxZVel << " > " << auvConstraints_->maxTransVel(2) << std::endl; // Debug
-      maxZVel = auvConstraints_->maxTransVel(2);
+      std::cout << "BT: MAX distance Z: " << distanceZ << " > " << auvConstraints_->maxZDistance << std::endl; // Debug
    }
 
-   // Update max velocity vector
-   maxVelocity_ = sqrt(maxXYVel * maxXYVel + maxZVel * maxZVel);
-   maxVelocityVec_ = unitVec_ * maxVelocity_;
+   // Determine if XYZ velocities are violated
+   for (int i = 0; i < 3; i++)
+   {
+      // Check inertial-frame velocity
+      if (fabs(maxVelI(i)) > auvConstraints_->maxTransVel(i))
+      {
+         isSimultaneousTrajectory_ = false;
+         maxVelI(i) = auv_core::math_lib::sign(maxVelI(i)) * auvConstraints_->maxTransVel(i);
+         std::cout << "BT: MAX I-frame velocity " << i << "-axis: " << fabs(maxVelI(i)) << " > " << auvConstraints_->maxTransVel(i) << std::endl; // Debug
+      }
+
+      // Check body-frame velocity
+      if (fabs(maxVelB(i)) > auvConstraints_->maxTransVel(i))
+      {
+         isSimultaneousTrajectory_ = false;
+         maxVelB(i) = auv_core::math_lib::sign(maxVelB(i)) * auvConstraints_->maxTransVel(i);
+         std::cout << "BT: MAX B-frame velocity " << i << "-axis: " << fabs(maxVelB(i)) << " > " << auvConstraints_->maxTransVel(i) << std::endl; // Debug
+      }
+   }
+
+   // // Set the allowed max velocity
+   maxVelocity_ = std::min(maxVelI.norm(), maxVelB.norm());
 
    if (!isSimultaneousTrajectory_) // Execute long trajectory
    {
       isLongTrajectory_ = true;
-      double cruiseRatio = 1.0 - maxVelocity_ / initialMaxVelocity_;
+      double cruiseRatio = 1.0 - maxVelocity_ / maxVelocityST_;
       ltPrimary_ = new LongTrajectory(wStop_, wEnd_, auvConstraints_, cruiseRatio, maxVelocity_);
       longDuration_ = ltPrimary_->getTime();
       totalDuration_ += longDuration_;
@@ -204,8 +211,8 @@ void BasicTrajectory::setPrimaryTrajectory()
       stPrimary_ = new SimultaneousTrajectory(wStop_, wEnd_, simultaneousDuration_);
       totalDuration_ = simultaneousDuration_;
    }
-   std::cout << "BT long trajectory " << isLongTrajectory_ << std::endl;                 // Debug
-   std::cout << "BT simultaneous trajectory " << isSimultaneousTrajectory_ << std::endl; // Debug
+   std::cout << "BT long trajectory [bool]: " << isLongTrajectory_ << std::endl;                 // Debug
+   std::cout << "BT simultaneous trajectory [bool]: " << isSimultaneousTrajectory_ << std::endl; // Debug
 }
 
 /**
@@ -224,12 +231,12 @@ auv_core::Vector13d BasicTrajectory::computeState(double time)
 {
    if (time <= stopDuration_)
    {
-      //std::cout << "ST: stop trajectory at time " << time << std::endl;
+      //std::cout << "BT: stop trajectory at time " << time << std::endl; // Debug
       return stStop_->computeState(time);
    }
    else if (isSimultaneousTrajectory_)
    {
-      //std::cout << "ST: main trajectory at time " << time - stopDuration_ << std::endl;
+      //std::cout << "BT: main trajectory at time " << time - stopDuration_ << std::endl; // Debug
       return stPrimary_->computeState(time - stopDuration_);
    }
    else if (isLongTrajectory_)

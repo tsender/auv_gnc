@@ -27,7 +27,7 @@ private:
 
    Eigen::Vector3d unitVec_, deltaVec_, maxVelocityVec_;
    double totalDuration_, stopDuration_, simultaneousDuration_, longDuration_;
-   double distance_, initialMaxVelocity_, maxVelocity_;
+   double distance_, maxVelocityST_, maxVelocity_;
 
    bool isLongTrajectory_, isSimultaneousTrajectory_, exceedsMaxSpeed_;
 
@@ -36,7 +36,7 @@ public:
 
    BasicTrajectory(auv_core::auvConstraints *constraints, Waypoint *wStart, Waypoint *wEnd);
    void setStopTrajectory();
-   void computeMaxVelocity();
+   void computeMaxVelocityST();
    void computeSimultaneousTime();
    void setPrimaryTrajectory();
    double getTime();

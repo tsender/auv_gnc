@@ -93,7 +93,7 @@ constraints: # Note: Some constraints are for trajectory limits
     max_z_distance: 1.0 # [m]
   },
   # Set heading towards destination when path inclination is less than this value
-  max_align_inclination: 1.40, # [rad]
+  max_align_inclination: 1.20, # [rad]
   max_velocity:
   {
     x: 0.75, # [m/s]

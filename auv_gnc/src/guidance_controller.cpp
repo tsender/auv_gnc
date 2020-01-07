@@ -213,7 +213,7 @@ void GuidanceController::loadAUVLQR()
    initLQR_ = true;
 
    // Initialize dynamic reconfig values
-   auv_control::LQRGainsConfig config;
+   auv_control::LQRWeightsConfig config;
    config.Q_x = Q_Aug_(0, 0);
    config.Q_y = Q_Aug_(1, 1);
    config.Q_z = Q_Aug_(2, 2);
@@ -246,7 +246,7 @@ void GuidanceController::loadAUVLQR()
 }
 
 /**
- * \brief Initializes dynamic reconfigure for LQR Q matrix
+ * \brief Initializes dynamic reconfigure for LQR weight matrices
  */
 void GuidanceController::initDynamicReconfigure()
 {
@@ -260,7 +260,11 @@ void GuidanceController::initDynamicReconfigure()
    ROS_INFO("GuidanceController: Initialized dynamic reconfigure");
 }
 
-void GuidanceController::updateDynamicReconfig(auv_control::LQRGainsConfig config)
+/**
+ * @param config Config of LQR weights to apply
+ * \brief Manuallly updates LQR weights for dynamic reconfigure callback (used for initialization)
+ */
+void GuidanceController::updateDynamicReconfig(auv_control::LQRWeightsConfig config)
 {
    // Make sure dynamic reconfigure is initialized
    if (!dynamicReconfigInit_)
@@ -272,8 +276,12 @@ void GuidanceController::updateDynamicReconfig(auv_control::LQRGainsConfig confi
    paramReconfigMutex_.unlock();
 }
 
-// Callback for dynamic reconfigure
-void GuidanceController::dynamicReconfigCB(auv_control::LQRGainsConfig &config, uint32_t levels)
+/**
+ * @param config Updated LQR weight config
+ * @param levels Indicates the levels of the recently adjusted parameters (0 = state cost, 1 = control input cost)
+ * \brief Dynamic reconfigure callback to update LQR weight matrices
+ */
+void GuidanceController::dynamicReconfigCB(auv_control::LQRWeightsConfig &config, uint32_t levels)
 {
    if (!initLQR_)
       return;
@@ -347,6 +355,9 @@ void GuidanceController::sixDofCB(const auv_msgs::SixDoF::ConstPtr &state)
    auv_core::eigen_ros::vectorMsgToEigen(state->linear_accel, linearAccel_);
 }
 
+/**
+ * \brief Action callback for trajectory generator action
+ */
 void GuidanceController::tgenActionGoalCB()
 {
    boost::shared_ptr<const auv_msgs::TrajectoryGeneratorGoal> tgenPtr = tgenActionServer_->acceptNewGoal();
@@ -370,6 +381,9 @@ void GuidanceController::tgenActionGoalCB()
    }
 }
 
+/**
+ * \brief Preempt callback for trajectory generator acion
+ */
 void GuidanceController::tgenActionPreemptCB()
 {
    tgenActionServer_->setPreempted();
@@ -379,6 +393,9 @@ void GuidanceController::tgenActionPreemptCB()
    GuidanceController::publishThrustMessage();
 }
 
+/**
+ * \brief Returns true if action server is active and no preempt requested
+ */
 bool GuidanceController::isActionServerActive()
 {
    return (tgenActionServer_->isActive() && !tgenActionServer_->isPreemptRequested());
@@ -397,6 +414,9 @@ bool GuidanceController::isTrajectoryTypeValid(int type)
    return false;
 }
 
+/**
+ * \brief Execute one loop of the controller
+ */
 void GuidanceController::runController()
 {
    if (!tgenInit_)
@@ -410,14 +430,11 @@ void GuidanceController::runController()
    {
       double evalTime = ros::Time::now().toSec() - startTime_.toSec();
 
-      if (tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ || tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ)
+      if (tgenType_ == auv_msgs::Trajectory::BASIC_ABS_XYZ || tgenType_ == auv_msgs::Trajectory::BASIC_REL_XYZ)
       {
          //ROS_INFO("Time in Trajectory: %f", evalTime);
          ref_ = basicTrajectory_->computeState(evalTime);
          accel_ = basicTrajectory_->computeAccel(evalTime);
-         
-         //std::cout << "Reference state: " << std::endl << ref << std::endl; // Debug
-         //std::cout << "Accel state: " << std::endl << accel << std::endl; // Debug
       }
 
       if (evalTime > trajectoryDuration_ && !resultMessageSent_)
@@ -463,7 +480,10 @@ void GuidanceController::initNewTrajectory()
       auv_core::eigen_ros::quaternionMsgToEigen(desiredTrajectory_.pose.orientation, quatEnd);
 
       if (tgenType_ == auv_msgs::Trajectory::BASIC_REL_XYZ)
-         posIEnd = (quaternion_ * posIStart) + posIEnd;
+      {
+         posIEnd = posIStart + (quaternion_ * posIEnd);
+         quatEnd = quaternion_ * quatEnd;
+      }
 
       endWaypoint_ = new auv_guidance::Waypoint(posIEnd, zero3d, zero3d, quatEnd, zero3d);
       basicTrajectory_ = new auv_guidance::BasicTrajectory(auvConstraints_, startWaypoint_, endWaypoint_);
@@ -471,6 +491,9 @@ void GuidanceController::initNewTrajectory()
    }
 }
 
+/**
+ * \brief Publish thrust message
+ */
 void GuidanceController::publishThrustMessage()
 {
    auv_msgs::Thrust thrustMsg;

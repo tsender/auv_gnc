@@ -15,7 +15,7 @@ find_package(Ceres REQUIRED)
 find_package(ct_optcon REQUIRED)
 
 generate_dynamic_reconfigure_options(
-  cfg/LQRGains.cfg
+  cfg/LQRWeights.cfg
 )
 
 ###########

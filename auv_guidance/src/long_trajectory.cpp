@@ -61,6 +61,8 @@ void LongTrajectory::initTrajectory()
    {
       travelHeading = atan2(dy, dx); // Radians
       qCruise_ = auv_core::rot3d::rpy2Quat(0, 0, travelHeading);
+      newTravelHeading_ = true;
+      std::cout << "LT: new cruise heading, path inclination " << atan(fabs(dz) / xyDistance) * 180 / M_PI << " < " << auvConstraints_->maxAlignInclination * 180 / M_PI << std::endl; // Debug
       std::cout << "LT: new cruise heading [deg]: " << travelHeading * 180 / M_PI << std::endl; // Debug
    }
 
@@ -88,8 +90,8 @@ void LongTrajectory::initWaypoints()
    accelDuration_ = mjts->getTime();
 
    // Init position vectors and cruise duration
-   cruiseStartPos_ = wStart_->posI() + accelDistance * unitVec_;
-   cruiseEndPos_ = wEnd_->posI() - accelDistance * unitVec_;
+   cruiseStartPos_ = wStart_->posI() + (accelDistance * unitVec_);
+   cruiseEndPos_ = wEnd_->posI() - (accelDistance * unitVec_);
    cruiseVel_ = cruiseSpeed_ * unitVec_;
    cruiseDuration_ = deltaVec_.norm() * cruiseRatio_ / cruiseSpeed_;
 
@@ -100,6 +102,16 @@ void LongTrajectory::initWaypoints()
    wCruiseStart_ = new Waypoint(cruiseStartPos_, cruiseVel_, zero3d, qCruise_, zero3d);
    wCruiseEnd_ = new Waypoint(cruiseEndPos_, cruiseVel_, zero3d, qCruise_, zero3d);
    wPostTranslate_ = new Waypoint(wEnd_->posI(), zero3d, zero3d, qCruise_, zero3d);
+
+   // Debug print lines
+   std::cout << "LT: delta vector = " << std::endl << deltaVec_ << std::endl;
+   std::cout << "LT: cruise ratio = " << cruiseRatio_ << std::endl;
+   std::cout << "LT: total distance = " << deltaVec_.norm() << std::endl;
+   std::cout << "LT: accel distance = " << accelDistance << std::endl;
+   std::cout << "LT: pre translate: " << std::endl << wStart_->posI() << std::endl;
+   std::cout << "LT: cruise start: " << std::endl << cruiseStartPos_ << std::endl;
+   std::cout << "LT: cruise end: " << std::endl << cruiseEndPos_ << std::endl;
+   std::cout << "LT: post translate: " << std::endl << wEnd_->posI() << std::endl;
 }
 
 /**
@@ -168,6 +180,7 @@ double LongTrajectory::computeRotationTime(Eigen::Quaterniond qDiff)
    MinJerkTimeSolver *mjts;
    mjts = new MinJerkTimeSolver(rotStart, rotEnd);
 
+   // TODO: Check max speed and verify within limits ///////////////////////////////////////////////////////////////
    return mjts->getTime();
 }
 
@@ -195,7 +208,7 @@ auv_core::Vector13d LongTrajectory::computeState(double time)
       if (time < stTimes_[i])
       {
          double t = (i == 0) ? time : time - stTimes_[i - 1];
-         //std::cout << "BT: compute state from ST " << i << "at time " << t << std::endl;
+         std::cout << "LT: compute state from ST " << i << "at time " << t << std::endl;
          return stList_[i]->computeState(t);
       }
    }

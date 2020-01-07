@@ -16,7 +16,7 @@
 #include <actionlib/server/simple_action_server.h>
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
-#include "auv_control/LQRGainsConfig.h"
+#include "auv_control/LQRWeightsConfig.h"
 
 #include <yaml-cpp/yaml.h>
 #include <algorithm>
@@ -39,7 +39,7 @@ private:
    auv_core::auvParameters *auvParams_;
 
    // Dynamic Reconfigure Setup
-   typedef dynamic_reconfigure::Server<auv_control::LQRGainsConfig> DynamicReconfigServer;
+   typedef dynamic_reconfigure::Server<auv_control::LQRWeightsConfig> DynamicReconfigServer;
    boost::shared_ptr<DynamicReconfigServer> paramReconfigServer_;
    DynamicReconfigServer::CallbackType paramReconfigCB_;
    boost::recursive_mutex paramReconfigMutex_;
@@ -87,8 +87,8 @@ private:
    void loadAUVLQR();
    
    void initDynamicReconfigure();
-   void updateDynamicReconfig(auv_control::LQRGainsConfig config);
-   void dynamicReconfigCB(auv_control::LQRGainsConfig &config, uint32_t levels);
+   void updateDynamicReconfig(auv_control::LQRWeightsConfig config);
+   void dynamicReconfigCB(auv_control::LQRWeightsConfig &config, uint32_t levels);
 
    void sixDofCB(const auv_msgs::SixDoF::ConstPtr &state);
    void tgenActionGoalCB();

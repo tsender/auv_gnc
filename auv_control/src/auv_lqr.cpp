@@ -265,12 +265,14 @@ auv_core::Vector8d AUVLQR::computeThrust(const Eigen::Ref<const auv_core::Vector
 
       if (!enableIntegrator_)
       {
-         //std::cout << "LQR error: " << error << std::endl;
          lqrSolver_.compute(Q_, R_, A_, B_, K_);
          lqrThrust_ = -K_ * error_; // U = -K*(state-ref)
       }
       else
-      { // TODO: Verify quaternion error calculation, or improve if not correct
+      { 
+         // NOTE: INTEGRAL ACTION IS UNTESTED CODE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         
+         // TODO: Verify quaternion error calculation, or improve if not correct
          augError_.head<12>() = error_;
          qIntegratorError_ = qIntegratorError_ * qError_; // Regard integral error of quaternion as another quaternion
          posIntegratorError_ = posIntegratorError_ + dt_ * augError_.segment<3>(auv_core::constants::RSTATE_XI);
@@ -286,6 +288,7 @@ auv_core::Vector8d AUVLQR::computeThrust(const Eigen::Ref<const auv_core::Vector
       //std::cout << "Reference state: " << std::endl << ref << std::endl;
       //std::cout << "Ref Attitude state: " << std::endl << auv_core::rot3d::quat2RPY(qRef_) * 180 / M_PI << std::endl;
       //std::cout << "Accel state: " << std::endl << accel << std::endl;
+      std::cout << "LQR quaternion error: " << std::endl << qError_.vec() << std::endl;
       //std::cout << "Solve LQR, A matrix: " << std::endl << A_ << std::endl;
       //std::cout << "Solve LQR, B matrix: " << std::endl << B_ << std::endl;
       //std::cout << "LQR gain K: " << K_ << std::endl;
@@ -293,7 +296,7 @@ auv_core::Vector8d AUVLQR::computeThrust(const Eigen::Ref<const auv_core::Vector
       //std::cout << "LQR thrust: " << lqrThrust_ << std::endl;
       //std::cout << "Total thrust: " << (nominalThrust +lqrThrust_) << std::endl;
 
-      totalThrust_ = nominalThrust;// + lqrThrust_;
+      totalThrust_ = nominalThrust + lqrThrust_;
    }
    return totalThrust_;
 }
