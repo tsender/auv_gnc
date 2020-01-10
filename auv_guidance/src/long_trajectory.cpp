@@ -208,7 +208,7 @@ auv_core::Vector13d LongTrajectory::computeState(double time)
       if (time < stTimes_[i])
       {
          double t = (i == 0) ? time : time - stTimes_[i - 1];
-         std::cout << "LT: compute state from ST " << i << "at time " << t << std::endl;
+         //std::cout << "LT: compute state from ST " << i << "at time " << t << std::endl;
          return stList_[i]->computeState(t);
       }
    }

@@ -288,7 +288,7 @@ auv_core::Vector8d AUVLQR::computeThrust(const Eigen::Ref<const auv_core::Vector
       //std::cout << "Reference state: " << std::endl << ref << std::endl;
       //std::cout << "Ref Attitude state: " << std::endl << auv_core::rot3d::quat2RPY(qRef_) * 180 / M_PI << std::endl;
       //std::cout << "Accel state: " << std::endl << accel << std::endl;
-      std::cout << "LQR quaternion error: " << std::endl << qError_.vec() << std::endl;
+      //std::cout << "LQR quaternion error: " << std::endl << qError_.vec() << std::endl;
       //std::cout << "Solve LQR, A matrix: " << std::endl << A_ << std::endl;
       //std::cout << "Solve LQR, B matrix: " << std::endl << B_ << std::endl;
       //std::cout << "LQR gain K: " << K_ << std::endl;

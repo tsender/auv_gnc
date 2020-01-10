@@ -40,6 +40,10 @@ void SimultaneousTrajectory::initTrajectory()
     angularDistance_ = angleAxis(0);
     rotationAxis_ = angleAxis.tail<3>(); // Get axis relative to Body-frame at starting position
     double angVel = wStart_->angVelB().norm();
+    std::cout << "ST: start attitude " << std::endl << auv_core::rot3d::quat2RPY(qStart_) * 180 / M_PI << std::endl; // Debug
+    std::cout << "ST: angular distance [deg]: " << angularDistance_ * 180 / M_PI << std::endl;
+    std::cout << "ST: angular axis, relative to I-frame: " << std::endl << qStart_.conjugate() * rotationAxis_ << std::endl;
+    std::cout << "ST: end attitude " << std::endl << auv_core::rot3d::quat2RPY(qEnd_) * 180 / M_PI << std::endl; // Debug
 
     Eigen::Vector3d angleStart = Eigen::Vector3d::Zero(); 
     Eigen::Vector3d angleEnd = Eigen::Vector3d::Zero();

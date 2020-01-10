@@ -180,17 +180,17 @@ void BasicTrajectory::setPrimaryTrajectory()
       // Check inertial-frame velocity
       if (fabs(maxVelI(i)) > auvConstraints_->maxTransVel(i))
       {
+         std::cout << "BT: MAX I-frame velocity " << i << "-axis: " << fabs(maxVelI(i)) << " > " << auvConstraints_->maxTransVel(i) << std::endl; // Debug
          isSimultaneousTrajectory_ = false;
          maxVelI(i) = auv_core::math_lib::sign(maxVelI(i)) * auvConstraints_->maxTransVel(i);
-         std::cout << "BT: MAX I-frame velocity " << i << "-axis: " << fabs(maxVelI(i)) << " > " << auvConstraints_->maxTransVel(i) << std::endl; // Debug
       }
 
       // Check body-frame velocity
       if (fabs(maxVelB(i)) > auvConstraints_->maxTransVel(i))
       {
+         std::cout << "BT: MAX B-frame velocity " << i << "-axis: " << fabs(maxVelB(i)) << " > " << auvConstraints_->maxTransVel(i) << std::endl; // Debug
          isSimultaneousTrajectory_ = false;
          maxVelB(i) = auv_core::math_lib::sign(maxVelB(i)) * auvConstraints_->maxTransVel(i);
-         std::cout << "BT: MAX B-frame velocity " << i << "-axis: " << fabs(maxVelB(i)) << " > " << auvConstraints_->maxTransVel(i) << std::endl; // Debug
       }
    }
 

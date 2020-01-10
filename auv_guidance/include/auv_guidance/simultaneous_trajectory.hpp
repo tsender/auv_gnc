@@ -7,6 +7,7 @@
 #include "auv_guidance/min_jerk_trajectory.hpp"
 
 #include "math.h"
+#include <iostream>
 
 namespace auv_guidance
 {
