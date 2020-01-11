@@ -37,7 +37,7 @@ public:
    void initTrajectory();
    void initWaypoints();
    void initSimultaneousTrajectories();
-   double computeRotationTime(Eigen::Quaterniond qDiff);
+   double computeRotationTime(Eigen::Quaterniond qRel);
    double getTime();
    auv_core::Vector13d computeState(double time);
    auv_core::Vector6d computeAccel(double time);

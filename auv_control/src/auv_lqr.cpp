@@ -95,7 +95,7 @@ void AUVLQR::computeThrustCoeffs()
 void AUVLQR::setCostMatrices(const Eigen::Ref<const auv_core::Matrix18d> &Q_Aug,
                              const Eigen::Ref<const auv_core::Matrix8d> &R)
 {
-   Q_ = Q_Aug.block<12,12>(0,0);
+   Q_ = Q_Aug.block<12, 12>(0, 0);
    Q_Aug_ = Q_Aug;
    R_ = R;
    initLQR_ = true;
@@ -106,7 +106,7 @@ void AUVLQR::setCostMatrices(const Eigen::Ref<const auv_core::Matrix18d> &Q_Aug,
  */
 void AUVLQR::setCostMatrixQ(const Eigen::Ref<const auv_core::Matrix18d> &Q_Aug)
 {
-   Q_ = Q_Aug.block<12,12>(0,0);
+   Q_ = Q_Aug.block<12, 12>(0, 0);
    Q_Aug_ = Q_Aug;
 }
 
@@ -140,7 +140,7 @@ void AUVLQR::computeLinearizedSystemMatrix(const Eigen::Ref<const auv_core::Vect
 {
    // Variables for Auto Diff.
    size_t n = 12, m = 3;
-   ADVectorXd X(n), Xdot(n);
+   ADVectorXd X(n), Xdot(n), ADq0(1);
    std::vector<double> jac(n * n); // Create nxn elements to represent a Jacobian matrix ()
 
    // MUST set X to contain INDEPENDENT variables
@@ -149,7 +149,10 @@ void AUVLQR::computeLinearizedSystemMatrix(const Eigen::Ref<const auv_core::Vect
    // Using Eigen::Quaternion: quaternion * vector = rotated vector by the described axis-angle/quaternion
    // --> B-frame vector = quaternion.conjugate() * I-frame vector
    // --> I-frame vector = quaternion * B-frame vector
-   Eigen::Quaternion<CppAD::AD<double>> ADquat(ref(auv_core::constants::STATE_Q0), X[auv_core::constants::RSTATE_Q1], X[auv_core::constants::RSTATE_Q2], X[auv_core::constants::RSTATE_Q3]);
+   ADq0[0] = auv_core::math_lib::sign(ref(auv_core::constants::STATE_Q0)) *
+           CppAD::sqrt(1 - CppAD::pow(X[auv_core::constants::RSTATE_Q1], 2) - CppAD::pow(X[auv_core::constants::RSTATE_Q2], 2) - CppAD::pow(X[auv_core::constants::RSTATE_Q3], 2));
+   //Eigen::Quaternion<CppAD::AD<double>> ADquat(ref(auv_core::constants::STATE_Q0), X[auv_core::constants::RSTATE_Q1], X[auv_core::constants::RSTATE_Q2], X[auv_core::constants::RSTATE_Q3]);
+   Eigen::Quaternion<CppAD::AD<double>> ADquat(ADq0[0], X[auv_core::constants::RSTATE_Q1], X[auv_core::constants::RSTATE_Q2], X[auv_core::constants::RSTATE_Q3]);
 
    // Translational States
    // 1. Time derivatives of: xI, yI, zI (expressed in I-frame)
@@ -168,7 +171,7 @@ void AUVLQR::computeLinearizedSystemMatrix(const Eigen::Ref<const auv_core::Vect
    // 3. Time Derivatives of: q1, q2, q3 (remember, quaternion represents the B-frame orientation wrt to the I-frame)
    ADMatrix3d qoIdentity;
    Eigen::Matrix3d identity = Eigen::Matrix3d::Identity();
-   qoIdentity = identity * ref(auv_core::constants::STATE_Q0);
+   qoIdentity = identity * ADq0[0]; //identity * ref(auv_core::constants::STATE_Q0);
    Xdot.segment<3>(auv_core::constants::RSTATE_Q1) = 0.5 * (qoIdentity * X.segment<3>(auv_core::constants::RSTATE_P) + X.segment<3>(auv_core::constants::RSTATE_Q1).cross(X.segment<3>(auv_core::constants::RSTATE_P)));
 
    // 4. Time Derivatives of: P, Q, R (expressed in B-frame)
@@ -182,8 +185,8 @@ void AUVLQR::computeLinearizedSystemMatrix(const Eigen::Ref<const auv_core::Vect
 
    // Reduced state (excludes q0)
    auv_core::Vector12d reducedState;
-   reducedState.head<6>() = reducedState.head<6>();
-   reducedState.tail<6>() = reducedState.tail<6>();
+   reducedState.head<6>() = ref.head<6>();
+   reducedState.tail<6>() = ref.tail<6>();
 
    // Compute Jacobian
    std::vector<double> x;
@@ -257,7 +260,8 @@ auv_core::Vector8d AUVLQR::computeThrust(const Eigen::Ref<const auv_core::Vector
 
       qState_ = Eigen::Quaterniond(state(auv_core::constants::STATE_Q0), state(auv_core::constants::STATE_Q1), state(auv_core::constants::STATE_Q2), state(auv_core::constants::STATE_Q3));
       qRef_ = Eigen::Quaterniond(ref(auv_core::constants::STATE_Q0), ref(auv_core::constants::STATE_Q1), ref(auv_core::constants::STATE_Q2), ref(auv_core::constants::STATE_Q3));
-      qError_ = qRef_ * qState_.conjugate(); // Want quaternion error relative to Inertial-frame (is it instead qState * qRef.conjugate?)
+      qError_ = qRef_ * qState_.conjugate(); // Quaternion error relative to Inertial-frame
+      //qError_ = auv_core::rot3d::relativeQuat(qRef_.conjugate(), qState_.conjugate());
 
       error_.head<6>() = state.head<6>() - ref.head<6>();
       error_.tail<6>() = state.tail<6>() - ref.tail<6>();
@@ -269,9 +273,9 @@ auv_core::Vector8d AUVLQR::computeThrust(const Eigen::Ref<const auv_core::Vector
          lqrThrust_ = -K_ * error_; // U = -K*(state-ref)
       }
       else
-      { 
+      {
          // NOTE: INTEGRAL ACTION IS UNTESTED CODE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         
+
          // TODO: Verify quaternion error calculation, or improve if not correct
          augError_.head<12>() = error_;
          qIntegratorError_ = qIntegratorError_ * qError_; // Regard integral error of quaternion as another quaternion

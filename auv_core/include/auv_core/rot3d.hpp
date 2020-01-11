@@ -18,6 +18,8 @@ Eigen::Quaterniond rpy2Quat(double roll, double pitch, double yaw);
 
 Eigen::Vector3d quat2RPY(const Eigen::Quaterniond &quaternion);
 
+Eigen::Quaterniond relativeQuat(const Eigen::Quaterniond &q1, const Eigen::Quaterniond &q2);
+
 Eigen::Matrix3d getRotationMat(int axis, double angle);
 
 Eigen::Matrix3d getEulerRotationMat(const Eigen::Ref<const Eigen::Vector3d> &rpy);

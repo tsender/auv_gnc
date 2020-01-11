@@ -122,12 +122,12 @@ void LongTrajectory::initSimultaneousTrajectories()
    totalDuration_ = 0;
    stList_.clear();
    stTimes_.clear();
-   Eigen::Quaterniond qDiff = Eigen::Quaterniond::Identity();
+   Eigen::Quaterniond qRel = Eigen::Quaterniond::Identity();
 
    if (newTravelHeading_)
    {
-      qDiff = qStart_.conjugate() * qCruise_;
-      rotationDuration1_ = LongTrajectory::computeRotationTime(qDiff);
+      qRel = auv_core::rot3d::relativeQuat(qStart_, qCruise_); //qStart_.conjugate() * qCruise_;
+      rotationDuration1_ = LongTrajectory::computeRotationTime(qRel);
       stPreRotation_ = new SimultaneousTrajectory(wStart_, wPreTranslate_, rotationDuration1_);
       stList_.push_back(stPreRotation_);
       totalDuration_ += rotationDuration1_;
@@ -149,8 +149,8 @@ void LongTrajectory::initSimultaneousTrajectories()
    totalDuration_ += accelDuration_;
    stTimes_.push_back(totalDuration_);
 
-   qDiff = qCruise_.conjugate() * qEnd_;
-   rotationDuration2_ = LongTrajectory::computeRotationTime(qDiff);
+   qRel = auv_core::rot3d::relativeQuat(qCruise_, qEnd_); // qCruise_.conjugate() * qEnd_;
+   rotationDuration2_ = LongTrajectory::computeRotationTime(qRel);
    stPostRotation_ = new SimultaneousTrajectory(wPostTranslate_, wEnd_, rotationDuration2_);
    stList_.push_back(stPostRotation_);
    totalDuration_ += rotationDuration2_;
@@ -165,12 +165,12 @@ void LongTrajectory::initSimultaneousTrajectories()
 }
 
 /**
- * @param qDiff Difference quaternion wrt B-frame (qDiff = q1.conjugate * q2)
+ * @param qRel Difference quaternion wrt B-frame (qRel = q1.conjugate * q2)
  * \brief Compute rotation duration given difference quaternion and TGenLimits
  */
-double LongTrajectory::computeRotationTime(Eigen::Quaterniond qDiff)
+double LongTrajectory::computeRotationTime(Eigen::Quaterniond qRel)
 {
-   double angularDistance = auv_core::rot3d::quat2AngleAxis(qDiff)(0);
+   double angularDistance = auv_core::rot3d::quat2AngleAxis(qRel)(0);
 
    Eigen::Vector4d rotStart = Eigen::Vector4d::Zero();
    Eigen::Vector4d rotEnd = Eigen::Vector4d::Zero();

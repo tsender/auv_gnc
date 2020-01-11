@@ -17,7 +17,7 @@ class SimultaneousTrajectory : public Trajectory
 private:
    MinJerkTrajectory *mjtX_, *mjtY_, *mjtZ_, *mjtAtt_;
    Waypoint *wStart_, *wEnd_;
-   Eigen::Quaterniond qStart_, qEnd_, qDiff_, qSlerp_;
+   Eigen::Quaterniond qStart_, qEnd_, qRel_, qSlerp_;
    double totalDuration_, angularDistance_;
 
    Eigen::Vector3d xState_, yState_, zState_, angleState_;

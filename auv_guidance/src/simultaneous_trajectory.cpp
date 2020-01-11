@@ -13,7 +13,7 @@ SimultaneousTrajectory::SimultaneousTrajectory(Waypoint *start, Waypoint *end, d
     wEnd_ = end;
     totalDuration_ = duration;
 
-    qDiff_.setIdentity();
+    qRel_.setIdentity();
     xState_.setZero();
     yState_.setZero();
     zState_.setZero();
@@ -31,9 +31,9 @@ void SimultaneousTrajectory::initTrajectory()
 {
     qStart_ = wStart_->quaternion().normalized();
     qEnd_ = wEnd_->quaternion().normalized();
-    qDiff_ = qStart_.conjugate() * qEnd_; // Error quaternion wrt B-frame (q2 * q1.conjugate is wrt I-frame)
+    qRel_ = auv_core::rot3d::relativeQuat(qStart_, qEnd_); //qStart_.conjugate() * qEnd_; // Difference quaternion wrt B-frame (q2 * q1.conjugate is wrt I-frame)
 
-    Eigen::Vector4d angleAxis = auv_core::rot3d::quat2AngleAxis(qDiff_);
+    Eigen::Vector4d angleAxis = auv_core::rot3d::quat2AngleAxis(qRel_);
     if (angleAxis.isApprox(Eigen::Vector4d::Zero()))
         noRotation_ = true;
     

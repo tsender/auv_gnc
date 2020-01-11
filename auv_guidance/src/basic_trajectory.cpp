@@ -129,8 +129,8 @@ void BasicTrajectory::computeSimultaneousTime()
 
    // Rotation
    qEnd_ = wEnd_->quaternion();
-   Eigen::Quaterniond qDiff = qStop_.conjugate() * qEnd_; // Error quaternion wrt B-frame (wrt I-frame: q2 * q1.conjugate)
-   double angularDistance = auv_core::rot3d::quat2AngleAxis(qDiff)(0);
+   Eigen::Quaterniond qRel = auv_core::rot3d::relativeQuat(qStop_, qEnd_); // Relative quaternion wrt B-frame (wrt I-frame: q2 * q1.conjugate)
+   double angularDistance = auv_core::rot3d::quat2AngleAxis(qRel)(0);
 
    Eigen::Vector4d rotStart = Eigen::Vector4d::Zero();
    Eigen::Vector4d rotEnd = Eigen::Vector4d::Zero();

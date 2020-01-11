@@ -98,6 +98,24 @@ Eigen::Vector3d quat2RPY(const Eigen::Quaterniond &quaternion)
 }
 
 /**
+ * @param q1 Quaternion 1 (start attitude, relative to an absolute ref frame)
+ * @param q2 Quaternion 2 (end attitude, relative to an absolute ref frame)
+ * \brief Returns the shortest relative quaternion from q1 to q2, expressed from reference frame of q1.
+ */
+Eigen::Quaterniond relativeQuat(const Eigen::Quaterniond &q1, const Eigen::Quaterniond &q2)
+{
+   double dp = q1.w() * q2.w() + q1.x() * q2.x() + q1.y() * q2.y() + q1.z() * q2.z(); // Dot product
+   Eigen::Quaterniond qRel = q1.conjugate() * q2;
+   
+   if (dp < 0) // Dot product is negative, shortest path not taken by default. Negate all components
+      qRel.w() *= -1;
+      qRel.x() *= -1;
+      qRel.y() *= -1;
+      qRel.z() *= -1;
+   return qRel;
+}
+
+/**
  * @param axis Indicates which axis to obtain rotation matrix from, where 0 = X, 1 = Y, 2 = Z
  * @param angle Angle of rotation in [rad]
  * \brief Get rotation matrix about specified axis
