@@ -87,3 +87,21 @@ If you wish to install AUV GNC to the same location as where ROS Kinetic is inst
 While you may also build the entire repo with the command `catkin build`, it is unnecessary to build all of the Control Toolbox packages since `auv_gnc` is only dependent on `ct_core` and `ct_optcon`. 
 
 Building the entire AUV GNC repo can also take a while due to the additional overhead in the Control Toolbox. Further, if you see an error message saying there is "no target to make ct_doc", do not fret. This is just a documentation package from the Control Toolbox and they are working on a fix.
+
+## How to use AUV GNC
+You will need to locate the appropriate YAML files mentioned below in the [auv_gnc/cfg](https://github.com/tsender/auv_gnc/tree/master/auv_gnc/cfg) folder.
+You will also need to locate the appropriate launch files mentioned below in the [auv_gnc/launch](https://github.com/tsender/auv_gnc/tree/master/auv_gnc/launch) folder.
+
+### How to launch the Trans EKF node (translational EKF)
+See  the `trans_ekf.yaml` as an example file for the configurable parameters. You will also need to create a ROS node that publishes the appropriate data using the SixDoF message in `auv_msgs` (each field is described in the .msg file). If you are all set, then launch your node that publishes the SixDoF message and launch the trans_ekf node:
+
+   roslaunch auv_gnc trans_ekf
+   
+It is recommended that you place everything into a single launch file in one of your own ROS packages and pass the argument with the YAML file's path. See the `trans_ekf.launch` file for more details.
+
+### How to launch the Guidance Controller node
+See  the `gc_config.yal` and `auv_config.yaml` as example files for the configurable parameters. Please read through these YAML files carefully. The Guidance Controller uses an action server to receive goal trajectories. Please see the `auv_msgs` package for the service file and its internal messages. When ready, do:
+
+   roslaunch auv_gnc guidance_controller
+   
+It is recommended that you place everything into a single launch file in one of your own ROS packages and pass the argument with both YAML file paths. See the `guidance_controller.launch` file fore more details.
