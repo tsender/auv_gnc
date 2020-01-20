@@ -10,7 +10,7 @@ GuidanceController::GuidanceController(ros::NodeHandle nh)
    nh_.param("auv_config_path", auvConfigFile_, std::string("none"));
    if (auvConfigFile_ == std::string("none"))
    {
-      ROS_ERROR("AUD Model not specified. Shutting down.");
+      ROS_ERROR("AUV Model not specified. Shutting down.");
       ros::shutdown();
    }
    auvConfig_ = YAML::LoadFile(auvConfigFile_);
@@ -257,7 +257,7 @@ void GuidanceController::initDynamicReconfigure()
    // Now, we set the callback
    paramReconfigCB_ = boost::bind(&GuidanceController::dynamicReconfigCB, this, _1, _2);
    paramReconfigServer_->setCallback(paramReconfigCB_);
-   ROS_INFO("GuidanceController: Initialized dynamic reconfigure");
+   ROS_INFO("Guidance Controller: Initialized dynamic reconfigure");
 }
 
 /**

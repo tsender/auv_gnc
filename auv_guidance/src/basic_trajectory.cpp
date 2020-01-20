@@ -146,8 +146,7 @@ void BasicTrajectory::computeSimultaneousDuration()
    mjts = new MinJerkTimeSolver(rotStart, rotEnd);
    timeRot = mjts->getDuration();
 
-   simultaneousDuration_ = std::max(timeTrans, timeRot);                             // Take longer duration
-   std::cout << "BT: simultaneous duration: " << simultaneousDuration_ << std::endl; // Debug
+   simultaneousDuration_ = std::max(timeTrans, timeRot); // Take longer duration
 }
 
 /**
@@ -205,15 +204,15 @@ void BasicTrajectory::setPrimaryTrajectory()
       ltPrimary_ = new LongTrajectory(wStop_, wEnd_, auvConstraints_, cruiseRatio, maxVelocity_);
       longDuration_ = ltPrimary_->getDuration();
       totalDuration_ += longDuration_;
+      std::cout << "BT: Executing long trajectory with duration [s]: " << longDuration_ << std::endl; // Debug
    }
    else // Execute simultaneous trajectory
    {
       isSimultaneousTrajectory_ = true;
       stPrimary_ = new SimultaneousTrajectory(wStop_, wEnd_, simultaneousDuration_);
-      totalDuration_ = simultaneousDuration_;
+      totalDuration_ += simultaneousDuration_;
+      std::cout << "BT: Executing simultaneous trajectory with duration [s]: " << simultaneousDuration_ << std::endl; // Debug
    }
-   std::cout << "BT long trajectory [bool]: " << isLongTrajectory_ << std::endl;                 // Debug
-   std::cout << "BT simultaneous trajectory [bool]: " << isSimultaneousTrajectory_ << std::endl; // Debug
 }
 
 /**

@@ -26,7 +26,7 @@ LongTrajectory::LongTrajectory(Waypoint *wStart, Waypoint *wEnd, auv_core::auvCo
    if (cruiseRatio > 0 && cruiseRatio < 1)
       cruiseRatio_ = cruiseRatio;
    else
-      cruiseRatio_ = 0.2; // Default cruise ratio
+      cruiseRatio_ = 0.1; // Default cruise ratio
 
    stList_.clear();
    stTimes_.clear();
@@ -62,7 +62,7 @@ void LongTrajectory::initTrajectory()
       travelHeading = atan2(dy, dx); // Radians
       qCruise_ = auv_core::rot3d::rpy2Quat(0, 0, travelHeading);
       newTravelHeading_ = true;
-      std::cout << "LT: new cruise heading, path inclination " << atan(fabs(dz) / xyDistance) * 180 / M_PI << " < " << auvConstraints_->maxAlignInclination * 180 / M_PI << std::endl; // Debug
+      std::cout << "LT: path inclination " << atan(fabs(dz) / xyDistance) * 180 / M_PI << " < " << auvConstraints_->maxAlignInclination * 180 / M_PI << std::endl; // Debug
       std::cout << "LT: new cruise heading [deg]: " << travelHeading * 180 / M_PI << std::endl;                                                                                        // Debug
    }
 
@@ -145,13 +145,6 @@ void LongTrajectory::initSimultaneousTrajectories()
    stList_.push_back(stPostRotation_);
    totalDuration_ += rotationDuration2_;
    stTimes_.push_back(totalDuration_);
-
-   // Debug print lines
-   // std::cout << "LT: set travel heading duration: " << rotationDuration1_ << std::endl;
-   // std::cout << "LT: speed up duration: " << accelDuration_ << std::endl;
-   // std::cout << "LT: cruise duration: " << cruiseDuration_ << std::endl;
-   // std::cout << "LT: slow down duration: " << accelDuration_ << std::endl;
-   // std::cout << "LT: final rotation duration: " << rotationDuration2_ << std::endl;
 }
 
 /**

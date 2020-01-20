@@ -18,6 +18,7 @@ TransEKF::TransEKF(ros::NodeHandle nh)
    sixDoFPub_ = nh_.advertise<auv_msgs::SixDoF>(pubTopic_, 1, this);
 
    TransEKF::initEKF();
+   ROS_INFO("Trans EKF initialized");
 }
 
 /**

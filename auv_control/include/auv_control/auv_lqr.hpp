@@ -27,9 +27,7 @@ struct ScalarBinaryOpTraits<X, CppAD::AD<X>, BinOp>
 
 namespace auv_control
 {
-// AUV Model
-// Contains information about an AUV's attributes: mass, volume inertia, drag, and thruster properties
-// Used to compute any jacobians and state vectors required by TransEKF and LQR
+// AUV Continuous-Time LQR Controller
 class AUVLQR
 {
    typedef Eigen::Matrix<CppAD::AD<double>, 3, 3> ADMatrix3d;
