@@ -1,18 +1,14 @@
 AUV GNC: Guidance, Navigation, and Control for AUVs
 ===============================================================
-CAUTION: This library is still in development. Use at your own risk.
+This is an open-source, C++ library for guidance, navigation, and control of AUVs.
 
 ## Overview
-Guidance, Navigation, and Control (GNC) are three of the biggest challenges that all robots face, let alone autonomous robots. From unmanned aerial vehicles (UAVs) to self-driving cars to autonomous underwater vehicles (AUVs), every one of these types of robots must be capable of localizing, navigating, and guiding itself in an unknown environment, and also be capable of controlling its own movements. This library is specifically targeted at AUVs.
-
-Finding an open-source "GNC-like" library for AUVs used to be a struggle, until now. AUVs are becomming increasingly popular, yet there never seemed to exist a solid GNC platform from which anyone can build off of. The purpose of this library is to do just that. AUV GNC is a C++ library containing (almost) all of the needed GNC-related code needed to start working with an AUV.
+As a former member of The Ohio State University's [Underwater Robotics Team](https://uwrt.engineering.osu.edu/) competing in AUVSI Robonation's [RoboSub](https://www.robonation.org/competition/robosub) competition, I know how difficult it can be for a team to build a strong foundation to perform well in this competition. As engineers, we learn from each other, using other people's works as a starting point for us to build upon. With the advent of the [UUV Simulator](https://github.com/uuvsimulator/uuv_simulator) research project, simulation for AUVs using ROS and Gazebo has become much easier. However, there still did not exist an open-source library dedicated to guidance, navigation, and control of AUVs. I hope this library helps to bridge that gap, making it easier for anyone interested in this field to experiment and test AUVs. AUV GNC is a C++ library containing (almost) all of the needed GNC-related code needed to start working with an AUV.
 
 **Author: [Ted Sender](https://github.com/tsender) (tsender@umich.edu)**
 
-**Former Affiliation: [The Ohio State University's Underwater Robotics Team](https://uwrt.engineering.osu.edu/), [AUVSI Robonation's RoboSub competition](https://www.robonation.org/competition/robosub)**
-
 ## Building/Installation
-This library has been tested on Ubuntu 16.04 with ROS Kinetic Kame.
+Note: This library has been tested on Ubuntu 16.04 with ROS Kinetic Kame.
 
 ### Dependencies
 AUV GNC is currently targeted towards the Robot Operating System ([ROS](https://www.ros.org/)), which must be installed to build the library as is. The system dependencies are listed below. It is recommended that you install these via the install script provided (see Building).
