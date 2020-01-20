@@ -85,9 +85,9 @@ void BasicTrajectory::setStopTrajectory()
    double timeTrans = 0, timeRot = 0;
    MinJerkTimeSolver *mjts;
    mjts = new MinJerkTimeSolver(transStart, transEnd);
-   timeTrans = mjts->getTime();
+   timeTrans = mjts->getDuration();
    mjts = new MinJerkTimeSolver(rotStart, rotEnd);
-   timeRot = mjts->getTime();
+   timeRot = mjts->getDuration();
    stopDuration_ = std::max(timeTrans, timeRot); // Take longer duration
 
    stStop_ = new SimultaneousTrajectory(wStart_, wStop_, stopDuration_);
@@ -103,15 +103,15 @@ void BasicTrajectory::computeMaxVelocityST()
    unitVec_ = deltaVec_.normalized();
    distance_ = deltaVec_.norm();
 
-   BasicTrajectory::computeSimultaneousTime();
+   BasicTrajectory::computeSimultaneousDuration();
 
    // Find max translational velocity
    Eigen::Vector3d transStart = Eigen::Vector3d::Zero();
    Eigen::Vector3d transEnd = Eigen::Vector3d::Zero();
    transEnd(0) = distance_;
-   mjtHelper_ = new MinJerkTrajectory(transStart, transEnd, simultaneousDuration_);
+   mjt_ = new MinJerkTrajectory(transStart, transEnd, simultaneousDuration_);
 
-   maxVelocityST_ = fabs(mjtHelper_->getMiddleVelocity());
+   maxVelocityST_ = fabs(mjt_->getMiddleVelocity());
    maxVelocity_ = maxVelocityST_;
    maxVelocityVec_ = unitVec_ * maxVelocity_;
 }
@@ -119,7 +119,7 @@ void BasicTrajectory::computeMaxVelocityST()
 /**
  * \brief Find the duration of a simulaneous trajectory from stop point to goal point
  */
-void BasicTrajectory::computeSimultaneousTime()
+void BasicTrajectory::computeSimultaneousDuration()
 {
    // Translation
    Eigen::Vector4d transStart = Eigen::Vector4d::Zero();
@@ -131,6 +131,7 @@ void BasicTrajectory::computeSimultaneousTime()
    qEnd_ = wEnd_->quaternion();
    Eigen::Quaterniond qRel = auv_core::rot3d::relativeQuat(qStop_, qEnd_); // Relative quaternion wrt B-frame (wrt I-frame: q2 * q1.conjugate)
    double angularDistance = auv_core::rot3d::quat2AngleAxis(qRel)(0);
+   angularDistance = fabs(auv_core::rot3d::mapRollYaw(angularDistance));
 
    Eigen::Vector4d rotStart = Eigen::Vector4d::Zero();
    Eigen::Vector4d rotEnd = Eigen::Vector4d::Zero();
@@ -141,9 +142,9 @@ void BasicTrajectory::computeSimultaneousTime()
    double timeTrans = 0, timeRot = 0;
    MinJerkTimeSolver *mjts;
    mjts = new MinJerkTimeSolver(transStart, transEnd);
-   timeTrans = mjts->getTime();
+   timeTrans = mjts->getDuration();
    mjts = new MinJerkTimeSolver(rotStart, rotEnd);
-   timeRot = mjts->getTime();
+   timeRot = mjts->getDuration();
 
    simultaneousDuration_ = std::max(timeTrans, timeRot);                             // Take longer duration
    std::cout << "BT: simultaneous duration: " << simultaneousDuration_ << std::endl; // Debug
@@ -166,12 +167,12 @@ void BasicTrajectory::setPrimaryTrajectory()
    if (distanceXY > auvConstraints_->maxXYDistance)
    {
       isSimultaneousTrajectory_ = false;
-      std::cout << "BT: MAX distance XY: " << distanceXY << " > " << auvConstraints_->maxXYDistance << std::endl; // Debug
+      // std::cout << "BT: MAX distance XY: " << distanceXY << " > " << auvConstraints_->maxXYDistance << std::endl; // Debug
    }
    if (distanceZ > auvConstraints_->maxZDistance)
    {
       isSimultaneousTrajectory_ = false;
-      std::cout << "BT: MAX distance Z: " << distanceZ << " > " << auvConstraints_->maxZDistance << std::endl; // Debug
+      // std::cout << "BT: MAX distance Z: " << distanceZ << " > " << auvConstraints_->maxZDistance << std::endl; // Debug
    }
 
    // Determine if XYZ velocities are violated
@@ -180,7 +181,7 @@ void BasicTrajectory::setPrimaryTrajectory()
       // Check inertial-frame velocity
       if (fabs(maxVelI(i)) > auvConstraints_->maxTransVel(i))
       {
-         std::cout << "BT: MAX I-frame velocity " << i << "-axis: " << fabs(maxVelI(i)) << " > " << auvConstraints_->maxTransVel(i) << std::endl; // Debug
+         // std::cout << "BT: MAX I-frame velocity " << i << "-axis: " << fabs(maxVelI(i)) << " > " << auvConstraints_->maxTransVel(i) << std::endl; // Debug
          isSimultaneousTrajectory_ = false;
          maxVelI(i) = auv_core::math_lib::sign(maxVelI(i)) * auvConstraints_->maxTransVel(i);
       }
@@ -188,7 +189,7 @@ void BasicTrajectory::setPrimaryTrajectory()
       // Check body-frame velocity
       if (fabs(maxVelB(i)) > auvConstraints_->maxTransVel(i))
       {
-         std::cout << "BT: MAX B-frame velocity " << i << "-axis: " << fabs(maxVelB(i)) << " > " << auvConstraints_->maxTransVel(i) << std::endl; // Debug
+         // std::cout << "BT: MAX B-frame velocity " << i << "-axis: " << fabs(maxVelB(i)) << " > " << auvConstraints_->maxTransVel(i) << std::endl; // Debug
          isSimultaneousTrajectory_ = false;
          maxVelB(i) = auv_core::math_lib::sign(maxVelB(i)) * auvConstraints_->maxTransVel(i);
       }
@@ -202,7 +203,7 @@ void BasicTrajectory::setPrimaryTrajectory()
       isLongTrajectory_ = true;
       double cruiseRatio = 1.0 - maxVelocity_ / maxVelocityST_;
       ltPrimary_ = new LongTrajectory(wStop_, wEnd_, auvConstraints_, cruiseRatio, maxVelocity_);
-      longDuration_ = ltPrimary_->getTime();
+      longDuration_ = ltPrimary_->getDuration();
       totalDuration_ += longDuration_;
    }
    else // Execute simultaneous trajectory
@@ -218,7 +219,7 @@ void BasicTrajectory::setPrimaryTrajectory()
 /**
  * \brief Return the total duration
  */
-double BasicTrajectory::getTime()
+double BasicTrajectory::getDuration()
 {
    return totalDuration_;
 }
@@ -231,12 +232,10 @@ auv_core::Vector13d BasicTrajectory::computeState(double time)
 {
    if (time <= stopDuration_)
    {
-      //std::cout << "BT: stop trajectory at time " << time << std::endl; // Debug
       return stStop_->computeState(time);
    }
    else if (isSimultaneousTrajectory_)
    {
-      //std::cout << "BT: main trajectory at time " << time - stopDuration_ << std::endl; // Debug
       return stPrimary_->computeState(time - stopDuration_);
    }
    else if (isLongTrajectory_)

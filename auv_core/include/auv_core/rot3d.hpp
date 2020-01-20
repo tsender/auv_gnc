@@ -10,7 +10,7 @@ namespace auv_core
 {
 namespace rot3d
 {
-Eigen::Vector4d quat2AngleAxis(const Eigen::Quaterniond &quaternion);
+Eigen::Vector4d quat2AngleAxis(const Eigen::Quaterniond &quaternion, bool nan2Zero = false);
 
 Eigen::Quaterniond angleAxis2Quat(const Eigen::Ref<const Eigen::Vector4d> &angleAxis);
 

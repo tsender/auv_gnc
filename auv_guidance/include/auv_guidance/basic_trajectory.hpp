@@ -21,7 +21,7 @@ private:
    auv_core::auvConstraints *auvConstraints_;
    SimultaneousTrajectory *stStop_, *stPrimary_;
    LongTrajectory *ltPrimary_;
-   MinJerkTrajectory *mjtHelper_;
+   MinJerkTrajectory *mjt_;
    Waypoint *wStart_, *wStop_, *wEnd_;
    Eigen::Quaterniond qStop_, qEnd_;
 
@@ -37,9 +37,9 @@ public:
    BasicTrajectory(auv_core::auvConstraints *constraints, Waypoint *wStart, Waypoint *wEnd);
    void setStopTrajectory();
    void computeMaxVelocityST();
-   void computeSimultaneousTime();
+   void computeSimultaneousDuration();
    void setPrimaryTrajectory();
-   double getTime();
+   double getDuration();
    auv_core::Vector13d computeState(double time);
    auv_core::Vector6d computeAccel(double time);
 };

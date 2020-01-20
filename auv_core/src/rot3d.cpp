@@ -6,23 +6,24 @@ namespace rot3d
 {
 /**
  * @param quaternion Quaternion representation of attitude
- * /brief Convert quaternion to its angle-axis representation. Caution, if the quaternion's scalar component is too close to 1, then the entire angleAxis vector returned is the zero vector.
+ * @param nan2Zero Indicates if nan values should be changed to zeros. If quaternion is the identity, then axis will be nan (may cause errors in post-calculations)
+ * \brief Convert quaternion to its angle-axis representation.
  */
-Eigen::Vector4d quat2AngleAxis(const Eigen::Quaterniond &quaternion)
+Eigen::Vector4d quat2AngleAxis(const Eigen::Quaterniond &quaternion, bool nan2Zero)
 {
    Eigen::Vector4d angleAxis;
    angleAxis.setZero();
    Eigen::Quaterniond q = quaternion.normalized();
-   double val = 1 - q.w() * q.w();
+   double val = 1 - q.w() * q.w(); // If val == 0, quaternion is the identity quaternion
+
+   if (val == 0 && nan2Zero) // Change nan's to 0's
+      return angleAxis;
 
    angleAxis(0) = 2 * acos(q.w()); // Angle [rad]
-   if (val != 0)                   // If val == 0, all axis components are zero
-   {
-      angleAxis(1) = q.x() / sqrt(val); // Axis, x-component
-      angleAxis(2) = q.y() / sqrt(val); // Axis, y-component
-      angleAxis(3) = q.z() / sqrt(val); // Axis, z-component
-      angleAxis.tail<3>().normalize();
-   }
+   angleAxis(1) = q.x() / sqrt(val); // Axis, x-component
+   angleAxis(2) = q.y() / sqrt(val); // Axis, y-component
+   angleAxis(3) = q.z() / sqrt(val); // Axis, z-component
+   angleAxis.tail<3>().normalize();
 
    return angleAxis;
 }
@@ -106,12 +107,12 @@ Eigen::Quaterniond relativeQuat(const Eigen::Quaterniond &q1, const Eigen::Quate
 {
    double dp = q1.w() * q2.w() + q1.x() * q2.x() + q1.y() * q2.y() + q1.z() * q2.z(); // Dot product
    Eigen::Quaterniond qRel = q1.conjugate() * q2;
-   
+
    if (dp < 0) // Dot product is negative, shortest path not taken by default. Negate all components
       qRel.w() *= -1;
-      qRel.x() *= -1;
-      qRel.y() *= -1;
-      qRel.z() *= -1;
+   qRel.x() *= -1;
+   qRel.y() *= -1;
+   qRel.z() *= -1;
    return qRel;
 }
 

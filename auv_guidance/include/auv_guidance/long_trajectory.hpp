@@ -5,6 +5,7 @@
 #include "auv_guidance/abstract_trajectory.hpp"
 #include "auv_guidance/simultaneous_trajectory.hpp"
 #include "auv_guidance/min_jerk_time_solver.hpp"
+#include "auv_guidance/min_jerk_trajectory.hpp"
 #include "auv_guidance/tgen_limits.hpp"
 #include "auv_guidance/waypoint.hpp"
 
@@ -37,8 +38,8 @@ public:
    void initTrajectory();
    void initWaypoints();
    void initSimultaneousTrajectories();
-   double computeRotationTime(Eigen::Quaterniond qRel);
-   double getTime();
+   double computeRotationDuration(Eigen::Quaterniond qRel);
+   double getDuration();
    auv_core::Vector13d computeState(double time);
    auv_core::Vector6d computeAccel(double time);
 };

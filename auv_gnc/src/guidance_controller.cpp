@@ -487,7 +487,7 @@ void GuidanceController::initNewTrajectory()
 
       endWaypoint_ = new auv_guidance::Waypoint(posIEnd, zero3d, zero3d, quatEnd, zero3d);
       basicTrajectory_ = new auv_guidance::BasicTrajectory(auvConstraints_, startWaypoint_, endWaypoint_);
-      trajectoryDuration_ = basicTrajectory_->getTime();
+      trajectoryDuration_ = basicTrajectory_->getDuration();
    }
 }
 

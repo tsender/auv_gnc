@@ -63,7 +63,7 @@ void LongTrajectory::initTrajectory()
       qCruise_ = auv_core::rot3d::rpy2Quat(0, 0, travelHeading);
       newTravelHeading_ = true;
       std::cout << "LT: new cruise heading, path inclination " << atan(fabs(dz) / xyDistance) * 180 / M_PI << " < " << auvConstraints_->maxAlignInclination * 180 / M_PI << std::endl; // Debug
-      std::cout << "LT: new cruise heading [deg]: " << travelHeading * 180 / M_PI << std::endl; // Debug
+      std::cout << "LT: new cruise heading [deg]: " << travelHeading * 180 / M_PI << std::endl;                                                                                        // Debug
    }
 
    LongTrajectory::initWaypoints();
@@ -87,7 +87,7 @@ void LongTrajectory::initWaypoints()
    transEnd << accelDistance, 0, 0, auvConstraints_->transJerk;
    MinJerkTimeSolver *mjts;
    mjts = new MinJerkTimeSolver(transStart, transEnd);
-   accelDuration_ = mjts->getTime();
+   accelDuration_ = mjts->getDuration();
 
    // Init position vectors and cruise duration
    cruiseStartPos_ = wStart_->posI() + (accelDistance * unitVec_);
@@ -102,16 +102,6 @@ void LongTrajectory::initWaypoints()
    wCruiseStart_ = new Waypoint(cruiseStartPos_, cruiseVel_, zero3d, qCruise_, zero3d);
    wCruiseEnd_ = new Waypoint(cruiseEndPos_, cruiseVel_, zero3d, qCruise_, zero3d);
    wPostTranslate_ = new Waypoint(wEnd_->posI(), zero3d, zero3d, qCruise_, zero3d);
-
-   // Debug print lines
-   std::cout << "LT: delta vector = " << std::endl << deltaVec_ << std::endl;
-   std::cout << "LT: cruise ratio = " << cruiseRatio_ << std::endl;
-   std::cout << "LT: total distance = " << deltaVec_.norm() << std::endl;
-   std::cout << "LT: accel distance = " << accelDistance << std::endl;
-   std::cout << "LT: pre translate: " << std::endl << wStart_->posI() << std::endl;
-   std::cout << "LT: cruise start: " << std::endl << cruiseStartPos_ << std::endl;
-   std::cout << "LT: cruise end: " << std::endl << cruiseEndPos_ << std::endl;
-   std::cout << "LT: post translate: " << std::endl << wEnd_->posI() << std::endl;
 }
 
 /**
@@ -126,8 +116,8 @@ void LongTrajectory::initSimultaneousTrajectories()
 
    if (newTravelHeading_)
    {
-      qRel = auv_core::rot3d::relativeQuat(qStart_, qCruise_); //qStart_.conjugate() * qCruise_;
-      rotationDuration1_ = LongTrajectory::computeRotationTime(qRel);
+      qRel = qStart_.conjugate() * qCruise_; // auv_core::rot3d::relativeQuat(qStart_, qCruise_);
+      rotationDuration1_ = LongTrajectory::computeRotationDuration(qRel);
       stPreRotation_ = new SimultaneousTrajectory(wStart_, wPreTranslate_, rotationDuration1_);
       stList_.push_back(stPreRotation_);
       totalDuration_ += rotationDuration1_;
@@ -149,28 +139,29 @@ void LongTrajectory::initSimultaneousTrajectories()
    totalDuration_ += accelDuration_;
    stTimes_.push_back(totalDuration_);
 
-   qRel = auv_core::rot3d::relativeQuat(qCruise_, qEnd_); // qCruise_.conjugate() * qEnd_;
-   rotationDuration2_ = LongTrajectory::computeRotationTime(qRel);
+   qRel = qCruise_.conjugate() * qEnd_; // auv_core::rot3d::relativeQuat(qCruise_, qEnd_); //
+   rotationDuration2_ = LongTrajectory::computeRotationDuration(qRel);
    stPostRotation_ = new SimultaneousTrajectory(wPostTranslate_, wEnd_, rotationDuration2_);
    stList_.push_back(stPostRotation_);
    totalDuration_ += rotationDuration2_;
    stTimes_.push_back(totalDuration_);
 
    // Debug print lines
-   std::cout << "LT: set travel heading duration: " << rotationDuration1_ << std::endl;
-   std::cout << "LT: speed up duration: " << accelDuration_ << std::endl;
-   std::cout << "LT: cruise duration: " << cruiseDuration_ << std::endl;
-   std::cout << "LT: slow down duration: " << accelDuration_ << std::endl;
-   std::cout << "LT: final rotation duration: " << rotationDuration2_ << std::endl;
+   // std::cout << "LT: set travel heading duration: " << rotationDuration1_ << std::endl;
+   // std::cout << "LT: speed up duration: " << accelDuration_ << std::endl;
+   // std::cout << "LT: cruise duration: " << cruiseDuration_ << std::endl;
+   // std::cout << "LT: slow down duration: " << accelDuration_ << std::endl;
+   // std::cout << "LT: final rotation duration: " << rotationDuration2_ << std::endl;
 }
 
 /**
  * @param qRel Difference quaternion wrt B-frame (qRel = q1.conjugate * q2)
- * \brief Compute rotation duration given difference quaternion and TGenLimits
+ * \brief Compute rotation duration given difference quaternion within max speed allowed
  */
-double LongTrajectory::computeRotationTime(Eigen::Quaterniond qRel)
+double LongTrajectory::computeRotationDuration(Eigen::Quaterniond qRel)
 {
    double angularDistance = auv_core::rot3d::quat2AngleAxis(qRel)(0);
+   angularDistance = fabs(auv_core::rot3d::mapRollYaw(angularDistance));
 
    Eigen::Vector4d rotStart = Eigen::Vector4d::Zero();
    Eigen::Vector4d rotEnd = Eigen::Vector4d::Zero();
@@ -180,14 +171,30 @@ double LongTrajectory::computeRotationTime(Eigen::Quaterniond qRel)
    MinJerkTimeSolver *mjts;
    mjts = new MinJerkTimeSolver(rotStart, rotEnd);
 
-   // TODO: Check max speed and verify within limits ///////////////////////////////////////////////////////////////
-   return mjts->getTime();
+   // Check max rotation speed
+   double rotDuration = mjts->getDuration();
+   MinJerkTrajectory *mjt;
+   mjt = new MinJerkTrajectory(rotStart.head<3>(), rotEnd.head<3>(), rotDuration);
+   double maxRotVel = mjt->getMiddleVelocity();
+
+   // Iterate until max attained speed is within limits
+   int maxIter = 10;
+   int iter = 0;
+   while (maxRotVel > auvConstraints_->maxRotVel && iter < maxIter)
+   {
+      rotDuration = rotDuration * (maxRotVel / auvConstraints_->maxRotVel);
+      mjt = new MinJerkTrajectory(rotStart.head<3>(), rotEnd.head<3>(), rotDuration);
+      maxRotVel = mjt->getMiddleVelocity();
+      iter++;
+   }
+
+   return rotDuration;
 }
 
 /**
  * \brief Return total duration
  */
-double LongTrajectory::getTime()
+double LongTrajectory::getDuration()
 {
    return totalDuration_;
 }
@@ -208,7 +215,6 @@ auv_core::Vector13d LongTrajectory::computeState(double time)
       if (time < stTimes_[i])
       {
          double t = (i == 0) ? time : time - stTimes_[i - 1];
-         //std::cout << "LT: compute state from ST " << i << "at time " << t << std::endl;
          return stList_[i]->computeState(t);
       }
    }

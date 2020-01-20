@@ -125,7 +125,7 @@ void AUVLQR::setIntegrator(bool enable)
 {
    enableIntegrator_ = enable;
 
-   if (!enableIntegrator_)
+   if (enableIntegrator_)
    {
       posIntegratorError_.setZero();
       qIntegratorError_.setIdentity();

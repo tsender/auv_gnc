@@ -29,21 +29,22 @@ SimultaneousTrajectory::SimultaneousTrajectory(Waypoint *start, Waypoint *end, d
  */
 void SimultaneousTrajectory::initTrajectory()
 {
-    qStart_ = wStart_->quaternion().normalized();
-    qEnd_ = wEnd_->quaternion().normalized();
-    qRel_ = auv_core::rot3d::relativeQuat(qStart_, qEnd_); //qStart_.conjugate() * qEnd_; // Difference quaternion wrt B-frame (q2 * q1.conjugate is wrt I-frame)
+    qStart_ = wStart_->quaternion();
+    qEnd_ = wEnd_->quaternion();
+    qRel_ = qStart_.conjugate() * qEnd_; // Difference quaternion wrt B-frame (q2 * q1.conjugate is wrt I-frame)
 
-    Eigen::Vector4d angleAxis = auv_core::rot3d::quat2AngleAxis(qRel_);
+    Eigen::Vector4d angleAxis = auv_core::rot3d::quat2AngleAxis(qRel_, true);
     if (angleAxis.isApprox(Eigen::Vector4d::Zero()))
         noRotation_ = true;
     
-    angularDistance_ = angleAxis(0);
+    angularDistance_ = fabs(auv_core::rot3d::mapRollYaw(angleAxis(0)));
     rotationAxis_ = angleAxis.tail<3>(); // Get axis relative to Body-frame at starting position
     double angVel = wStart_->angVelB().norm();
-    std::cout << "ST: start attitude " << std::endl << auv_core::rot3d::quat2RPY(qStart_) * 180 / M_PI << std::endl; // Debug
-    std::cout << "ST: angular distance [deg]: " << angularDistance_ * 180 / M_PI << std::endl;
-    std::cout << "ST: angular axis, relative to I-frame: " << std::endl << qStart_.conjugate() * rotationAxis_ << std::endl;
-    std::cout << "ST: end attitude " << std::endl << auv_core::rot3d::quat2RPY(qEnd_) * 180 / M_PI << std::endl; // Debug
+    
+   //  std::cout << "ST: start attitude " << std::endl << auv_core::rot3d::quat2RPY(qStart_) * 180 / M_PI << std::endl; // Debug
+   //  std::cout << "ST: angular distance [deg]: " << angularDistance_ * 180 / M_PI << std::endl;
+   //  std::cout << "ST: angular axis, relative to I-frame: " << std::endl << qStart_.conjugate() * rotationAxis_ << std::endl;
+   //  std::cout << "ST: end attitude " << std::endl << auv_core::rot3d::quat2RPY(qEnd_) * 180 / M_PI << std::endl; // Debug
 
     Eigen::Vector3d angleStart = Eigen::Vector3d::Zero(); 
     Eigen::Vector3d angleEnd = Eigen::Vector3d::Zero();
@@ -59,7 +60,7 @@ void SimultaneousTrajectory::initTrajectory()
 /**
  * \brief Return total duration
  */
-double SimultaneousTrajectory::getTime()
+double SimultaneousTrajectory::getDuration()
 {
     return totalDuration_;
 }
@@ -102,8 +103,8 @@ auv_core::Vector13d SimultaneousTrajectory::computeState(double time)
     }
     else if (time >= 0 && time <= totalDuration_)
     {
-        double frac = time / totalDuration_;
-        qSlerp_ = qStart_.slerp(frac, qEnd_); // Attitude wrt I-frame
+        double frac = angleState_(0) / angularDistance_;
+        qSlerp_ = qStart_.slerp(frac, qEnd_);
         qSlerp_ = qSlerp_.normalized();
     }
     else if (time < 0)

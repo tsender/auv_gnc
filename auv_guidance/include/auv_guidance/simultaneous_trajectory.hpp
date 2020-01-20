@@ -29,7 +29,7 @@ public:
 
    SimultaneousTrajectory(Waypoint *start, Waypoint *end, double duration);
    void initTrajectory();
-   double getTime();
+   double getDuration();
    auv_core::Vector13d computeState(double time);
    auv_core::Vector6d computeAccel(double time);
 };

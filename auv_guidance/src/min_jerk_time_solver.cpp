@@ -3,9 +3,8 @@
 namespace auv_guidance
 {
 /**
- * @param start Initial conditions of position, velocity, and acceleration.
- * @param end Final conditions of position, velocity, and acceleration
- * @param duration Duration for which trajectory will occur
+ * @param start Initial conditions of position, velocity, acceleration, and jerk
+ * @param end Final conditions of position, velocity, acceleration, and jerk
  */
 MinJerkTimeSolver::MinJerkTimeSolver(const Eigen::Ref<const Eigen::Vector4d> &start, const Eigen::Ref<const Eigen::Vector4d> &end)
 {
@@ -16,21 +15,13 @@ MinJerkTimeSolver::MinJerkTimeSolver(const Eigen::Ref<const Eigen::Vector4d> &st
     optionsMTTS_.linear_solver_type = ceres::DENSE_QR;
 
     ceres::Solve(optionsMTTS_, &problemMTTS_, &summaryMTTS_);
-
-    mjt_ = new MinJerkTrajectory(start.head<3>(), end.head<3>(), minTime_);
 }
 
 /**
  * Returns the time calculated by the solver
  */
-double MinJerkTimeSolver::getTime()
+double MinJerkTimeSolver::getDuration()
 {
     return minTime_;
-}
-
-double MinJerkTimeSolver::getMiddleVelocity()
-{
-    Eigen::Vector3d state =  mjt_->computeState(minTime_ / 2.0);
-    return state(1);
 }
 } // namespace auv_guidance
