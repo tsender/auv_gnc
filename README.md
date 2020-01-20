@@ -7,6 +7,35 @@ As a former member of The Ohio State University's [Underwater Robotics Team](htt
 
 **Author: [Ted Sender](https://github.com/tsender) (tsender@umich.edu)**
 
+## AUV GNC Packages
+This library is built on ROS and so all packages are catkin packages. This library also adopts the North East Down (NED) convention throughout.
+
+### auv_core
+- Contains essential headers for all other packages in this library including math for 3-D rotations using quaternions and structs specifically for describing the AUV in the `auv_control` package.
+
+### auv_guidance
+- Contains the building blocks for creating various trajectories in the water. 
+- The Simultaneous Trajectory creates a minimum jerk trajectory from one pose to another in the specified duration. This is the primary building blocks for trajectory generation used in this package.
+- The Long Trajectory is used if the vehicle is travelling over relatively large distances, and determines appropriate waypoints along the way for the vehicle to speed up, cruise, and slow down.
+- The Basic Trajectory can take the vehicle from one arbitrary pose to another, and is what the user interacts with through ROS. Based on user-specified constraints, this trajectory automatically calculates an appropriate duration of travel for the entire trajectory, determines if it's safe to perform the entire action simultaneously or if it requires a long trajectory, and will calculate the state and acceleration vectors used for the controller.
+
+### auv_navigation
+- Contains code for implementing a Kalman Filter and Extended Kalman Filter.
+- The primary feature is the translational EKF to estimate the vehicle's state under translational motion.
+
+### auv_control
+- Contains code for a continuous-time Linear Quadratic Regulator (LQR) controller.
+- This library uses Google's Ceres solver to calculate the nominal thruster forces and uses LQR to account for perturbations between the reference trajectory and the current state.
+- At most eight thrusters are supported in this controller.
+
+### auv_gnc
+- This is the ROS package that you will be interacting with. 
+- Contains the ROS node for the translational EKF, which supports asynchronous data from all AUV sensors (depth, IMU, and DVL). EKF weights are specified in a YAML file.
+- Contains the ROS node for the Guidance Controller, which combines both trajectory generation and the LQR controller in a single node. AUV configuration is specified in a YAML file.
+
+### auv_msgs
+- Contains custom ROS messages and services for `auc_gnc`.
+
 ## Building/Installation
 Note: This library has been tested on Ubuntu 16.04 with ROS Kinetic Kame.
 
@@ -31,10 +60,10 @@ To get started, clone this library into a catkin workspace.
 
 For FIRST TIME users, please run the following to install the required dependencies:
 
-    cd ~/catkin_ws/src/auv_gnc/installation/
+    cd ~/catkin_ws/src/auv_gnc/
     ./install_deps.sh
    
-The suggested way to build/install this library is with [Catkin tools](https://catkin-tools.readthedocs.io/en/latest/installing.html). It is preferred that catkin be configured with the install space as follows
+The recommended way to build/install this library is with [Catkin tools](https://catkin-tools.readthedocs.io/en/latest/installing.html). It is preferred that catkin be configured with the install space as follows
 
     cd ~/catkin_ws/
     catkin init
@@ -57,4 +86,4 @@ If you wish to install AUV GNC to the same location as where ROS Kinetic is inst
 ### Notes
 While you may also build the entire repo with the command `catkin build`, it is unnecessary to build all of the Control Toolbox packages since `auv_gnc` is only dependent on `ct_core` and `ct_optcon`. 
 
-Building the entire AUV GNC repo can also take a while due to some of the additional overhead in the Control Toolbox. Further, the `ct_doc` package from the Control Toolbox does not build for some reason. If you build the entire repo, you will see an error message saying that there is "no target to make ct_doc" - it's just a doc package, so don't worry about it.
+Building the entire AUV GNC repo can also take a while due to the additional overhead in the Control Toolbox. Further, if you see an error message saying there is "no target to make ct_doc", do not fret. This is just a documentation package from the Control Toolbox and they are working on a fix.
