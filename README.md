@@ -26,7 +26,7 @@ This library is built on ROS and so all packages are catkin packages. This libra
 ### auv_control
 - Contains code for a continuous-time Linear Quadratic Regulator (LQR) controller.
 - This library uses Google's Ceres solver to calculate the nominal thruster forces and uses LQR to account for perturbations between the reference trajectory and the current state.
--- WARNING: The integral action has not been tested. Please do not use this feature unless you wish to debug the code.
+   - WARNING: The integral action has not been tested yet. Please do not use this feature unless you wish to debug the code.
 - At most eight thrusters are supported in this controller.
 
 ### auv_gnc
