@@ -26,6 +26,7 @@ This library is built on ROS and so all packages are catkin packages. This libra
 ### auv_control
 - Contains code for a continuous-time Linear Quadratic Regulator (LQR) controller.
 - This library uses Google's Ceres solver to calculate the nominal thruster forces and uses LQR to account for perturbations between the reference trajectory and the current state.
+-- WARNING: The integral action has not been tested. Please do not use this feature unless you wish to debug the code.
 - At most eight thrusters are supported in this controller.
 
 ### auv_gnc
@@ -100,7 +101,7 @@ See  the `trans_ekf.yaml` as an example file for the configurable parameters. Yo
 It is recommended that you place everything into a single launch file in one of your own ROS packages and pass the argument with the YAML file's path. See the `trans_ekf.launch` file for more details.
 
 ### How to launch the Guidance Controller node
-See  the `gc_config.yal` and `auv_config.yaml` as example files for the configurable parameters. Please read through these YAML files carefully. The Guidance Controller uses an action server to receive goal trajectories. Please see the `auv_msgs` package for the service file and its internal messages. When ready, do:
+See  the `gc_config.yal` and `auv_config.yaml` as example files for the configurable parameters. Please read through these YAML files carefully. Please keep the `enable_integrator` field as `false` as this feature is untested. The Guidance Controller uses an action server to receive goal trajectories. Please see the `auv_msgs` package for the service file and its internal messages. When ready, do:
 
    roslaunch auv_gnc guidance_controller
    
