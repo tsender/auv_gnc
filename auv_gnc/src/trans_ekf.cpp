@@ -122,14 +122,14 @@ void TransEKF::sixDofCB(const auv_msgs::SixDoF::ConstPtr &raw)
 
          // Create SixDoF message and publish
          auv_msgs::SixDoF filtered;
-         filtered.header.stamp = ros::Time::now();
-         filtered.header.frame_id = std::string("/auv_gnc/trans_ekf");
+         filtered.header.stamp = timeNew;
+         filtered.header.frame_id = std::string("/auv_gnc/trans_ekf/");
 
          auv_core::eigen_ros::pointEigenToMsg(inertialState_.segment<3>(STATE_POS), filtered.pose.position);
          filtered.pose.orientation = raw->pose.orientation;
-         auv_core::eigen_ros::vectorEigenToMsg(inertialState_.segment<3>(STATE_VEL), filtered.velocity.linear);
+         auv_core::eigen_ros::vectorEigenToMsg(bodyState_.segment<3>(STATE_VEL), filtered.velocity.linear);
          filtered.velocity.angular = raw->velocity.angular;
-         auv_core::eigen_ros::vectorEigenToMsg(inertialState_.segment<3>(STATE_ACCEL), filtered.linear_accel);
+         auv_core::eigen_ros::vectorEigenToMsg(bodyState_.segment<3>(STATE_ACCEL), filtered.linear_accel);
 
          sixDoFPub_.publish(filtered);
       }
