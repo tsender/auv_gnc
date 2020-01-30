@@ -96,13 +96,13 @@ You will also need to locate the appropriate launch files mentioned below in the
 ### How to launch the Trans EKF node (translational EKF)
 See  the `trans_ekf.yaml` as an example file for the configurable parameters. You will also need to create a ROS node that publishes the appropriate data using the SixDoF message in `auv_msgs` (each field is described in the .msg file). If you are all set, then launch your node that publishes the SixDoF message and launch the trans_ekf node:
 
-   roslaunch auv_gnc trans_ekf
+      roslaunch auv_gnc trans_ekf
    
 It is recommended that you place everything into a single launch file in one of your own ROS packages and pass the argument with the YAML file's path. See the `trans_ekf.launch` file for more details.
 
 ### How to launch the Guidance Controller node
 See  the `gc_config.yal` and `auv_config.yaml` as example files for the configurable parameters. Please read through these YAML files carefully. Please keep the `enable_integrator` field as `false` as this feature is untested. The Guidance Controller uses an action server to receive goal trajectories. Please see the `auv_msgs` package for the service file and its internal messages. When ready, do:
 
-   roslaunch auv_gnc guidance_controller
+      roslaunch auv_gnc guidance_controller
    
 It is recommended that you place everything into a single launch file in one of your own ROS packages and pass the argument with both YAML file paths. See the `guidance_controller.launch` file fore more details.
