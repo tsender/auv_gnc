@@ -3,9 +3,12 @@ AUV GNC: Guidance, Navigation, and Control for AUVs
 This is an open-source, C++ library for guidance, navigation, and control of AUVs.
 
 ## Overview
-As a former member of The Ohio State University's [Underwater Robotics Team](https://uwrt.engineering.osu.edu/) competing in AUVSI Robonation's [RoboSub](https://www.robonation.org/competition/robosub) competition, I know how difficult it can be for a team to build a strong foundation to perform well in this competition. As engineers, we learn from each other, using other people's works as a starting point for us to build upon. With the advent of the [UUV Simulator](https://github.com/uuvsimulator/uuv_simulator) research project, simulation for AUVs using ROS and Gazebo has become much easier. However, there still did not exist an open-source library dedicated to guidance, navigation, and control of AUVs. I hope this library helps to bridge that gap, making it easier for anyone interested in this field to experiment and test AUVs. AUV GNC is a C++ library containing (almost) all of the needed GNC-related code needed to start working with an AUV.
+As a former member of The Ohio State University's [Underwater Robotics Team](https://uwrt.engineering.osu.edu/) competing in AUVSI Robonation's [RoboSub](https://www.robonation.org/competition/robosub) competition, I know how difficult it can be for a team to build a strong foundation to perform well in this competition. As engineers, we learn from each other, using other people's works as a starting point for us to build upon. With the advent of the [UUV Simulator](https://github.com/uuvsimulator/uuv_simulator) research project, simulation for AUVs using ROS and Gazebo has become much easier. However, there still did not exist an open-source library dedicated to guidance, navigation, and control of AUVs. I hope this library helps to bridge that gap, making it easier for anyone interested in this field to experiment and test AUVs. AUV GNC is a C++ library containing a fair amount of GNC-related code to help you start working with an AUV. My hope is that you find this library useful, whether you use it as is or improve upon it for your own needs. If you do find it useful, I only ask that in return you give me credit for having created this repository (I do not have any required citation guidelines).
 
 **Author: [Ted Sender](https://github.com/tsender) (tsender@umich.edu)**
+
+## Repo Status
+I am currently a PhD student at the University of Michigan and this github project has nothing to do with my research thesis, this was just a side-project I did for fun while I was on the Underwater Robotics Team at OSU. I do not anticipate having time in the near future to update this repo or fix any known problems (see bottom of README). Though, I am happy to provide some guidance, time-permitting, to anyone that wishes to learn more or wants to improve this repo.
 
 ## AUV GNC Packages
 This library is built on ROS and so all packages are catkin packages. This library also adopts the North East Down (NED) convention throughout.
@@ -17,7 +20,7 @@ This library is built on ROS and so all packages are catkin packages. This libra
 - Contains the building blocks for creating various trajectories in the water. 
 - The Simultaneous Trajectory creates a minimum jerk trajectory from one pose to another in the specified duration. This is the primary building blocks for trajectory generation used in this package.
 - The Long Trajectory is used if the vehicle is travelling over relatively large distances, and determines appropriate waypoints along the way for the vehicle to speed up, cruise, and slow down.
-- The Basic Trajectory can take the vehicle from one arbitrary pose to another, and is what the user interacts with through ROS. Based on user-specified constraints, this trajectory automatically calculates an appropriate duration of travel for the entire trajectory, determines if it's safe to perform the entire action simultaneously or if it requires a long trajectory, and will calculate the state and acceleration vectors used for the controller.
+- The Basic Trajectory can take the vehicle from one arbitrary pose to another, and is what the user interacts with through ROS. Based on user-specified constraints, this trajectory automatically calculates an appropriate duration of travel for the entire trajectory, determines if it's safe to perform the entire action simultaneously or if it requires a long trajectory, and will calculate the state and acceleration vectors used for the controller. NOTE: At the time of writing this library I did not know how more advanced controllers, such as MPC, work and so I did my best to accomodate any constraints set on vehicle motion.
 
 ### auv_navigation
 - Contains code for implementing a Kalman Filter and Extended Kalman Filter.
@@ -106,3 +109,8 @@ See  the `gc_config.yal` and `auv_config.yaml` as example files for the configur
       roslaunch auv_gnc guidance_controller
    
 It is recommended that you place everything into a single launch file in one of your own ROS packages and pass the argument with both YAML file paths. See the `guidance_controller.launch` file fore more details.
+
+## Known Problems
+Occasionally a set of matrices that is fed into the LQR solver from the Control Toolbox results in an infeasible solution. When this happens, the LQR solver terminates the entire program. I have not gotten around to investigating the exact culrpit of this phenomena, but I believe the reason is that some orientations of the vehicle result in an (A,B) matrix pair that is uncontrollable. A thorough investigation would require determining what orientations cause the error and verifying the uncontrollability of those (A,B) matrices. If anyone wishes to dive into solving this issue, I'm sure anyone that uses this library would appreciate it.
+
+A quick workaround would be to place the `lqrSolver_.compute(Q_, R_, A_, B_, K_);` [line of code](https://github.com/tsender/auv_gnc/blob/master/auv_control/src/auv_lqr.cpp#L272) in a try-catch block for safety (something that deserves to be in the code, I just never got around to doing that).
